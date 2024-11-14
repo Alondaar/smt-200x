@@ -8,10 +8,10 @@
       "discord": "alondaar"
     }
   ],
-  "url": "Replace this with a link to your public repository",
+  "url": "https://github.com/Alondaar/smt-200x",
   "license": "LICENSE.txt",
   "readme": "README.md",
-  "bugs": "Replace this with a link to file issues or tickets",
+  "bugs": "https://github.com/Alondaar/smt-200x/issues",
   "changelog": "CHANGELOG.md",
   "media": [
     {
@@ -20,7 +20,7 @@
       "thumbnail": "systems/smt-200x/assets/anvil-impact.png"
     }
   ],
-  "version": "2.0.0",
+  "version": "0.01",
   "compatibility": {
     "minimum": 11,
     "verified": "11.315"
