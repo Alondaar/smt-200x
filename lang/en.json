@@ -1,12 +1,26 @@
 {
   "SMT_X": {
-    "Ability": {
-      "Str": { "long": "Strength", "abbr": "str" },
-      "Con": { "long": "Constitution", "abbr": "con" },
-      "Dex": { "long": "Dexterity", "abbr": "dex" },
-      "Int": { "long": "Intelligence", "abbr": "int" },
-      "Wis": { "long": "Wisdom", "abbr": "wis" },
-      "Cha": { "long": "Charisma", "abbr": "cha" }
+    "Stat": {
+      "st": {
+        "long": "Strength",
+        "abbr": "ST"
+      },
+      "mg": {
+        "long": "Magic",
+        "abbr": "MG"
+      },
+      "vt": {
+        "long": "Vitality",
+        "abbr": "VT"
+      },
+      "ag": {
+        "long": "Agility",
+        "abbr": "AG"
+      },
+      "lk": {
+        "long": "Luck",
+        "abbr": "LK"
+      }
     },
     "SheetLabels": {
       "Actor": "SMTX Actor Sheet",
@@ -24,18 +38,59 @@
       "Temporary": "Temporary Effects",
       "Passive": "Passive Effects",
       "Inactive": "Inactive Effects"
+    },
+    "Affinity": {
+      "strike": "Strike",
+      "gun": "Gun",
+      "fire": "Fire",
+      "ice": "Ice",
+      "elec": "Elec",
+      "force": "Force",
+      "expel": "Expel",
+      "death": "Death",
+      "mind": "Mind",
+      "nerve": "Nerve",
+      "curse": "Curse",
+      "almighty": "Almighty",
+      "recovery": "Recovery",
+      "none": "None"
+    },
+    "WeaponChoices": {
+      "x": "X",
+      "a": "A",
+      "b": "B"
+    },
+    "CharAffinity": {
+      "normal": "Normal",
+      "resist": "Resist",
+      "weak": "Weak",
+      "null": "Null",
+      "drain": "Drain",
+      "repel": "Repel"
+    },
+    "AffinityBS": {
+      "DEAD": "Insta-kill",
+      "STONE": "STONE",
+      "FLY": "FLY",
+      "PARALYZE": "PARALYZE",
+      "CHARM": "CHARM",
+      "POISON": "POISON",
+      "CLOSE": "CLOSE",
+      "BIND": "BIND",
+      "FREEZE": "FREEZE",
+      "SLEEP": "SLEEP",
+      "PANIC": "PANIC",
+      "SHOCK": "SHOCK",
+      "HAPPY": "HAPPY"
     }
   },
-
   "TYPES": {
     "Actor": {
       "character": "Character",
       "npc": "NPC"
     },
     "Item": {
-      "item": "Item",
-      "feature": "Feature",
-      "spell": "Spell"
+      "feature": "Feature"
     }
   }
 }

@@ -1,0 +1,72 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" />
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name" /></h1>
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">Description</a>
+    <a class="item" data-tab="attributes">Attributes</a>
+    <a class="item" data-tab="effects">Effects</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+
+    {{!-- Description Tab --}}
+    <div class="tab" data-group="primary" data-tab="description">
+      {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
+      {{editor enrichedDescription target="system.description" engine="prosemirror" button=true editable=editable}}
+    </div>
+
+    {{!-- Attributes Tab --}}
+    <div class="tab attributes" data-group="primary" data-tab="attributes">
+      <label for="system.gp" class="resource-label">GP</label>
+      <input type="text" name="system.gp" value="{{system.gp}}" data-dtype="Number" />
+      <br><br>
+      <label for="system.buy" class="resource-label">Buy</label>
+      <input type="text" name="system.buy" value="{{system.buy}}" data-dtype="Number" />
+      <br><br>
+      <label for="system.sell" class="resource-label">Sell</label>
+      <input type="text" name="system.sell" value="{{system.sell}}" data-dtype="Number" />
+      <br><br>
+      <label for="system.vt" class="resource-label">VT</label>
+      <input type="text" name="system.vt" value="{{system.vt}}" data-dtype="Number" />
+      <br><br>
+      <label for="system.sex" class="resource-label">Sex</label>
+      <input type="text" name="system.sex" value="{{system.sex}}" />
+      <br><br>
+      <label for="system.alignment" class="resource-label">Alignment</label>
+      <input type="text" name="system.alignment" value="{{system.alignment}}" />
+      <br><br>
+
+      <label for="system.type" class="resource-label">Type</label>
+      <input type="text" name="system.type" value="{{system.type}}" />
+      <br><br>
+      <label for="system.phydef" class="resource-label">Physical Defense</label>
+      <input type="text" name="system.phydef" value="{{system.phydef}}" data-dtype="Number" />
+      <br><br>
+      <label for="system.magdef" class="resource-label">Magical Defense</label>
+      <input type="text" name="system.magdef" value="{{system.magdef}}" data-dtype="Number" />
+      <br><br>
+      <label for="system.meleePower" class="resource-label">Melee Power Bonus</label>
+      <input type="text" name="system.meleePower" value="{{system.meleePower}}" data-dtype="Number" />
+      <br><br>
+      <label for="system.init" class="resource-label">Initiative Bonus</label>
+      <input type="text" name="system.init" value="{{system.init}}" data-dtype="Number" />
+      <br><br>
+      <label for="system.equipped" class="resource-label">Equipped</label>
+      <input type="checkbox" name="system.equipped" {{#if system.equipped}}checked{{/if}} />
+      <br><br>
+    </div>
+
+    {{!-- Effects Tab --}}
+    <div class="tab effects" data-group="primary" data-tab="effects">
+      {{> "systems/smt-200x/templates/item/parts/item-effects.hbs"}}
+    </div>
+  </section>
+
+</form>

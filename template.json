@@ -1,73 +1,295 @@
 {
   "Actor": {
-    "types": ["character", "npc"],
+    "types": [
+      "character",
+      "npc"
+    ],
     "templates": {
       "base": {
-        "health": {
+        "biography": "",
+        "isHuman": false,
+        "hp": {
           "value": 10,
           "min": 0,
-          "max": 10
+          "max": 10,
+          "mult": 4
         },
-        "power": {
+        "mp": {
+          "value": 5,
+          "min": 0,
+          "max": 5,
+          "mult": 2
+        },
+        "fate": {
           "value": 5,
           "min": 0,
           "max": 5
         },
-        "biography": ""
+        "attributes": {
+          "level": 0,
+          "exp": 0
+        },
+        "stats": {
+          "st": {
+            "value": 0
+          },
+          "mg": {
+            "value": 0
+          },
+          "vt": {
+            "value": 0
+          },
+          "ag": {
+            "value": 0
+          },
+          "lk": {
+            "value": 0
+          }
+        },
+        "suku": {
+          "buff": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "debuff": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "taru": {
+          "buff": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "debuff": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "raku": {
+          "buff": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "debuff": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "maka": {
+          "buff": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "debuff": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "powerDice": {
+          "melee": 1,
+          "ranged": 1,
+          "spell": 1,
+          "init": 1,
+          "item": 0
+        },
+        "dark": 0,
+        "light": 0,
+        "law": 0,
+        "chaos": 0,
+        "neutral": 0,
+        "heeho": 0,
+        "affinity": {
+          "strike": "Normal",
+          "gun": "Normal",
+          "fire": "Normal",
+          "ice": "Normal",
+          "elec": "Normal",
+          "force": "Normal",
+          "expel": "Normal",
+          "death": "Normal",
+          "mind": "Normal",
+          "nerve": "Normal",
+          "curse": "Normal",
+          "almighty": "Normal"
+        },
+        "affinityBS": {
+          "DEAD": "Normal",
+          "STONE": "Normal",
+          "FLY": "Normal",
+          "PARALYZE": "Normal",
+          "CHARM": "Normal",
+          "POISON": "Normal",
+          "CLOSE": "Normal",
+          "BIND": "Normal",
+          "FREEZE": "Normal",
+          "SLEEP": "Normal",
+          "PANIC": "Normal",
+          "SHOCK": "Normal",
+          "HAPPY": "Normal"
+        },
+        "wepA": {
+          "name": "",
+          "type": "",
+          "power": 0,
+          "hit": 0
+        },
+        "wepB": {
+          "name": "",
+          "type": "",
+          "power": 0,
+          "hit": 0
+        },
+        "unarmed": {
+          "power": 0,
+          "hit": 0
+        },
+        "isCursed": false,
+        "badStatus": "",
+        "aux": {
+          "useTCDef": false,
+          "useTCInit": false
+        }
       }
     },
     "character": {
-      "templates": ["base"],
-      "attributes": {
-        "level": {
-          "value": 1
-        }
-      },
-      "abilities": {
-        "str": {
-          "value": 10
-        },
-        "dex": {
-          "value": 10
-        },
-        "con": {
-          "value": 10
-        },
-        "int": {
-          "value": 10
-        },
-        "wis": {
-          "value": 10
-        },
-        "cha": {
-          "value": 10
-        }
-      }
+      "templates": [
+        "base"
+      ],
+      "backgrounds": "",
+      "contacts": ""
     },
     "npc": {
-      "templates": ["base"],
-      "cr": 0
+      "templates": [
+        "base"
+      ]
     }
   },
   "Item": {
-    "types": ["item", "feature", "spell"],
+    "types": [
+      "weapon",
+      "armor",
+      "consumable",
+      "feature",
+      "passive"
+    ],
     "templates": {
       "base": {
-        "description": ""
+        "description": "",
+        "shortEffect": "-",
+        "type": ""
+      },
+      "item": {
+        "gp": 1,
+        "buy": "0",
+        "sell": "0"
+      },
+      "equipment": {
+        "vt": 0,
+        "sex": "-",
+        "alignment": "-"
       }
     },
-    "item": {
-      "templates": ["base"],
-      "quantity": 1,
-      "weight": 0,
-      "formula": "d20 + @str.mod + ceil(@lvl / 2)"
+    "weapon": {
+      "templates": [
+        "base",
+        "item",
+        "equipment"
+      ],
+      "power": 0,
+      "hit": 0,
+      "slotA": false,
+      "slotB": false
+    },
+    "armor": {
+      "templates": [
+        "base",
+        "item",
+        "equipment"
+      ],
+      "phydef": 0,
+      "magdef": 0,
+      "equipped": false,
+      "meleePower": 0,
+      "init": 0
+    },
+    "consumable": {
+      "templates": [
+        "base",
+        "item"
+      ],
+      "target": "1",
+      "power": "0",
+      "affinity": "strike",
+      "ingoreDefense": false,
+      "pierce": false,
+      "affectsMP": false,
+      "buffs": {
+        "sukukaja": false,
+        "sukunda": false,
+        "tarukaja": false,
+        "tarunda": false,
+        "rakukaja": false,
+        "rakunda": false,
+        "makakaja": false,
+        "makunda": false
+      },
+      "quantity": 0
     },
     "feature": {
-      "templates": ["base"]
+      "templates": [
+        "base"
+      ],
+      "cost": "-",
+      "target": "1",
+      "wep": "x",
+      "wepIgnoreTN": false,
+      "wepIgnorePower": false,
+      "tn": "0",
+      "power": "0",
+      "affinity": "strike",
+      "ingoreDefense": false,
+      "pierce": false,
+      "critMult": 2,
+      "critRange": "1/10",
+      "extraDice": 0,
+      "hpCost": "0",
+      "mpCost": "0",
+      "fateCost": "0",
+      "hideCritDamage": false,
+      "affectsMP": false,
+      "buffs": {
+        "sukukaja": false,
+        "sukunda": false,
+        "tarukaja": false,
+        "tarunda": false,
+        "rakukaja": false,
+        "rakunda": false,
+        "makakaja": false,
+        "makunda": false
+      },
+      "subBuffRoll": ""
     },
-    "spell": {
-      "templates": ["base"],
-      "spellLevel": 1
+    "passive": {
+      "templates": [
+        "base"
+      ]
     }
   }
 }

@@ -2,20 +2,16 @@
   <li class='item flexrow items-header'>
     <div class='item-name'>{{localize 'Name'}}</div>
     <div class='item-prop'>Type</div>
-    <div class='item-prop'>Cost</div>
-    <div class='item-prop'>Target</div>
-    <div class='item-prop'>Wep</div>
-    <div class='item-prop'>TN</div>
+    <div class='item-prop'>Hit</div>
     <div class='item-prop'>Power</div>
-    <div class='item-prop'>Affinity</div>
-    <div class='item-prop flex2'>Effect</div>
+    <div class='item-prop'>Equip to</div>
     <div class='item-controls'>
-      <a class='item-control item-create' title='Create item' data-type='feature'>
+      <a class='item-control item-create' title='Create item' data-type='weapon'>
         <i class='fas fa-plus'></i>
       </a>
     </div>
   </li>
-  {{#each features as |item id|}}
+  {{#each weapons as |item id|}}
   <li class='item flexrow' data-item-id='{{item._id}}'>
     <div class='item-name'>
       <div class='item-image'>
@@ -26,14 +22,14 @@
       <h4>{{item.name}}</h4>
     </div>
     <div class='item-prop'>{{item.system.type}}</div>
-    <div class='item-control item-prop clickable pay-cost'>{{item.system.cost}}</div>
-    <div class='item-prop'>{{item.system.target}}</div>
-    <div class='item-prop clickable weapon-rotate'>{{localize (lookup @root.config.weaponChoices item.system.wep)}}
+    <div class='item-prop'>{{item.system.power}}</div>
+    <div class='item-prop'>{{item.system.hit}}</div>
+    <div class='item-prop'>
+      <span class="weapon-equip-a clickable"><i class="fa-solid fa-a"> </i></span>
+      <span class="weapon-equip-b clickable">&emsp;<i class="fa-solid fa-b"></i></span>
+      <!-- <input type="checkbox" name="item.equipped" class='weapon-equip-a' {{#if item.system.slotA}}checked{{/if}} />
+      <input type="checkbox" name="item.equipped" class='weapon-equip-b' {{#if item.system.slotB}}checked{{/if}} /> -->
     </div>
-    <div class='item-prop clickable roll-tn'>{{item.system.calcTN}}%</div>
-    <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
-    <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>
-    <div class='item-prop flex2' style="text-align:left; padding-left:4px;">{{item.system.shortEffect}}</div>
     <div class='item-controls'>
       <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=' feature'}}'>
         <i class='fas fa-edit'></i>

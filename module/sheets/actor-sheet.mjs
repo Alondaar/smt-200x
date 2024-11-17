@@ -12,7 +12,7 @@ export class SMTXActorSheet extends ActorSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ['smt-200x', 'sheet', 'actor'],
-      width: 600,
+      width: 900,
       height: 600,
       tabs: [
         {
@@ -56,7 +56,7 @@ export class SMTXActorSheet extends ActorSheet {
     }
 
     // Prepare NPC data and items.
-    if (actorData.type == 'npc') {
+    if (actorData.type == 'npc-demon') {
       this._prepareItems(context);
     }
 
@@ -103,44 +103,38 @@ export class SMTXActorSheet extends ActorSheet {
    */
   _prepareItems(context) {
     // Initialize containers.
-    const gear = [];
+    const armor = [];
+    const weapons = [];
     const features = [];
-    const spells = {
-      0: [],
-      1: [],
-      2: [],
-      3: [],
-      4: [],
-      5: [],
-      6: [],
-      7: [],
-      8: [],
-      9: [],
-    };
+    const passives = [];
+    const consumables = [];
 
     // Iterate through items, allocating to containers
     for (let i of context.items) {
       i.img = i.img || Item.DEFAULT_ICON;
-      // Append to gear.
-      if (i.type === 'item') {
-        gear.push(i);
+      if (i.type === 'armor') {
+        armor.push(i);
       }
-      // Append to features.
       else if (i.type === 'feature') {
         features.push(i);
       }
-      // Append to spells.
-      else if (i.type === 'spell') {
-        if (i.system.spellLevel != undefined) {
-          spells[i.system.spellLevel].push(i);
-        }
+      else if (i.type === 'weapon') {
+        weapons.push(i);
+      }
+      else if (i.type === 'consumable') {
+        consumables.push(i);
+      }
+      else if (i.type === 'passive') {
+        passives.push(i);
       }
     }
 
     // Assign and return
-    context.gear = gear;
+    context.armor = armor;
+    context.weapons = weapons;
     context.features = features;
-    context.spells = spells;
+    context.passives = passives;
+    context.consumables = consumables;
   }
 
   /* -------------------------------------------- */
@@ -184,6 +178,144 @@ export class SMTXActorSheet extends ActorSheet {
     // Rollable abilities.
     html.on('click', '.rollable', this._onRoll.bind(this));
 
+    html.on('click', '.pay-cost', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      const currentHP = this.actor.system.hp.value;
+      const currentMP = this.actor.system.mp.value;
+      const currentFate = this.actor.system.fate.value;
+
+      this.actor.update({
+        "system.hp.value": currentHP - Math.floor(Math.abs(item.system.hpCost)),
+        "system.mp.value": currentMP - Math.floor(Math.abs(item.system.mpCost)),
+        "system.fate.value": currentFate - Math.floor(Math.abs(item.system.fateCost))
+      });
+    });
+
+
+    html.on('click', '.clear-buffs', (ev) => {
+      this.actor.dekaja();
+    });
+
+    html.on('click', '.clear-debuffs', (ev) => {
+      this.actor.dekunda();
+    });
+
+    html.on('click', '.clear-buffs-and-debuffs', (ev) => {
+      this.actor.clearAllBuffs();
+    });
+
+
+    html.on('change', '.buff-field', (ev) => {
+      const input = ev.currentTarget;
+      const path = input.name; // e.g., "system.suku.buff[0]"
+      const value = parseInt(input.value) || 0;
+
+      // Extract the array path (e.g., "system.suku.buff") and index (e.g., 0)
+      const match = input.name.match(/^(.+)\[(\d+)\]$/);
+      if (!match) {
+        console.error("Invalid input name format:", input.name);
+        return;
+      }
+
+      const arrayPath = match[1]; // "system.suku.buff"
+      const index = parseInt(match[2], 10); // 0
+
+      // Get the current array
+      const currentArray = foundry.utils.getProperty(this.actor, arrayPath) || [];
+
+      // Modify the array
+      currentArray[index] = value;
+
+      console.log("Path exists:", foundry.utils.getProperty(this.actor, path));
+      this.actor.update({ [arrayPath]: currentArray });
+    });
+
+    /*    let updateTimeout;
+html.on('change', '.buff-input', (ev) => {
+  clearTimeout(updateTimeout);
+  updateTimeout = setTimeout(() => {
+    const input = ev.currentTarget;
+    const path = input.name;
+    const value = parseFloat(input.value) || 0;
+    this.actor.update({ [path]: value });
+  }, 200); // Adjust the timeout duration as needed
+});*/
+
+    html.on('click', '.armor-equip', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      item.update({ "system.equipped": !item.system.equipped })
+    });
+
+
+    html.on('click', '.weapon-equip-a', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      item.update({ "system.slotA": !item.system.slotA })
+      const weaponObj = {
+        "name": item.name,
+        "type": item.system.type,
+        "hit": item.system.hit,
+        "power": item.system.power
+      };
+
+      this.actor.update({ "system.wepA": weaponObj })
+    });
+
+    html.on('click', '.weapon-equip-b', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      item.update({ "system.slotB": !item.system.slotB })
+      const weaponObj = {
+        "name": item.name,
+        "type": item.system.type,
+        "hit": item.system.hit,
+        "power": item.system.power
+      };
+
+      this.actor.update({ "system.wepB": weaponObj })
+    });
+
+
+    html.on('click', '.weapon-rotate', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      item.rotateWeapon()
+    });
+
+
+    html.on('mousedown', '.roll-tn', async (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      if (!item) return;
+      if (ev.button === 2) {
+        ev.preventDefault();
+        await item.rollSplitD100();
+
+      } else if (ev.button === 0) {
+        await item.rollSplitD100(true);
+      }
+    });
+
+
+    html.on('mousedown', '.roll-power', async (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      if (!item) return;
+      if (ev.button === 2) {
+        ev.preventDefault();
+        await item.rollPower();
+
+      } else if (ev.button === 0) {
+        await item.rollPower(true);
+      }
+    });
+
     // Drag events for macros.
     if (this.actor.isOwner) {
       let handler = (ev) => this._onDragStart(ev);
@@ -206,7 +338,7 @@ export class SMTXActorSheet extends ActorSheet {
     // Get the type of item to create.
     const type = header.dataset.type;
     // Grab any data associated with this control.
-    const data = duplicate(header.dataset);
+    const data = foundry.utils.duplicate(header.dataset);
     // Initialize a default name.
     const name = `New ${type.capitalize()}`;
     // Prepare the item object.

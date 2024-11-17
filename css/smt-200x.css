@@ -1,13 +1,32 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+
 /* Global styles */
 .window-app {
   font-family: "Roboto", sans-serif;
 }
 
-.rollable:hover, .rollable:focus {
+.rollable:hover,
+.rollable:focus {
   color: #000;
   text-shadow: 0 0 10px red;
   cursor: pointer;
+}
+
+.clickable {
+  cursor: pointer;
+  /* Change cursor to pointer to indicate it's clickable */
+  /*transition: box-shadow 0.3s ease, transform 0.3s ease;*/
+  /* Smooth animation */
+}
+
+.clickable:hover {
+  text-shadow: 0 0 10px red;
+  font-weight: bold;
+  /*box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.8);*/
+  /*box-shadow: 0 0 6px 4px rgba(255, 0, 0, 0.7);*/
+  /* Add a glow effect */
+  /*transform: scale(1.05);*/
+  /* Slightly enlarge the element */
 }
 
 .grid,
@@ -207,6 +226,7 @@
 .smt-200x .item-form {
   font-family: "Roboto", sans-serif;
 }
+
 .smt-200x .sheet-header {
   flex: 0 auto;
   overflow: hidden;
@@ -216,42 +236,52 @@
   justify-content: flex-start;
   margin-bottom: 10px;
 }
+
 .smt-200x .sheet-header .profile-img {
   flex: 0 0 100px;
   height: 100px;
   margin-right: 10px;
 }
+
 .smt-200x .sheet-header .header-fields {
   flex: 1;
 }
+
 .smt-200x .sheet-header h1.charname {
   height: 50px;
   padding: 0px;
   margin: 5px 0;
   border-bottom: 0;
 }
+
 .smt-200x .sheet-header h1.charname input {
   width: 100%;
   height: 100%;
   margin: 0;
 }
+
 .smt-200x .sheet-tabs {
   flex: 0;
 }
+
 .smt-200x .sheet-body,
 .smt-200x .sheet-body .tab,
 .smt-200x .sheet-body .tab .editor {
   height: 100%;
 }
+
 .smt-200x .tox .tox-editor-container {
   background: #fff;
 }
+
 .smt-200x .tox .tox-edit-area {
   padding: 0 8px;
 }
+
 .smt-200x .resource-label {
   font-weight: bold;
 }
+
 .smt-200x .items-header {
   height: 28px;
   margin: 2px 0;
@@ -261,16 +291,19 @@
   border: 2px groove #eeede0;
   font-weight: bold;
 }
-.smt-200x .items-header > * {
+
+.smt-200x .items-header>* {
   font-size: 14px;
   text-align: center;
 }
+
 .smt-200x .items-header .item-name {
   font-weight: bold;
   padding-left: 5px;
   text-align: left;
   display: flex;
 }
+
 .smt-200x .items-list {
   list-style: none;
   margin: 0;
@@ -279,11 +312,13 @@
   scrollbar-width: thin;
   color: #444;
 }
+
 .smt-200x .items-list .item-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
+
 .smt-200x .items-list .item-name {
   flex: 2;
   margin: 0;
@@ -293,32 +328,40 @@
   align-items: center;
   display: flex;
 }
-.smt-200x .items-list .item-name h3, .smt-200x .items-list .item-name h4 {
+
+.smt-200x .items-list .item-name h3,
+.smt-200x .items-list .item-name h4 {
   margin: 0;
   white-space: nowrap;
   overflow-x: hidden;
 }
+
 .smt-200x .items-list .item-controls {
   display: flex;
-  flex: 0 0 100px;
+  flex: 0 0 50px;
   justify-content: flex-end;
 }
+
 .smt-200x .items-list .item-controls a {
   font-size: 12px;
   text-align: center;
-  margin: 0 6px;
+  margin: 0 3px;
 }
+
 .smt-200x .items-list .item {
   align-items: center;
   padding: 0 2px;
   border-bottom: 1px solid #c9c7b8;
 }
+
 .smt-200x .items-list .item:last-child {
   border-bottom: none;
 }
+
 .smt-200x .items-list .item .item-name {
   color: #191813;
 }
+
 .smt-200x .items-list .item .item-name .item-image {
   flex: 0 0 30px;
   height: 30px;
@@ -326,12 +369,14 @@
   border: none;
   margin-right: 5px;
 }
+
 .smt-200x .items-list .item-prop {
   text-align: center;
   border-left: 1px solid #c9c7b8;
   border-right: 1px solid #c9c7b8;
   font-size: 12px;
 }
+
 .smt-200x .items-list .items-header {
   height: 28px;
   margin: 2px 0;
@@ -341,18 +386,22 @@
   border: 2px groove #eeede0;
   font-weight: bold;
 }
-.smt-200x .items-list .items-header > * {
+
+.smt-200x .items-list .items-header>* {
   font-size: 12px;
   text-align: center;
 }
+
 .smt-200x .items-list .items-header .item-name {
   padding-left: 5px;
   text-align: left;
 }
+
 .smt-200x .item-formula {
   flex: 0 0 200px;
   padding: 0 8px;
 }
+
 .smt-200x .effects .item .effect-source,
 .smt-200x .effects .item .effect-duration,
 .smt-200x .effects .item .effect-controls {
@@ -361,6 +410,7 @@
   border-right: 1px solid #c9c7b8;
   font-size: 12px;
 }
+
 .smt-200x .effects .item .effect-controls {
   border: none;
 }
