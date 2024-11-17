@@ -23,7 +23,7 @@
   "version": "0.01",
   "compatibility": {
     "minimum": 11,
-    "verified": "11.315"
+    "verified": "12.331"
   },
   "esmodules": [
     "module/smt-200x.mjs"
@@ -41,8 +41,8 @@
   "packs": [],
   "packFolders": [],
   "socket": false,
-  "manifest": "Replace this with a link to the /latest release system.json so people can receive updates after they've installed the system",
-  "download": "This must link to a .zip file of the current version",
+  "manifest": "https://github.com/Alondaar/smt-200x/blob/main/system.json",
+  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/released.zip",
   "background": "systems/smt-200x/assets/anvil-impact.png",
   "gridDistance": 2,
   "gridUnits": "m",
