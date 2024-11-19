@@ -12,8 +12,8 @@ export class SMTXActorSheet extends ActorSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ['smt-200x', 'sheet', 'actor'],
-      width: 900,
-      height: 600,
+      width: 950,
+      height: 800,
       tabs: [
         {
           navSelector: '.sheet-tabs',
@@ -186,11 +186,18 @@ export class SMTXActorSheet extends ActorSheet {
       const currentMP = this.actor.system.mp.value;
       const currentFate = this.actor.system.fate.value;
 
-      this.actor.update({
-        "system.hp.value": currentHP - Math.floor(Math.abs(item.system.hpCost)),
-        "system.mp.value": currentMP - Math.floor(Math.abs(item.system.mpCost)),
-        "system.fate.value": currentFate - Math.floor(Math.abs(item.system.fateCost))
-      });
+      const hpCost = Math.floor(Math.abs(item.system.hpCost));
+      const mpCost = Math.floor(Math.abs(item.system.mpCost));
+      const fateCost = Math.floor(Math.abs(item.system.fateCost));
+
+      if (/*currentHP - hpCost >= 0 &&*/ currentMP - mpCost >= 0 && currentMP - fateCost >= 0)
+        this.actor.update({
+          "system.hp.value": currentHP - hpCost,
+          "system.mp.value": currentMP - mpCost,
+          "system.fate.value": currentFate - fateCost
+        });
+      else
+        ui.notifications.info(`You are unable to pay the cost for that skill.`);
     });
 
 
@@ -204,6 +211,25 @@ export class SMTXActorSheet extends ActorSheet {
 
     html.on('click', '.clear-buffs-and-debuffs', (ev) => {
       this.actor.clearAllBuffs();
+    });
+
+
+    // Handle pip clicks
+    html.on('click', '.pip', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      const pip = ev.currentTarget;
+      const row = pip.closest('.pip-row');
+      const index = parseInt(pip.dataset.index, 10); // Get pip index
+
+      // Update the item's uses.value to match the clicked pip
+      let newValue = index;
+
+      if (item.system.uses.value == 1 && index == 1)
+        newValue = 0 // If its the last pip, toggle off
+
+      item.update({ "system.uses.value": newValue });
     });
 
 
@@ -233,15 +259,15 @@ export class SMTXActorSheet extends ActorSheet {
     });
 
     /*    let updateTimeout;
-html.on('change', '.buff-input', (ev) => {
-  clearTimeout(updateTimeout);
-  updateTimeout = setTimeout(() => {
+    html.on('change', '.buff-input', (ev) => {
+    clearTimeout(updateTimeout);
+    updateTimeout = setTimeout(() => {
     const input = ev.currentTarget;
     const path = input.name;
     const value = parseFloat(input.value) || 0;
     this.actor.update({ [path]: value });
-  }, 200); // Adjust the timeout duration as needed
-});*/
+    }, 200); // Adjust the timeout duration as needed
+    });*/
 
     html.on('click', '.armor-equip', (ev) => {
       const li = $(ev.currentTarget).parents('.item');

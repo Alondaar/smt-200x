@@ -9,7 +9,6 @@
       use both the "grid" and "grid-Ncol" class where "N" can be any number
       from 1 to 12 and will create that number of columns. --}}
       <div class="resources grid grid-6col">
-
         {{!-- "flex-group-center" is also defined in the _grid.scss file
         and it will add a small amount of padding, a border, and will
         center all of its child elements content and text. --}}
@@ -48,7 +47,8 @@
         <div class="resource flex-group-center">
           <label for="system.attributes.exp" class="resource-label">EXP</label>
           <div class="resource-content flexrow flex-center flex-between">
-            <input type="text" name="system.attributes.exp" value="{{system.attributes.exp}}" data-dtype="Number" />
+            <input type="text" name="system.attributes.exp" value="{{system.attributes.totalexp}}" data-dtype="Number"
+              disabled />
           </div>
         </div>
 
@@ -62,86 +62,224 @@
 
       </div>
     </div>
+    <div class="grid grid-5col" style="flex-basis: 100%;">
+      <div class="abilities flexcol">
+        {{#each system.stats as |ability key|}}
+        <div class="ability flexrow flex-group-center">
+          <label for="system.stats.{{key}}.value" class="resource-label rollable align-left" data-roll="d100"
+            data-label="{{localize (lookup @root.config.statAbbreviations key)}}">{{localize
+            (lookup @root.config.statAbbreviations key)}}</label>
+          <input type="text" name="system.stats.{{key}}.value" value="{{ability.value}}" data-dtype="Number" />
+          <span class="ability-mod" data-label="{{localize (lookup @root.config.stats key)}}">{{ability.tn}}%</span>
+        </div>
+        {{/each}}
+      </div>
+
+      <div class="flexrow grid-span-2">
+        <div class="align-center" style="border: 2px groove #eeede0;">
+          <label for="system.meleePower.value" class="resource-label">Melee</label>
+          <div>
+            <h1>{{system.meleePower.value}}</h1>
+          </div>
+          <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
+              name="system.powerDice.melee" value="{{system.powerDice.melee}}" data-dtype="Number" />&nbsp;d10</div>
+        </div>
+
+        <div class="align-center" style="border: 2px groove #eeede0;">
+          <label for="system.rangedPower.value" class="resource-label">Ranged</label>
+          <div>
+            <h1>{{system.rangedPower.value}}</h1>
+          </div>
+          <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
+              name="system.powerDice.ranged" value="{{system.powerDice.ranged}}" data-dtype="Number" />&nbsp;d10</div>
+        </div>
+
+        <div class="align-center" style="border: 2px groove #eeede0;">
+          <label for="system.spellPower.value" class="resource-label">Spell</label>
+          <div>
+            <h1>{{system.spellPower.value}}</h1>
+          </div>
+          <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
+              name="system.powerDice.spell" value="{{system.powerDice.spell}}" data-dtype="Number" />&nbsp;d10</div>
+        </div>
+
+        <div class="align-center" style="border: 2px groove #eeede0;">
+          <label for="system.init" class="resource-label">Init</label>
+          <div>
+            <h1>{{system.init}}</h1>
+          </div>
+          <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
+              name="system.powerDice.init" value="{{system.powerDice.init}}" data-dtype="Number" />&nbsp;d10</div>
+        </div>
+
+
+        <div class="flexrow" style="flex-basis: 100%;">
+          <div class="align-center" style="border: 2px groove #eeede0;">
+            <label for="system.init" class="resource-label">Dodge TN</label>
+            <div>
+              <h1>{{system.dodgetn}}%</h1>
+            </div>
+          </div>
+
+          <div class="align-center" style="border: 2px groove #eeede0;">
+            <label for="system.init" class="resource-label">Talk TN</label>
+            <div>
+              <h1>{{system.talktn}}%</h1>
+            </div>
+          </div>
+
+          <div class="align-center" style="border: 2px groove #eeede0;">
+            <label for="system.init" class="resource-label">Phy Def</label>
+            <div>
+              <h1>{{system.phydef}}</h1>
+            </div>
+          </div>
+
+          <div class="align-center" style="border: 2px groove #eeede0;">
+            <label for="system.init" class="resource-label">Mag Def</label>
+            <div>
+              <h1>{{system.magdef}}</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flexcol grid-span-2">
+        <div class='flexrow' style="justify-content: center; align-items: center;">
+          <label for="x" class="resource-label flex0">Affinity&nbsp;</label>
+          <label for="x" class="resource-label align-right">Current BS:&nbsp;</label>
+          <select name="x">
+            {{selectOptions @root.config.badStatusList localize=true}}
+          </select>
+        </div>
+
+
+        <div class='flexrow'>
+          <input type="text" name="x" value="Null Expel" />
+        </div>
+
+
+        <div class='flexrow flex-group-center'>
+          <div class="flex2"><strong>Ready Weapon</strong></div>
+          <div><strong>Type</strong></div>
+          <div><strong>Hit Mod</strong></div>
+          <div><strong>Pwr Mod</strong></div>
+        </div>
+
+        <div class='flexrow flex-group-center'>
+          <div class='flexrow flex2 item-name' style="align-items: center">
+            <label for="system.wepA.name" class="flex0"><strong>A:</strong>&nbsp;</label>
+            <input type="text" name="system.wepA.name" value="{{system.wepA.name}}" />
+          </div>
+          <input type="text" name="system.wepA.type" value="{{system.wepA.type}}" />
+          <input type="text" name="system.wepA.hit" value="{{system.wepA.hit}}" data-dtype="Number" />
+          <input type="text" name="system.wepA.power" value="{{system.wepA.power}}" data-dtype="Number" />
+        </div>
+
+        <div class='flexrow flex-group-center'>
+          <div class='flexrow flex2 item-name' style="align-items: center">
+            <label for="system.wepB.name" class="flex0"><strong>B:</strong>&nbsp;</label>
+            <input type="text" name="system.wepB.name" value="{{system.wepB.name}}" />
+          </div>
+          <input type="text" name="system.wepB.type" value="{{system.wepB.type}}" />
+          <input type="text" name="system.wepB.hit" value="{{system.wepB.hit}}" data-dtype="Number" />
+          <input type="text" name="system.wepB.power" value="{{system.wepB.power}}" data-dtype="Number" />
+        </div>
+
+      </div>
+    </div>
   </header>
 
   {{!-- Sheet Tab Navigation --}}
   <nav class="sheet-tabs tabs" data-group="primary">
     {{!-- Default tab is specified in actor-sheet.mjs --}}
     <a class="item" data-tab="features">Features</a>
+    <a class="item" data-tab="items">Items</a>
     <a class="item" data-tab="description">Description</a>
-    <a class="item" data-tab="effects">Effects</a>
-    <a class="item" data-tab="aux">Aux</a>
+    <a class="item" data-tab="effects">Options</a>
   </nav>
 
   {{!-- Sheet Body --}}
   <section class="sheet-body">
-
     {{!-- Owned Features Tab --}}
     <div class="tab features" data-group="primary" data-tab="features">
-      <section class="grid grid-5col">
-        <aside class="sidebar">
-          {{!-- The grid classes are defined in scss/global/_grid.scss. To use,
-          use both the "grid" and "grid-Ncol" class where "N" can be any number
-          from 1 to 12 and will create that number of columns. --}}
-          <div class="abilities flexcol">
-            {{#each system.stats as |ability key|}}
-            <div class="ability flexrow flex-group-center">
-              <label for="system.stats.{{key}}.value" class="resource-label rollable flexlarge align-left"
-                data-roll="d100" data-label="{{localize (lookup @root.config.stats key)}}">{{localize
-                (lookup @root.config.stats key)}}</label>
-              <input type="text" name="system.stats.{{key}}.value" value="{{ability.value}}" data-dtype="Number" />
-              <span class="ability-mod" data-label="{{localize (lookup @root.config.stats key)}}">{{ability.tn}}%</span>
-            </div>
-            {{/each}}
+      <section class="main">
+        {{> "systems/smt-200x/templates/actor/parts/actor-features.hbs"}}
+      </section>
+
+
+      <section class="main">
+        {{> "systems/smt-200x/templates/actor/parts/actor-passives.hbs"}}
+      </section>
+    </div>
+
+    {{!-- Items Tab --}}
+    <div class="tab items" data-group="primary" data-tab="items">
+      <section class="main">
+        {{> "systems/smt-200x/templates/actor/parts/actor-armor.hbs"}}
+      </section>
+
+      <section class="grid grid-2col">
+        <div>
+          {{> "systems/smt-200x/templates/actor/parts/actor-weapons.hbs"}}
+        </div>
+      </section>
+    </div>
+
+
+    {{!-- Biography Tab --}}
+    <div class="tab biography" data-group="primary" data-tab="description">
+      <div class="flexrow">
+        <div class="flex2">
+          <div class="grid grid-12col">
+            <label for="x" class="resource-label">Sex</label>
+            <input type="text" name="x" class="grid-span-3" value="" />
+            <label for="x" class="resource-label">Age</label>
+            <input type="text" name="x" class="grid-span-3" value="" />
+            <label for="x" class="resource-label">Race</label>
+            <input type="text" name="x" class="grid-span-3" value="" />
           </div>
-        </aside>
-        <div class="flexcol">
-          <div class="flexrow flex-group-center">
-            <div class="flexrow flex-group-center" style="border: 2px groove #eeede0;"><label
-                for="system.meleePower.value" class="resource-label flexlarge align-left">Melee</label>
-              {{system.meleePower.value}} + <input type="text" class="flex0" name="system.powerDice.melee"
-                value="{{system.powerDice.melee}}" data-dtype="Number" />d10x</div>
+          <div class="grid grid-4col flex-group-center">
+            <label for="x" class="resource-label align-left">Awakening Tier</label>
+            <label for="x" class="resource-label">I Gifted</label>
+            <label for="x" class="resource-label">II Awakened</label>
+            <label for="x" class="resource-label">III Metahuman</label>
           </div>
-          <div class="flexrow flex-group-center">
-            <div class="flexrow flex-group-center" style="border: 2px groove #eeede0;"><label
-                for="system.rangedPower.value" class="resource-label flexlarge align-left">Ranged</label>
-              {{system.rangedPower.value}} + <input type="text" class="flex0" name="system.powerDice.ranged"
-                value="{{system.powerDice.ranged}}" data-dtype="Number" />d10x</div>
+          <div class="grid grid-4col">
+            <label for="x" class="resource-label">Classes</label>
+            <input type="text" name="x" value="" />
+            <input type="text" name="x" value="" />
+            <input type="text" name="x" value="" />
           </div>
-          <div class="flexrow flex-group-center">
-            <div class="flexrow flex-group-center" style="border: 2px groove #eeede0;"><label
-                for="system.spellPower.value" class="resource-label flexlarge align-left">Spell</label>
-              {{system.spellPower.value}} + <input type="text" class="flex0" name="system.powerDice.spell"
-                value="{{system.powerDice.spell}}" data-dtype="Number" />d10x</div>
+          <div class="grid grid-4col">
+            <label for="x" class="resource-label">Experience</label>
+            <input type="text" name="system.attributes.exp.tierOne" value="{{system.attributes.exp.tierOne}}"
+              data-dtype="Number" />
+            <input type="text" name="system.attributes.exp.tierTwo" value="{{system.attributes.exp.tierTwo}}"
+              data-dtype="Number" />
+            <input type="text" name="system.attributes.exp.tierThree" value="{{system.attributes.exp.tierThree}}"
+              data-dtype="Number" />
           </div>
-          <div class="flexrow flex-group-center">
-            <div style="border: 2px groove #eeede0;"><label for="system.dodgetn" class="resource-label align-left">Dodge
-                TN</label>
-              &nbsp;{{system.dodgetn}}%</div>
+          <div class="grid grid-4col">
+            <label for="x" class="resource-label">Backgrounds</label>
+            <input type="text" name="x" class="grid-span-3" value="" />
           </div>
-          <div class="flexrow flex-group-center">
-            <div style="border: 2px groove #eeede0;"><label for="system.talktn" class="resource-label align-left">Talk
-                TN</label>
-              &nbsp;{{system.talktn}}%</div>
+          <div class="grid grid-4col">
+            <label for="x" class="resource-label">Contacts</label>
+            <input type="text" name="x" class="grid-span-3" value="" />
           </div>
         </div>
-        <div class="flexcol">
-          <div class="flexrow flex-group-center">
-            <div style="border: 2px groove #eeede0;"><label for="system.phydef"
-                class="resource-label flexlarge align-left">Phy Def</label>
-              &nbsp;{{system.phydef}}</div>
-            <div style="border: 2px groove #eeede0;"><label for="system.magdef"
-                class="resource-label flexlarge align-left">Mag Def</label>
-              &nbsp;{{system.magdef}}
-            </div>
-          </div>
-          <div class="flexrow flex-group-center">
-            <div class="flexrow flex-group-center" style="border: 2px groove #eeede0;"><label for="system.init"
-                class="resource-label flexlarge align-left">INIT</label>
-              {{system.init}} + <input type="text" class="flex0" name="system.powerDice.init"
-                value="{{system.powerDice.init}}" data-dtype="Number" />d10x</div>
-          </div>
-        </div>
+        <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="height: 220px" />
+      </div>
+      <hr>
+      {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
+      {{editor enrichedBiography target="system.biography" engine="prosemirror" button=true editable=editable}}
+    </div>
+
+
+    {{!-- Active Effects Tab --}}
+    <div class="tab effects flexcol" data-group="primary" data-tab="effects">
+      {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
+      <section class="main">
         <div class="flexcol grid-span-2">
           <div class="flexrow flex-group-center">
             <span class="clear-buffs clickable">Dekaja</span>
@@ -198,69 +336,8 @@
             {{/each}}
           </div>
         </div>
+
       </section>
-
-
-      <section class="main">
-        {{> "systems/smt-200x/templates/actor/parts/actor-features.hbs"}}
-      </section>
-
-
-      <section class="main">
-        {{> "systems/smt-200x/templates/actor/parts/actor-passives.hbs"}}
-      </section>
-
-
-      <section class="main">
-        {{> "systems/smt-200x/templates/actor/parts/actor-armor.hbs"}}
-      </section>
-
-      <section class="grid grid-2col">
-        <div>
-          <div class='flexrow flex-group-center'>
-            <div class="flex2"><strong>Ready Weapon</strong></div>
-            <div><strong>Type</strong></div>
-            <div><strong>Hit Mod</strong></div>
-            <div><strong>Power Mod</strong></div>
-          </div>
-          <div class='flexrow flex-group-center'>
-            <div class='flexrow flex2 item-name' style="align-items: center">
-              <label for="system.wepA.name" class="flex0"><strong>A:</strong>&nbsp;</label>
-              <input type="text" name="system.wepA.name" value="{{system.wepA.name}}" />
-            </div>
-            <input type="text" name="system.wepA.type" value="{{system.wepA.type}}" />
-            <input type="text" name="system.wepA.hit" value="{{system.wepA.hit}}" data-dtype="Number" />
-            <input type="text" name="system.wepA.power" value="{{system.wepA.power}}" data-dtype="Number" />
-          </div>
-
-          <div class='flexrow flex-group-center'>
-            <div class='flexrow flex2 item-name' style="align-items: center">
-              <label for="system.wepB.name" class="flex0"><strong>B:</strong>&nbsp;</label>
-              <input type="text" name="system.wepB.name" value="{{system.wepB.name}}" />
-            </div>
-            <input type="text" name="system.wepB.type" value="{{system.wepB.type}}" />
-            <input type="text" name="system.wepB.hit" value="{{system.wepB.hit}}" data-dtype="Number" />
-            <input type="text" name="system.wepB.power" value="{{system.wepB.power}}" data-dtype="Number" />
-          </div>
-          <br>
-          {{> "systems/smt-200x/templates/actor/parts/actor-weapons.hbs"}}
-        </div>
-      </section>
-    </div>
-
-    {{!-- Biography Tab --}}
-    <div class="tab biography" data-group="primary" data-tab="description">
-      {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
-      {{editor enrichedBiography target="system.biography" engine="prosemirror" button=true editable=editable}}
-    </div>
-
-    {{!-- Active Effects Tab --}}
-    <div class="tab effects flexcol" data-group="primary" data-tab="effects">
-      {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
-    </div>
-
-    {{!-- Active Effects Tab --}}
-    <div class="tab aux flexcol" data-group="primary" data-tab="aux">
       <section class="main">
         <div class="flexrow">
           {{#each system.affinity as |aff key|}}
@@ -286,6 +363,5 @@
         </div>
       </section>
     </div>
-
   </section>
 </form>

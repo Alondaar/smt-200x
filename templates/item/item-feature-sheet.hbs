@@ -24,94 +24,172 @@
 
     {{!-- Attributes Tab --}}
     <div class="tab attributes" data-group="primary" data-tab="attributes">
-      <label for="system.type" class="resource-label">Type</label>
-      <input type="text" name="system.type" value="{{system.type}}" />
-      <br><br>
-      <label for="system.cost" class="resource-label">Cost (display)</label>
-      <input type="text" name="system.cost" value="{{system.cost}}" />
-      <br><br>
-      <label for="system.target" class="resource-label">Target</label>
-      <input type="text" name="system.target" value="{{system.target}}" />
-      <br><br>
-      <label for="system.wep" class="resource-label">Weapon</label>
-      <select name="system.wep">
-        {{selectOptions @root.config.weaponChoices selected=system.wep localize=true}}
-      </select>
-      <br><br>
-      <label for="system.wepIgnoreTN" class="resource-label">Don't apply weapon to TN</label>
-      <input type="checkbox" name="system.wepIgnoreTN" {{#if system.wepIgnoreTN}}checked{{/if}} />
-      <br><br>
-      <label for="system.wepIgnorePower" class="resource-label">Don't apply weapon to Power</label>
-      <input type="checkbox" name="system.wepIgnorePower" {{#if system.wepIgnorePower}}checked{{/if}} />
-      <br><br>
-      <label for="system.tn" class="resource-label">TN</label>
-      <input type="text" name="system.tn" value="{{system.tn}}" />
-      <br><br>
-      <label for="system.power" class="resource-label">Power</label>
-      <input type="text" name="system.power" value="{{system.power}}" />
-      <br><br>
-      <label for="system.affinity" class="resource-label">Affinity</label>
-      <select name="system.affinity">
-        {{selectOptions @root.config.affinities selected=system.affinity localize=true}}
-      </select>
-      <br><br>
+      <div class="grid grid-6col">
+        <div class="flexcol">
+          <label for="system.type" class="resource-label">Type</label>
+          <input type="text" name="system.type" value="{{system.type}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.cost" class="resource-label">Cost</label>
+          <input type="text" name="system.cost" value="{{system.cost}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.target" class="resource-label">Target</label>
+          <input type="text" name="system.target" value="{{system.target}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.tn" class="resource-label">TN</label>
+          <input type="text" name="system.tn" value="{{system.tn}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.power" class="resource-label">Power</label>
+          <input type="text" name="system.power" value="{{system.power}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.affinity" class="resource-label">Affinity</label>
+          <select name="system.affinity">
+            {{selectOptions @root.config.affinities selected=system.affinity localize=true}}
+          </select>
+        </div>
+      </div>
+
+
       <label for="system.shortEffect" class="resource-label">Short Effect</label>
       <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
-      <br><br>
-      <label for="system.ingoreDefense" class="resource-label">Ignores Defense</label>
-      <input type="checkbox" name="system.ingoreDefense" {{#if system.ingoreDefense}}checked{{/if}} />
-      <br><br>
-      <label for="system.pierce" class="resource-label">Pierce</label>
-      <input type="checkbox" name="system.pierce" {{#if system.pierce}}checked{{/if}} />
-      <br><br>
-      <label for="system.critMult" class="resource-label">critMult</label>
-      <input type="text" name="system.critMult" value="{{system.critMult}}" />
-      <br><br>
-      <label for="system.critRange" class="resource-label">critRange</label>
-      <input type="text" name="system.critRange" value="{{system.critRange}}" />
-      <br><br>
-      <label for="system.extraDice" class="resource-label">Extra d10s</label>
-      <input type="text" name="system.extraDice" value="{{system.extraDice}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.hpCost" class="resource-label">HP Cost</label>
-      <input type="text" name="system.hpCost" value="{{system.hpCost}}" />
-      <br><br>
-      <label for="system.mpCost" class="resource-label">MP Cost</label>
-      <input type="text" name="system.mpCost" value="{{system.mpCost}}" />
-      <br><br>
-      <label for="system.fateCost" class="resource-label">Fate Cost</label>
-      <input type="text" name="system.fateCost" value="{{system.fateCost}}" />
-      <br><br>
-      <label for="system.hideCritDamage" class="resource-label">Hide Critical Damage</label>
-      <input type="checkbox" name="system.hideCritDamage" {{#if system.hideCritDamage}}checked{{/if}} />
-      <br><br>
-      <label for="system.affectsMP" class="resource-label">Affects MP</label>
-      <input type="checkbox" name="system.affectsMP" {{#if system.affectsMP}}checked{{/if}} />
-      <br><br>
-      <label for="system.buffs.sukukaja" class="resource-label">Sukukaja Effect</label>
-      <input type="checkbox" name="system.buffs.sukukaja" {{#if system.buffs.sukukaja}}checked{{/if}} />
-      <br><br>
-      <label for="system.buffs.sukunda" class="resource-label">Sukunda Effect</label>
-      <input type="checkbox" name="system.buffs.sukunda" {{#if system.buffs.sukunda}}checked{{/if}} />
-      <br><br>
-      <label for="system.buffs.tarukaja" class="resource-label">Tarukaja Effect</label>
-      <input type="checkbox" name="system.buffs.tarukaja" {{#if system.buffs.tarukaja}}checked{{/if}} />
-      <br><br>
-      <label for="system.buffs.tarunda" class="resource-label">Tarunda Effect</label>
-      <input type="checkbox" name="system.buffs.tarunda" {{#if system.buffs.tarunda}}checked{{/if}} />
-      <br><br>
-      <label for="system.buffs.rakukaja" class="resource-label">Rakukaja Effect</label>
-      <input type="checkbox" name="system.buffs.rakukaja" {{#if system.buffs.rakukaja}}checked{{/if}} />
-      <br><br>
-      <label for="system.buffs.rakunda" class="resource-label">Rakunda Effect</label>
-      <input type="checkbox" name="system.buffs.rakunda" {{#if system.buffs.rakunda}}checked{{/if}} />
-      <br><br>
-      <label for="system.buffs.makakaja" class="resource-label">Makakaja Effect</label>
-      <input type="checkbox" name="system.buffs.makakaja" {{#if system.buffs.makakaja}}checked{{/if}} />
-      <br><br>
-      <label for="system.buffs.makunda" class="resource-label">Makunda Effect</label>
-      <input type="checkbox" name="system.buffs.makunda" {{#if system.buffs.makunda}}checked{{/if}} />
-      <br><br>
+
+      <hr>
+
+      <div class="grid grid-3col">
+        <div class="flexcol">
+          <label for="system.hpCost" class="resource-label">HP Cost</label>
+          <input type="text" name="system.hpCost" value="{{system.hpCost}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.mpCost" class="resource-label">MP Cost</label>
+          <input type="text" name="system.mpCost" value="{{system.mpCost}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.fateCost" class="resource-label">Fate Cost</label>
+          <input type="text" name="system.fateCost" value="{{system.fateCost}}" />
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="grid grid-3col">
+        <div class="flexcol">
+          <label for="system.wep" class="resource-label">Weapon</label>
+          <select name="system.wep">
+            {{selectOptions @root.config.weaponChoices selected=system.wep localize=true}}
+          </select>
+        </div>
+
+        <div class="flexcol">
+          <label for="system.wepIgnoreTN" class="resource-label">No Weapon TN</label>
+          <input type="checkbox" name="system.wepIgnoreTN" {{#if system.wepIgnoreTN}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.wepIgnorePower" class="resource-label">No Weapon Power</label>
+          <input type="checkbox" name="system.wepIgnorePower" {{#if system.wepIgnorePower}}checked{{/if}} />
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="grid grid-4col">
+        <div class="flexcol">
+          <label for="system.ingoreDefense" class="resource-label">Ignores Defense</label>
+          <input type="checkbox" name="system.ingoreDefense" {{#if system.ingoreDefense}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.pierce" class="resource-label">Pierce</label>
+          <input type="checkbox" name="system.pierce" {{#if system.pierce}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.critMult" class="resource-label">critMult</label>
+          <input type="text" name="system.critMult" value="{{system.critMult}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.critRange" class="resource-label">critRange</label>
+          <input type="text" name="system.critRange" value="{{system.critRange}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.hideCritDamage" class="resource-label">Hide Critical Damage</label>
+          <input type="checkbox" name="system.hideCritDamage" {{#if system.hideCritDamage}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.affectsMP" class="resource-label">Affects MP</label>
+          <input type="checkbox" name="system.affectsMP" {{#if system.affectsMP}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.uses.value" class="resource-label">Uses</label>
+          <input type="text" name="system.uses.value" value="{{system.uses.value}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.uses.max" class="resource-label">Max Uses</label>
+          <input type="text" name="system.uses.max" value="{{system.uses.max}}" />
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="grid grid-4col">
+        <div class="flexcol">
+          <label for="system.buffs.sukukaja" class="resource-label">Sukukaja Effect</label>
+          <input type="checkbox" name="system.buffs.sukukaja" {{#if system.buffs.sukukaja}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.sukunda" class="resource-label">Sukunda Effect</label>
+          <input type="checkbox" name="system.buffs.sukunda" {{#if system.buffs.sukunda}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.tarukaja" class="resource-label">Tarukaja Effect</label>
+          <input type="checkbox" name="system.buffs.tarukaja" {{#if system.buffs.tarukaja}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.tarunda" class="resource-label">Tarunda Effect</label>
+          <input type="checkbox" name="system.buffs.tarunda" {{#if system.buffs.tarunda}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.rakukaja" class="resource-label">Rakukaja Effect</label>
+          <input type="checkbox" name="system.buffs.rakukaja" {{#if system.buffs.rakukaja}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.rakunda" class="resource-label">Rakunda Effect</label>
+          <input type="checkbox" name="system.buffs.rakunda" {{#if system.buffs.rakunda}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.makakaja" class="resource-label">Makakaja Effect</label>
+          <input type="checkbox" name="system.buffs.makakaja" {{#if system.buffs.makakaja}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.makunda" class="resource-label">Makunda Effect</label>
+          <input type="checkbox" name="system.buffs.makunda" {{#if system.buffs.makunda}}checked{{/if}} />
+        </div>
+      </div>
+
       <label for="system.subBuffRoll" class="resource-label">Sub Buff Roll</label>
       <input type="text" name="system.subBuffRoll" value="{{system.subBuffRoll}}" />
 

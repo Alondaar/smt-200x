@@ -67,6 +67,18 @@ Handlebars.registerHelper('toLowerCase', function (str) {
   return str.toLowerCase();
 });
 
+Handlebars.registerHelper('range', function (start, end, options) {
+  let result = '';
+
+  for (let i = start; i <= end; i++) {
+    result += `
+  <div class="pip${i <= options ? " filled" : ""}" data-index="${i}"></div>
+  `;
+  }
+
+  return new Handlebars.SafeString(result);
+});
+
 /* -------------------------------------------- */
 /*  Ready Hook                                  */
 /* -------------------------------------------- */

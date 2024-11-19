@@ -69,7 +69,7 @@
       "repel": "Repel"
     },
     "AffinityBS": {
-      "DEAD": "Insta-kill",
+      "DEAD": "DEAD",
       "STONE": "STONE",
       "FLY": "FLY",
       "PARALYZE": "PARALYZE",
@@ -81,7 +81,8 @@
       "SLEEP": "SLEEP",
       "PANIC": "PANIC",
       "SHOCK": "SHOCK",
-      "HAPPY": "HAPPY"
+      "HAPPY": "HAPPY",
+      "NONE": "NONE"
     }
   },
   "TYPES": {

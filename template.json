@@ -27,7 +27,11 @@
         },
         "attributes": {
           "level": 0,
-          "exp": 0
+          "exp": {
+            "tierOne": 0,
+            "tierTwo": 0,
+            "tierThree": 0
+          }
         },
         "stats": {
           "st": {
@@ -284,7 +288,11 @@
         "makakaja": false,
         "makunda": false
       },
-      "subBuffRoll": ""
+      "subBuffRoll": "",
+      "uses": {
+        "value": 0,
+        "max": 0
+      }
     },
     "passive": {
       "templates": [

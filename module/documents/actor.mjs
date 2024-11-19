@@ -21,8 +21,19 @@ export class SMTXActor extends Actor {
     const actorData = this;
     const systemData = actorData.system;
 
-    const levelMultiplier = 1.0;
-    systemData.attributes.level = Math.floor(Math.pow((systemData.attributes.exp + 1) / levelMultiplier, 1 / 3));
+    let levelMultiplier = 0.8;
+    if (systemData.attributes.exp.tierTwo > 0)
+      levelMultiplier = 1.0;
+    if (systemData.attributes.exp.tierThree > 0)
+      levelMultiplier = 1.3;
+
+    systemData.attributes.totalexp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree
+
+    const levelsFromTierOne = Math.floor(Math.pow((systemData.attributes.exp.tierOne) / 0.8, 1 / 3));
+    const levelsFromTierTwo = Math.floor(Math.pow((systemData.attributes.exp.tierTwo) / 1.0, 1 / 3));
+    const levelsFromTierThree = Math.floor(Math.pow((systemData.attributes.exp.tierThree) / 1.3, 1 / 3));
+
+    systemData.attributes.level = Math.max(levelsFromTierOne + levelsFromTierTwo + levelsFromTierThree, 1);
     systemData.attributes.expnext = Math.floor(Math.pow(systemData.attributes.level + 1, 3) * levelMultiplier);
 
     // Collect buff / debuff stacks

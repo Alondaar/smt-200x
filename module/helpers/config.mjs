@@ -65,5 +65,6 @@ SMT_X.badStatusList = {
   SLEEP: "SMT_X.AffinityBS.SLEEP",
   PANIC: "SMT_X.AffinityBS.PANIC",
   SHOCK: "SMT_X.AffinityBS.SHOCK",
-  HAPPY: "SMT_X.AffinityBS.HAPPY"
+  HAPPY: "SMT_X.AffinityBS.HAPPY",
+  NONE: "SMT_X.AffinityBS.NONE"
 }

@@ -367,11 +367,14 @@
   height: 30px;
   background-size: 30px;
   border: none;
-  margin-right: 5px;
+  /*margin-right: 5px;*/
 }
 
 .smt-200x .items-list .item-prop {
+  display: flex;
   text-align: center;
+  align-items: center;
+  justify-content: center;
   border-left: 1px solid #c9c7b8;
   border-right: 1px solid #c9c7b8;
   font-size: 12px;
@@ -413,4 +416,44 @@
 
 .smt-200x .effects .item .effect-controls {
   border: none;
+}
+
+
+
+
+
+
+
+
+
+
+.pip-row {
+  display: flex;
+  gap: 4px;
+  min-height: 20px;
+  margin-right: 6px;
+}
+
+.pip {
+  width: 13px;
+  /* Set square size */
+  height: 13px;
+  border: 2px solid #333;
+  /* Black border for unfilled pips */
+  background-color: transparent;
+  border-radius: 25%;
+  /* Unfilled pips are transparent */
+  display: inline-block;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  /* Smooth fill transition */
+}
+
+.pip.filled {
+  background-color: #333;
+  /* Filled pips have black background */
+}
+
+.pip:hover {
+  color: orange;
 }
