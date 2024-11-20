@@ -54,23 +54,18 @@ export class SMTXItem extends Item {
         break;
     }
 
+    const test = new Roll(systemData.power.replace(/\b\d*d10[x]?/g, "0"), rollData);
+    console.log(test);
+    test.evaluateSync();
 
+    // Figure out how to factor in systemData.powerBoost (multiplier) Before Weapon? After?
+    // Should probably just split the power field & power dice!!
+    systemData.calcPower = test.total + weaponPower;
 
-    function evaluateMathEquation(equation) {
-      try {
-        return new Function(`return ${equation};`)();
-      } catch (error) {
-        console.error("Invalid equation:", error);
-        return 0;
-      }
-    }
+    const preCalcTN = new Roll(systemData.tn, rollData)
+    preCalcTN.evaluateSync()
 
-    const test = new Roll(systemData.power, rollData);
-    const testFormula = test.formula.replace(/\b\d*d10[x]?/g, "0")
-    const testResult = evaluateMathEquation(testFormula);
-    systemData.calcPower = testResult + weaponPower;
-
-    const calcTN = evaluateMathEquation(new Roll(systemData.power, rollData).formula.replace(/\b\d*d10[x]?/g, "0"));
+    const calcTN = preCalcTN.total;
     systemData.calcTN = calcTN + weaponTN;
 
     systemData.formula = systemData.power + " + " + weaponPower;
@@ -232,9 +227,9 @@ export class SMTXItem extends Item {
           result = "Critical"; // Natural 1 is always a critical
         } else if (roll.total === 100) {
           result = "Fumble"; // Natural 100 is always a fumble
-        } else if (roll.total >= 96 && roll.total <= 99) {
-          result = "Automatic Failure"; // Rolls 96-99 are automatic failures
-        } else if (roll.total <= tn * critRate) {
+        } else if (roll.total >= (this.actor.isCursed ? 86 : 96) && roll.total <= 99) {
+          result = "Automatic Failure"; // Rolls 96+ (Cursed 86+) are automatic failures
+        } else if (roll.total <= (tn * critRate) + systemData.flatCritChance) {
           result = "Critical"; // Within the crit rate range
         } else if (roll.total <= tn) {
           result = "Success"; // Successful roll
@@ -369,6 +364,8 @@ export class SMTXItem extends Item {
     const regularRoll = new Roll(systemData.formula, rollData);
     await regularRoll.evaluate();
 
+    console.log(regularRoll);
+
     // Roll for sub-formula
     const hasBuffSubRoll = systemData.subBuffRoll !== "" ? true : false;
     const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData);
@@ -406,7 +403,7 @@ export class SMTXItem extends Item {
       .join(", "); // Join the values into a string
 
     // Calculate critical damage
-    const critDamage = regularRoll.total * overrides.critMult;
+    const critDamage = (regularRoll.total * overrides.critMult) + flatCritDamage;
 
     // Determine button visibility based on affinity
     const hideDamage = (hasBuffs && hasBuffSubRoll);

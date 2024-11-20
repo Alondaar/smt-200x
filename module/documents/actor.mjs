@@ -14,9 +14,7 @@ export class SMTXActor extends Actor {
 
   /** @override */
   prepareBaseData() {
-    // Data modifications in this step occur before processing embedded
-    // documents or derived data.
-
+    // Data modifications in this step occur before processing embedded documents or derived data.
     // Make modifications to data here. For example:
     const actorData = this;
     const systemData = actorData.system;
@@ -45,11 +43,16 @@ export class SMTXActor extends Actor {
     // Calculate defense based on armor and if one is a demon
     // Humans = VT, Demons = VT+L
     // TC = AVERAGE(VT,L) for all characters
-    systemData.phydef = systemData.stats.vt.value + sumRaku;
-    systemData.magdef = systemData.stats.vt.value + sumRaku;
+
+    systemData.phydef = this.parseFormula(systemData.phydefFormula) + sumRaku;
+    systemData.magdef = this.parseFormula(systemData.magdefFormula) + sumRaku;
 
     // INITIATIVE
-    systemData.init = Math.floor((systemData.attributes.level + systemData.stats.ag.value) / 2);
+    // Math.floor((systemData.attributes.level + systemData.stats.ag.value) / 2);
+
+    console.log(systemData.initFormula)
+    console.log(this.parseFormula(systemData.initFormula))
+    systemData.init = this.parseFormula(systemData.initFormula);
 
     // Calculate powers
     systemData.meleePower = { "value": 0, "roll": "1d10x" }
@@ -100,6 +103,27 @@ export class SMTXActor extends Actor {
     // things organized.
     this._prepareCharacterData(actorData);
     this._prepareNpcData(actorData);
+
+    /*// This actually works but will be annoying to expand??
+    let defense = 0;
+
+    // Evaluate Active Effects with formulas
+    this.appliedEffects.forEach(effect => {
+      effect.changes.forEach(change => {
+        if (change.key === "system.phydef") {
+          const formula = change.value; // e.g., "@stats.vt.value"
+          defense += this.parseFormula(formula, this);
+        }
+      });
+    });
+
+    systemData.phydef += parseInt(defense);*/
+
+
+
+    systemData.meleePower.roll = systemData.powerDice.melee + "d10x + " + systemData.meleePower.value;
+    systemData.spellPower.roll = systemData.powerDice.spell + "d10x + " + systemData.spellPower.value;
+    systemData.rangedPower.roll = systemData.powerDice.ranged + "d10x + " + systemData.rangedPower.value;
   }
 
   /**
@@ -130,10 +154,6 @@ export class SMTXActor extends Actor {
     this.system.magdef += magicalDefense;
     this.system.meleePower.value += meleePower;
     this.system.init += initiative;
-
-    systemData.meleePower.roll = systemData.powerDice.melee + "d10x + " + systemData.meleePower.value;
-    systemData.spellPower.roll = systemData.powerDice.spell + "d10x + " + systemData.spellPower.value;
-    systemData.rangedPower.roll = systemData.powerDice.ranged + "d10x + " + systemData.rangedPower.value;
   }
 
   /**
@@ -141,6 +161,18 @@ export class SMTXActor extends Actor {
    */
   _prepareNpcData(actorData) {
     if (actorData.type !== 'npc') return;
+  }
+
+  parseFormula(formula) {
+    // Evaluate the mathematical expression
+    try {
+      // Use Function with an explicit Math object
+      const result = new Roll(formula, this).evaluateSync().total;
+      return result;
+    } catch (error) {
+      console.error("Error evaluating formula:", formula, error);
+      return null;
+    }
   }
 
   /**
