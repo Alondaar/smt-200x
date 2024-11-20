@@ -40,21 +40,14 @@ export class SMTXActor extends Actor {
     const sumSuku = systemData.suku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.suku.debuff.reduce((total, num) => total + num, 0));
     const sumMaka = systemData.maka.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.maka.debuff.reduce((total, num) => total + num, 0));
 
-    // Calculate defense based on armor and if one is a demon
-    // Humans = VT, Demons = VT+L
-    // TC = AVERAGE(VT,L) for all characters
-
+    // DEFENSES
     systemData.phydef = this.parseFormula(systemData.phydefFormula) + sumRaku;
     systemData.magdef = this.parseFormula(systemData.magdefFormula) + sumRaku;
 
     // INITIATIVE
-    // Math.floor((systemData.attributes.level + systemData.stats.ag.value) / 2);
-
-    console.log(systemData.initFormula)
-    console.log(this.parseFormula(systemData.initFormula))
     systemData.init = this.parseFormula(systemData.initFormula);
 
-    // Calculate powers
+    // POWERS
     systemData.meleePower = { "value": 0, "roll": "1d10x" }
     systemData.meleePower.value = systemData.stats.st.value + systemData.attributes.level + sumTaru;
 

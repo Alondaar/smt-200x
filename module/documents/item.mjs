@@ -55,7 +55,6 @@ export class SMTXItem extends Item {
     }
 
     const test = new Roll(systemData.power.replace(/\b\d*d10[x]?/g, "0"), rollData);
-    console.log(test);
     test.evaluateSync();
 
     // Figure out how to factor in systemData.powerBoost (multiplier) Before Weapon? After?
@@ -184,7 +183,6 @@ export class SMTXItem extends Item {
             roll: {
               label: "Roll",
               callback: (html) => {
-                console.log("yoooo")
                 const dia_modifier = parseInt(html.find('input[name="modifier"]').val(), 10) || 0;
                 const dia_split = parseInt(html.find('select[name="split"]').val(), 10) || 1;
                 resolve({ dia_modifier, dia_split });
@@ -363,8 +361,6 @@ export class SMTXItem extends Item {
     // Roll for regular damage
     const regularRoll = new Roll(systemData.formula, rollData);
     await regularRoll.evaluate();
-
-    console.log(regularRoll);
 
     // Roll for sub-formula
     const hasBuffSubRoll = systemData.subBuffRoll !== "" ? true : false;
