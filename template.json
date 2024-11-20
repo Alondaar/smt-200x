@@ -7,7 +7,6 @@
     "templates": {
       "base": {
         "biography": "",
-        "isHuman": false,
         "hp": {
           "value": 10,
           "min": 0,
@@ -168,7 +167,8 @@
         "badStatus": "",
         "aux": {
           "useTCDef": false,
-          "useTCInit": false
+          "useTCInit": false,
+          "showTCheaders": false
         }
       }
     },
@@ -177,7 +177,17 @@
         "base"
       ],
       "backgrounds": "",
-      "contacts": ""
+      "contacts": "",
+      "sex": "",
+      "age": "",
+      "race": "",
+      "alignment": "",
+      "class1": "",
+      "class2": "",
+      "class3": "",
+      "phydefFormula": "@vt.value",
+      "magdefFormula": "@vt.value",
+      "initFormula": "floor((@ag.value + @lvl)/2)"
     },
     "npc": {
       "templates": [
@@ -267,12 +277,15 @@
       "wepIgnorePower": false,
       "tn": "0",
       "power": "0",
+      "powerDice": "1d10x",
       "affinity": "strike",
       "ingoreDefense": false,
       "pierce": false,
       "critMult": 2,
       "critRange": "1/10",
-      "extraDice": 0,
+      "flatCritChance": 0,
+      "flatCritDamage": 0,
+      "powerBoost": 1,
       "hpCost": "0",
       "mpCost": "0",
       "fateCost": "0",

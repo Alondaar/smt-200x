@@ -254,20 +254,10 @@ export class SMTXActorSheet extends ActorSheet {
       // Modify the array
       currentArray[index] = value;
 
-      console.log("Path exists:", foundry.utils.getProperty(this.actor, path));
+      //console.log("Path exists:", foundry.utils.getProperty(this.actor, path));
       this.actor.update({ [arrayPath]: currentArray });
     });
 
-    /*    let updateTimeout;
-    html.on('change', '.buff-input', (ev) => {
-    clearTimeout(updateTimeout);
-    updateTimeout = setTimeout(() => {
-    const input = ev.currentTarget;
-    const path = input.name;
-    const value = parseFloat(input.value) || 0;
-    this.actor.update({ [path]: value });
-    }, 200); // Adjust the timeout duration as needed
-    });*/
 
     html.on('click', '.armor-equip', (ev) => {
       const li = $(ev.currentTarget).parents('.item');
