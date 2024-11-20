@@ -399,7 +399,7 @@ export class SMTXItem extends Item {
       .join(", "); // Join the values into a string
 
     // Calculate critical damage
-    const critDamage = (regularRoll.total * overrides.critMult) + flatCritDamage;
+    const critDamage = (regularRoll.total * overrides.critMult) + systemData.flatCritDamage;
 
     // Determine button visibility based on affinity
     const hideDamage = (hasBuffs && hasBuffSubRoll);
