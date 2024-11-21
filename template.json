@@ -164,7 +164,8 @@
           "hit": 0
         },
         "isCursed": false,
-        "badStatus": "",
+        "badStatus": "none",
+        "affinityField": "",
         "aux": {
           "useTCDef": false,
           "useTCInit": false,
@@ -185,9 +186,9 @@
       "class1": "",
       "class2": "",
       "class3": "",
-      "phydefFormula": "@vt.value",
-      "magdefFormula": "@vt.value",
-      "initFormula": "floor((@ag.value + @lvl)/2)"
+      "phydefFormula": "@system.vt.value",
+      "magdefFormula": "@system.vt.value",
+      "initFormula": "floor((@system.ag.value + @system.attributes.level)/2)"
     },
     "npc": {
       "templates": [
@@ -282,6 +283,7 @@
       "ingoreDefense": false,
       "pierce": false,
       "critMult": 2,
+      "primaryMult": 1,
       "critRange": "1/10",
       "flatCritChance": 0,
       "flatCritDamage": 0,

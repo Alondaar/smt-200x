@@ -35,35 +35,30 @@ export class SMTXActor extends Actor {
     systemData.attributes.expnext = Math.floor(Math.pow(systemData.attributes.level + 1, 3) * levelMultiplier);
 
     // Collect buff / debuff stacks
-    const sumRaku = systemData.raku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.raku.debuff.reduce((total, num) => total + num, 0));
-    const sumTaru = systemData.taru.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.taru.debuff.reduce((total, num) => total + num, 0));
-    const sumSuku = systemData.suku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.suku.debuff.reduce((total, num) => total + num, 0));
-    const sumMaka = systemData.maka.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.maka.debuff.reduce((total, num) => total + num, 0));
+    systemData.sumRaku = systemData.raku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.raku.debuff.reduce((total, num) => total + num, 0));
+    systemData.sumTaru = systemData.taru.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.taru.debuff.reduce((total, num) => total + num, 0));
+    systemData.sumSuku = systemData.suku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.suku.debuff.reduce((total, num) => total + num, 0));
+    systemData.sumMaka = systemData.maka.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.maka.debuff.reduce((total, num) => total + num, 0));
 
     // DEFENSES
-    systemData.phydef = this.parseFormula(systemData.phydefFormula) + sumRaku;
-    systemData.magdef = this.parseFormula(systemData.magdefFormula) + sumRaku;
+    systemData.phydef = this.parseFormula(systemData.phydefFormula) + systemData.sumRaku;
+    systemData.magdef = this.parseFormula(systemData.magdefFormula) + systemData.sumRaku;
 
     // INITIATIVE
     systemData.init = this.parseFormula(systemData.initFormula);
 
     // POWERS
-    systemData.meleePower = { "value": 0, "roll": "1d10x" }
-    systemData.meleePower.value = systemData.stats.st.value + systemData.attributes.level + sumTaru;
-
-    systemData.spellPower = { "value": 0, "roll": "1d10x" }
-    systemData.spellPower.value = systemData.stats.mg.value + systemData.attributes.level + sumTaru;
-
-    systemData.rangedPower = { "value": 0, "roll": "1d10x" }
-    systemData.rangedPower.value = systemData.stats.ag.value + sumMaka;
+    systemData.meleePower = systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
+    systemData.spellPower = systemData.stats.mg.value + systemData.attributes.level + systemData.sumMaka;
+    systemData.rangedPower = systemData.stats.ag.value + systemData.sumTaru;
 
     // Loop through stats, and add their TNs to our sheet output.
     for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].tn = (stat.value * 5) + systemData.attributes.level + sumSuku;
+      systemData.stats[key].tn = (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
     }
 
-    systemData.dodgetn = 10 + systemData.stats.ag.value + sumSuku;
-    systemData.talktn = 20 + (systemData.stats.lk.value * 2) + sumSuku;
+    systemData.dodgetn = 10 + systemData.stats.ag.value + systemData.sumSuku;
+    systemData.talktn = 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
 
     // get hp/mp multipliers
     systemData.hp.max = (systemData.stats.vt.value + systemData.attributes.level) * systemData.hp.mult;
@@ -96,27 +91,6 @@ export class SMTXActor extends Actor {
     // things organized.
     this._prepareCharacterData(actorData);
     this._prepareNpcData(actorData);
-
-    /*// This actually works but will be annoying to expand??
-    let defense = 0;
-
-    // Evaluate Active Effects with formulas
-    this.appliedEffects.forEach(effect => {
-      effect.changes.forEach(change => {
-        if (change.key === "system.phydef") {
-          const formula = change.value; // e.g., "@stats.vt.value"
-          defense += this.parseFormula(formula, this);
-        }
-      });
-    });
-
-    systemData.phydef += parseInt(defense);*/
-
-
-
-    systemData.meleePower.roll = systemData.powerDice.melee + "d10x + " + systemData.meleePower.value;
-    systemData.spellPower.roll = systemData.powerDice.spell + "d10x + " + systemData.spellPower.value;
-    systemData.rangedPower.roll = systemData.powerDice.ranged + "d10x + " + systemData.rangedPower.value;
   }
 
   /**
@@ -145,7 +119,7 @@ export class SMTXActor extends Actor {
     // Update the derived defense attribute
     this.system.phydef += physicalDefense;
     this.system.magdef += magicalDefense;
-    this.system.meleePower.value += meleePower;
+    this.system.meleePower += meleePower;
     this.system.init += initiative;
   }
 

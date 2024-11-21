@@ -332,6 +332,40 @@ export class SMTXActorSheet extends ActorSheet {
       }
     });
 
+
+
+
+    html.on('click', '.set-tc-formulas', (ev) => {
+      this.actor.update({
+        "system.phydefFormula": "floor((@system.stats.vt.value + @system.attributes.level)/2)",
+        "system.magdefFormula": "floor((@system.stats.mg.value + @system.attributes.level)/2)",
+        "system.initFormula": "@system.stats.ag.value"
+      })
+    });
+
+    html.on('click', '.set-x-human', (ev) => {
+      this.actor.update({
+        "system.phydefFormula": "@system.stats.vt.value",
+        "system.magdefFormula": "@system.stats.vt.value",
+        "system.initFormula": "floor((@system.stats.ag.value + @system.attributes.level)/2)",
+        "system.hp.mult": 4,
+        "system.mp.mult": 2,
+      })
+    });
+
+    html.on('click', '.set-x-demon', (ev) => {
+      this.actor.update({
+        "system.phydefFormula": "@system.stats.vt.value + @system.attributes.level",
+        "system.magdefFormula": "@system.stats.vt.value + @system.attributes.level",
+        "system.initFormula": "floor((@system.stats.ag.value + @system.attributes.level)/2)",
+        "system.hp.mult": 6,
+        "system.mp.mult": 3,
+      })
+    });
+
+
+
+
     // Drag events for macros.
     if (this.actor.isOwner) {
       let handler = (ev) => this._onDragStart(ev);

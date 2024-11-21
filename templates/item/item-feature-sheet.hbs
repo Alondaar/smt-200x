@@ -24,7 +24,8 @@
 
     {{!-- Attributes Tab --}}
     <div class="tab attributes" data-group="primary" data-tab="attributes">
-      <div class="grid grid-6col">
+      <h2>DISPLAY INFO</h2>
+      <div class="grid grid-4col">
         <div class="flexcol">
           <label for="system.type" class="resource-label">Type</label>
           <input type="text" name="system.type" value="{{system.type}}" />
@@ -41,16 +42,6 @@
         </div>
 
         <div class="flexcol">
-          <label for="system.tn" class="resource-label">TN</label>
-          <input type="text" name="system.tn" value="{{system.tn}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.power" class="resource-label">Power</label>
-          <input type="text" name="system.power" value="{{system.power}}" />
-        </div>
-
-        <div class="flexcol">
           <label for="system.affinity" class="resource-label">Affinity</label>
           <select name="system.affinity">
             {{selectOptions @root.config.affinities selected=system.affinity localize=true}}
@@ -58,12 +49,46 @@
         </div>
       </div>
 
+      <div class="flexrow">
+        <div class="flexcol">
+          <label for="system.uses.value" class="resource-label">Uses</label>
+          <input type="text" name="system.uses.value" value="{{system.uses.value}}" data-dtype="Number" />
+        </div>
 
-      <label for="system.shortEffect" class="resource-label">Short Effect</label>
-      <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
+        <div class="flexcol">
+          <label for="system.uses.max" class="resource-label">Max Uses</label>
+          <input type="text" name="system.uses.max" value="{{system.uses.max}}" data-dtype="Number" />
+        </div>
+      </div>
 
-      <hr>
+      <div class="flexcol">
+        <label for="system.shortEffect" class="resource-label">Short Effect</label>
+        <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
+      </div>
 
+      <br><br>
+
+      <h2>ROLL and CHECK DATA</h2>
+      <div class="flexcol">
+        <label for="system.tn" class="resource-label">TN</label>
+        <input type="text" name="system.tn" value="{{system.tn}}" />
+      </div>
+
+      <div class="flexrow">
+        <div class="flexcol">
+          <label for="system.powerDice" class="resource-label">Power Dice</label>
+          <input type="text" name="system.powerDice" value="{{system.powerDice}}" />
+        </div>
+
+        <div class="flexcol flex2">
+          <label for="system.power" class="resource-label">Power</label>
+          <input type="text" name="system.power" value="{{system.power}}" />
+        </div>
+      </div>
+
+      <br><br>
+
+      <h2>COST-BUTTON CONFIGURATION</h2>
       <div class="grid grid-3col">
         <div class="flexcol">
           <label for="system.hpCost" class="resource-label">HP Cost</label>
@@ -81,8 +106,9 @@
         </div>
       </div>
 
-      <hr>
+      <br><br>
 
+      <h2>WEAPON CONFIGURATION</h2>
       <div class="grid grid-3col">
         <div class="flexcol">
           <label for="system.wep" class="resource-label">Weapon</label>
@@ -102,22 +128,13 @@
         </div>
       </div>
 
-      <hr>
+      <br><br>
 
+      <h2>CRIT CONFIGURATION</h2>
       <div class="grid grid-4col">
         <div class="flexcol">
-          <label for="system.ingoreDefense" class="resource-label">Ignores Defense</label>
-          <input type="checkbox" name="system.ingoreDefense" {{#if system.ingoreDefense}}checked{{/if}} />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.pierce" class="resource-label">Pierce</label>
-          <input type="checkbox" name="system.pierce" {{#if system.pierce}}checked{{/if}} />
-        </div>
-
-        <div class="flexcol">
           <label for="system.critMult" class="resource-label">critMult</label>
-          <input type="text" name="system.critMult" value="{{system.critMult}}" />
+          <input type="text" name="system.critMult" value="{{system.critMult}}" data-dtype="Number" />
         </div>
 
         <div class="flexcol">
@@ -126,28 +143,39 @@
         </div>
 
         <div class="flexcol">
-          <label for="system.hideCritDamage" class="resource-label">Hide Critical Damage</label>
+          <label for="system.hideCritDamage" class="resource-label">Hide Crit Damage</label>
           <input type="checkbox" name="system.hideCritDamage" {{#if system.hideCritDamage}}checked{{/if}} />
+        </div>
+      </div>
+
+      <br><br>
+
+      <h2>ATTACK CONFIGURATION</h2>
+      <div class="grid grid-4col">
+        <div class="flexcol">
+          <label for="system.ingoreDefense" class="resource-label">Ignores Defense</label>
+          <input type="checkbox" name="system.ingoreDefense" {{#if system.ingoreDefense}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.pierce" class="resource-label">Pierce (unused)</label>
+          <input type="checkbox" name="system.pierce" {{#if system.pierce}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.powerBoost" class="resource-label">Power Boost</label>
+          <input type="text" name="system.powerBoost" value="{{system.powerBoost}}" data-dtype="Number" />
         </div>
 
         <div class="flexcol">
           <label for="system.affectsMP" class="resource-label">Affects MP</label>
           <input type="checkbox" name="system.affectsMP" {{#if system.affectsMP}}checked{{/if}} />
         </div>
-
-        <div class="flexcol">
-          <label for="system.uses.value" class="resource-label">Uses</label>
-          <input type="text" name="system.uses.value" value="{{system.uses.value}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.uses.max" class="resource-label">Max Uses</label>
-          <input type="text" name="system.uses.max" value="{{system.uses.max}}" />
-        </div>
       </div>
 
-      <hr>
+      <br><br>
 
+      <h2>BUFF and DEBUFFs</h2>
       <div class="grid grid-4col">
         <div class="flexcol">
           <label for="system.buffs.sukukaja" class="resource-label">Sukukaja Effect</label>
