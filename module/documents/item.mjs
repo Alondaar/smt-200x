@@ -29,11 +29,7 @@ export class SMTXItem extends Item {
   }
 
   prepareFeature() {
-    if (!this.type == 'feature') return
-    if (this.type == 'armor') return // why
-    if (this.type == 'weapon') return // why
-    if (this.type == 'passive') return // why
-
+    if (this.type != 'feature') return
     const itemData = this;
     const systemData = itemData.system;
     const rollData = this.getRollData();
@@ -54,21 +50,32 @@ export class SMTXItem extends Item {
         break;
     }
 
-    const test = new Roll(systemData.power.replace(/\b\d*d10[x]?/g, "0"), rollData);
-    test.evaluateSync();
+    const preCalcPower = new Roll((systemData.power || "0").replace(/@/g, "@actor.") + "+(" + weaponPower + ")", rollData).evaluateSync({ minimize: true });
 
-    // Figure out how to factor in systemData.powerBoost (multiplier) Before Weapon? After?
-    // Should probably just split the power field & power dice!!
-    systemData.calcPower = test.total + weaponPower;
+    let totalDice = 0;
+    preCalcPower.dice.forEach(die => {
+      totalDice += die.number;
+    });
 
-    const preCalcTN = new Roll(systemData.tn, rollData)
-    preCalcTN.evaluateSync()
+    const staticPower = (preCalcPower.total - totalDice) > 0 ? Math.floor((preCalcPower.total - totalDice) * systemData.powerBoost) : "";
 
-    const calcTN = preCalcTN.total;
-    systemData.calcTN = calcTN + weaponTN;
+    const preCalcPowerDice = new Roll((systemData.powerDice || "0").replace(/@/g, "@actor."), rollData).evaluateSync({ minimize: true });
 
-    systemData.formula = systemData.power + " + " + weaponPower;
+    let displayDice = preCalcPowerDice.dice.reduce((total, die) => total + die.number, 0);
+    if (displayDice == 0)
+      displayDice = "";
+    else
+      displayDice += "D"
+
+    systemData.calcPower = displayDice + (displayDice != "" && staticPower != "" ? "+" : "") + staticPower;
+
+
+    const preCalcTN = new Roll((systemData.tn || "0").replace(/@/g, "@actor.") + "+(" + weaponTN + ")", rollData).evaluateSync();
+    systemData.calcTN = preCalcTN.total;
+
+    systemData.formula = "(" + systemData.powerDice + ")+" + (staticPower || 0);
   }
+
 
   /**
    * Prepare a data object which defines the data schema used by dice roll commands against this Item
@@ -86,6 +93,7 @@ export class SMTXItem extends Item {
 
     return rollData;
   }
+
 
   rotateWeapon() {
     const systemData = this.system;
@@ -363,7 +371,7 @@ export class SMTXItem extends Item {
     await regularRoll.evaluate();
 
     // Roll for sub-formula
-    const hasBuffSubRoll = systemData.subBuffRoll !== "" ? true : false;
+    const hasBuffSubRoll = systemData.subBuffRoll != "" ? true : false;
     const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData);
     await subBuffRoll.evaluate();
 
@@ -402,13 +410,13 @@ export class SMTXItem extends Item {
     const critDamage = (regularRoll.total * overrides.critMult) + systemData.flatCritDamage;
 
     // Determine button visibility based on affinity
-    const hideDamage = (hasBuffs && hasBuffSubRoll);
+    const hideDamage = (hasBuffs && !hasBuffSubRoll);
     const showCrit = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !systemData.hideCritDamage && !hideDamage;
     const showDamageButtons = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !hideDamage;
     const showHealing = overrides.affinity !== "none";
     const showBuffButtons = hasBuffs || hasBuffSubRoll;
 
-    let btnStyling = 'width: 32px; height:32px; font-size:14px;';
+    let btnStyling = 'width: 28px; height: 28px; font-size: 14px;';
 
     // HTML with refined logic
     const content = `
@@ -426,7 +434,7 @@ export class SMTXItem extends Item {
         <div class="flexcol">
         ${!hideDamage ? `<p><strong>Affinity:</strong> ${game.i18n.localize("SMT_X.Affinity." + overrides.affinity)}</p>
           <p style="font-size:32px;margin:0;" class="align-center"><strong>${regularRoll.total}</strong></p>` : ""}
-        <div class="damage-buttons flexrow">
+        <div class="damage-buttons grid grid-4col">
             ${showDamageButtons ? `
                 <button class='apply-full-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>
                 <button class='apply-half-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Click to apply half damage to selected token(s)."></i></button>
@@ -440,7 +448,7 @@ export class SMTXItem extends Item {
         <div class="flexcol">
         <p><strong>Critical:</strong></p>
         <p style="font-size:32px;margin:0;" class="align-center"><strong>${critDamage}</strong></p>
-        <div class="damage-buttons flexrow">
+        <div class="damage-buttons grid grid-4col">
             <button class='apply-full-crit-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>
                 <button class='apply-half-crit-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Click to apply half damage to selected token(s)."></i></button>
                 <button class='apply-double-crit-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Click to apply double damage to selected token(s)."></i></button>

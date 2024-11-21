@@ -77,27 +77,27 @@
 
       <div class="flexrow grid-span-2">
         <div class="align-center" style="border: 2px groove #eeede0;">
-          <label for="system.meleePower.value" class="resource-label">Melee</label>
+          <label for="system.meleePower" class="resource-label">Melee</label>
           <div>
-            <h1>{{system.meleePower.value}}</h1>
+            <h1>{{system.meleePower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.melee" value="{{system.powerDice.melee}}" data-dtype="Number" />&nbsp;d10</div>
         </div>
 
         <div class="align-center" style="border: 2px groove #eeede0;">
-          <label for="system.rangedPower.value" class="resource-label">Ranged</label>
+          <label for="system.rangedPower" class="resource-label">Ranged</label>
           <div>
-            <h1>{{system.rangedPower.value}}</h1>
+            <h1>{{system.rangedPower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.ranged" value="{{system.powerDice.ranged}}" data-dtype="Number" />&nbsp;d10</div>
         </div>
 
         <div class="align-center" style="border: 2px groove #eeede0;">
-          <label for="system.spellPower.value" class="resource-label">Spell</label>
+          <label for="system.spellPower" class="resource-label">Spell</label>
           <div>
-            <h1>{{system.spellPower.value}}</h1>
+            <h1>{{system.spellPower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.spell" value="{{system.powerDice.spell}}" data-dtype="Number" />&nbsp;d10</div>
@@ -156,7 +156,7 @@
 
 
         <div class='flexrow'>
-          <input type="text" name="x" value="Null Expel" />
+          <input type="text" name="system.affinityField" value="{{system.affinityField}}" />
         </div>
 
 
@@ -228,6 +228,7 @@
     </div>
 
 
+
     {{!-- Biography Tab --}}
     <div class="tab biography" data-group="primary" data-tab="description">
       <div class="flexrow">
@@ -262,12 +263,32 @@
               data-dtype="Number" />
           </div>
           <div class="grid grid-4col">
-            <label for="x" class="resource-label">Backgrounds</label>
+            <label for="system.backgrounds" class="resource-label">Backgrounds</label>
             <input type="text" name="system.backgrounds" class="grid-span-3" value="{{system.backgrounds}}" />
           </div>
           <div class="grid grid-4col">
-            <label for="x" class="resource-label">Contacts</label>
+            <label for="system.contacts" class="resource-label">Contacts</label>
             <input type="text" name="system.contacts" class="grid-span-3" value="{{system.contacts}}" />
+          </div>
+
+          <div class="grid grid-12col">
+            <label for="system.law" class="resource-label">Law</label>
+            <input type="text" name="system.law" value="{{system.law}}" />
+            <label for="system.chaos" class="resource-label">Chaos</label>
+            <input type="text" name="system.chaos" value="{{system.chaos}}" />
+            <label for="system.neutral" class="resource-label">Neutral</label>
+            <input type="text" name="system.neutral" value="{{system.neutral}}" />
+            <label for="system.light" class="resource-label">Light</label>
+            <input type="text" name="system.light" value="{{system.light}}" />
+            <label for="system.dark" class="resource-label">Dark</label>
+            <input type="text" name="system.dark" value="{{system.dark}}" />
+            <label for="system.heeho" class="resource-label">Hee-ho</label>
+            <input type="text" name="system.heeho" value="{{system.heeho}}" />
+          </div>
+
+          <div>
+            <label for="x" class="resource-label">Alignment</label>
+            <input type="text" name="system.alignment" value="{{system.contacts}}" />
           </div>
         </div>
         <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="height: 220px" />
@@ -276,6 +297,7 @@
       {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
       {{editor enrichedBiography target="system.biography" engine="prosemirror" button=true editable=editable}}
     </div>
+
 
 
     {{!-- Active Effects Tab --}}
@@ -312,7 +334,7 @@
       <hr>
 
       <section class="main">
-        <div class="grid grid-4col">
+        <div class="grid grid-5col">
           <div class="flexcol">
             <label for="system.hp.mult" class="resource-label">HP Multiplier</label>
             <input type="text" name="system.hp.mult" value="{{system.hp.mult}}" data-dtype="Number" />
@@ -341,6 +363,27 @@
           <div class="flexcol">
             <label for="system.aux.showTCheaders" class="resource-label">Show TC Headers</label>
             <input type="checkbox" name="system.aux.showTCheaders" {{#if system.aux.showTCheaders}}checked{{/if}} />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.aux.showTCheaders" class="resource-label">Set TC formulas</label>
+            <button class="set-tc-formulas"
+              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
+              TC Formulas</button>
+          </div>
+
+          <div class="flexcol">
+            <label for="system.aux.showTCheaders" class="resource-label">Set Base X Human</label>
+            <button class="set-x-human"
+              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
+              X Human</button>
+          </div>
+
+          <div class="flexcol">
+            <label for="system.aux.showTCheaders" class="resource-label">Set Base X Demon</label>
+            <button class="set-x-demon"
+              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
+              X Demon</button>
           </div>
       </section>
 

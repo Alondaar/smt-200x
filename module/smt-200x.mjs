@@ -29,7 +29,7 @@ Hooks.once('init', function () {
    * @type {String}
    */
   CONFIG.Combat.initiative = {
-    formula: '1d10x + @stats.ag',
+    formula: '(@powerDice.init)d10x + @init',
     decimals: 2,
   };
 
@@ -53,6 +53,59 @@ Hooks.once('init', function () {
     makeDefault: true,
     label: 'SMT_X.SheetLabels.Item',
   });
+
+
+
+
+  // Register a boolean setting
+  /*game.settings.register("my-system", "enableFeature", {
+    name: "Enable Special Feature",
+    hint: "Toggle this to enable or disable the special feature.",
+    scope: "world", // World-level setting (shared by all players)
+    config: true, // Expose in the configuration UI
+    type: Boolean,
+    default: true // Default value
+  });
+
+  // Register a number setting
+  game.settings.register("my-system", "maxItems", {
+    name: "Maximum Items",
+    hint: "Set the maximum number of items allowed.",
+    scope: "world",
+    config: true,
+    type: Number,
+    range: { min: 1, max: 100, step: 1 }, // Range input
+    default: 50
+  });
+
+  // Register a string setting
+  game.settings.register("my-system", "welcomeMessage", {
+    name: "Welcome Message",
+    hint: "Set the message displayed to players when they join.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "Welcome to the game!"
+  });
+
+  // Register a dropdown setting
+  game.settings.register("my-system", "difficulty", {
+    name: "Game Difficulty",
+    hint: "Choose the game's difficulty level.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      easy: "Easy",
+      normal: "Normal",
+      hard: "Hard"
+    },
+    default: "normal"
+  });*/
+
+
+
+
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();
