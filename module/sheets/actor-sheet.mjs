@@ -365,6 +365,54 @@ export class SMTXActorSheet extends ActorSheet {
 
 
 
+    // Left-click: Roll initiative
+    html.on('click', '.initiative-roll', async (event) => {
+      event.preventDefault();
+      const actor = this.actor;
+      if (!actor) return;
+      await addToCombatAndRollInitiative(actor);
+    });
+
+    // Right-click: Prompt for modifier
+    html.on('contextmenu', '.initiative-roll', async (event) => {
+      event.preventDefault();
+      const actor = this.actor;
+      if (!actor) return;
+
+      // Open a dialog to get the modifier
+      new Dialog({
+        title: "Add Initiative Modifier",
+        content: `
+        <div class="initiative-modifier-dialog">
+          <p>Enter an initiative modifier to apply to this roll:</p>
+          <input id="modifier" name="modifier" value="0" />
+          <label>
+            <input type="checkbox" id="flat-roll" name="flat-roll" />
+            Flat Roll (Ambushed, no dice rolled)
+          </label>
+        </div>
+      `,
+        buttons: {
+          roll: {
+            icon: '<i class="fas fa-check"></i>',
+            label: "Roll",
+            callback: async (html) => {
+              const modifier = html.find('input[name="modifier"]').val();
+              const flatRoll = html.find('input[name="flat-roll"]').is(':checked');
+              await addToCombatAndRollInitiative(actor, modifier, flatRoll);
+            }
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: "Cancel"
+          }
+        },
+        default: "roll"
+      }).render(true);
+    });
+
+
+
 
     // Drag events for macros.
     if (this.actor.isOwner) {
@@ -435,4 +483,60 @@ export class SMTXActorSheet extends ActorSheet {
       return roll;
     }
   }
+}
+
+// Function to add actor's token to combat and roll initiative
+async function addToCombatAndRollInitiative(actor, modifier = 0, flatRoll = false) {
+  // Ensure an active combat instance exists
+  let combat = game.combat;
+  if (!combat) {
+    combat = await Combat.create({ scene: game.scenes.active.id });
+  }
+
+  // Retrieve the actor's active token in the current scene
+  const token = actor.getActiveTokens()[0];
+  if (!token) {
+    ui.notifications.warn(`${actor.name} has no active token in the scene.`);
+    return;
+  }
+
+  // Check if the token is already in the combat tracker
+  let combatant = combat.combatants.find(c => c.tokenId === token.id);
+  if (!combatant) {
+    // Add the token to the combat tracker if not already present
+    const combatantData = {
+      tokenId: token.id,
+      sceneId: token.scene.id,
+      actorId: actor.id
+    };
+    await combat.createEmbeddedDocuments("Combatant", [combatantData]);
+    combatant = combat.combatants.find(c => c.tokenId === token.id);
+  }
+
+  // Retrieve the new combatant
+  if (!combatant) {
+    ui.notifications.error(`Failed to add ${actor.name} to the combat tracker.`);
+    return;
+  }
+
+  // Roll initiative for the new combatant
+  let newFormula = CONFIG.Combat.initiative.formula + " + " + (modifier || 0);
+
+  let flatRollFormula = 0;
+  if (flatRoll) {
+    flatRollFormula = new Roll(newFormula, actor.getRollData()).evaluateSync({ minimize: true });
+
+    console.log(flatRollFormula)
+    let totalDice = 0;
+    flatRollFormula.dice.forEach(die => {
+      totalDice += die.number;
+    });
+
+    newFormula = "(" + flatRollFormula.result + ")-" + totalDice;
+
+    console.log(flatRollFormula)
+  }
+
+  await combat.rollInitiative([combatant.id], { formula: newFormula });
+  ui.notifications.info(`${actor.name} has been added to the combat tracker and initiative rolled.`);
 }
