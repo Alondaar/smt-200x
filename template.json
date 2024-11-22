@@ -156,13 +156,17 @@
           "name": "",
           "type": "",
           "power": 0,
-          "hit": 0
+          "hit": 0,
+          "maxAmmo": 0,
+          "ammo": 0
         },
         "wepB": {
           "name": "",
           "type": "",
           "power": 0,
-          "hit": 0
+          "hit": 0,
+          "maxAmmo": 0,
+          "ammo": 0
         },
         "unarmed": {
           "power": 0,
@@ -255,6 +259,8 @@
       ],
       "power": 0,
       "hit": 0,
+      "ammo": 0,
+      "maxAmmo": 0,
       "slotA": false,
       "slotB": false
     },
@@ -303,6 +309,11 @@
       "hideCritDamage": true,
       "affectsMP": false,
       "actionPattern": "-",
+      "reloads": false,
+      "hasPower": false,
+      "hasAffinity": false,
+      "hasTarget": false,
+      "hasType": false,
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -344,6 +355,7 @@
       "hpCost": "0",
       "mpCost": "0",
       "fateCost": "0",
+      "ammoCost": "0",
       "hideCritDamage": false,
       "affectsMP": false,
       "actionPattern": "-",

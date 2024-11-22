@@ -38,7 +38,15 @@
       "path": "lang/en.json"
     }
   ],
-  "packs": [],
+  "packs": [
+    {
+      "name": "system-macros",
+      "label": "System Macros",
+      "system": "smt-200x",
+      "type": "Macro",
+      "path": "packs/system-macros.db"
+    }
+  ],
   "packFolders": [],
   "socket": false,
   "manifest": "https://github.com/Alondaar/smt-200x/raw/main/system.json",

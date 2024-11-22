@@ -19,6 +19,13 @@
           </div>
           <h4>{{item.name}}</h4>
         </div>
+        {{#if item.system.reloads}}
+        <div class='item-prop'>
+          Reload&emsp;
+          <span class="weapon-reload-a clickable"><i class="fa-solid fa-a"> </i></span>
+          <span class="weapon-reload-b clickable">&emsp;<i class="fa-solid fa-b"></i></span>
+        </div>
+        {{/if}}
         <!--<div class='item-prop'>{{item.system.type}}</div>
         <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
         <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>-->
