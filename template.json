@@ -34,19 +34,24 @@
         },
         "stats": {
           "st": {
-            "value": 0
+            "value": 0,
+            "base": 0
           },
           "mg": {
-            "value": 0
+            "value": 0,
+            "base": 0
           },
           "vt": {
-            "value": 0
+            "value": 0,
+            "base": 0
           },
           "ag": {
-            "value": 0
+            "value": 0,
+            "base": 0
           },
           "lk": {
-            "value": 0
+            "value": 0,
+            "base": 0
           }
         },
         "suku": {
@@ -275,12 +280,29 @@
         "base",
         "item"
       ],
+      "cost": "-",
       "target": "1",
+      "wep": "x",
+      "wepIgnoreTN": false,
+      "wepIgnorePower": false,
+      "tn": "0",
       "power": "0",
+      "powerDice": "1d10x",
       "affinity": "strike",
       "ingoreDefense": false,
       "pierce": false,
+      "critMult": 2,
+      "primaryMult": 1,
+      "critRange": "1/10",
+      "flatCritChance": 0,
+      "flatCritDamage": 0,
+      "powerBoost": 1,
+      "hpCost": "0",
+      "mpCost": "0",
+      "fateCost": "0",
+      "hideCritDamage": true,
       "affectsMP": false,
+      "actionPattern": "-",
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -290,6 +312,11 @@
         "rakunda": false,
         "makakaja": false,
         "makunda": false
+      },
+      "subBuffRoll": "",
+      "uses": {
+        "value": 0,
+        "max": 0
       },
       "quantity": 0
     },
