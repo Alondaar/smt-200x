@@ -433,8 +433,6 @@ export class SMTXActorSheet extends ActorSheet {
       const path = input.name.replace(".value", ".base");
       const value = parseInt(input.value) || 0;
 
-      console.log(path)
-      console.log(value)
       this.actor.update({
         [path]: value
       })
@@ -491,7 +489,7 @@ export class SMTXActorSheet extends ActorSheet {
           <input id="modifier" name="modifier" value="0" />
           <label>
             <input type="checkbox" id="flat-roll" name="flat-roll" />
-            Flat Roll (Ambushed, no dice rolled)
+            No Roll (Ambushed, no dice rolled)
           </label>
         </div>
       `,
@@ -629,15 +627,12 @@ async function addToCombatAndRollInitiative(actor, modifier = 0, flatRoll = fals
   if (flatRoll) {
     flatRollFormula = new Roll(newFormula, actor.getRollData()).evaluateSync({ minimize: true });
 
-    console.log(flatRollFormula)
     let totalDice = 0;
     flatRollFormula.dice.forEach(die => {
       totalDice += die.number;
     });
 
     newFormula = "(" + flatRollFormula.result + ")-" + totalDice;
-
-    console.log(flatRollFormula)
   }
 
   await combat.rollInitiative([combatant.id], { formula: newFormula });
