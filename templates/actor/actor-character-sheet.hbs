@@ -45,10 +45,10 @@
         </div>
 
         <div class="resource flex-group-center">
-          <label for="system.attributes.exp" class="resource-label">EXP</label>
+          <label for="system.attributes.totalexp" class="resource-label">EXP</label>
           <div class="resource-content flexrow flex-center flex-between">
-            <input type="text" name="system.attributes.exp" value="{{system.attributes.totalexp}}" data-dtype="Number"
-              disabled />
+            <input type="text" name="system.attributes.totalexp" value="{{system.attributes.totalexp}}"
+              data-dtype="Number" disabled />
           </div>
         </div>
 
@@ -214,6 +214,8 @@
       </section>
     </div>
 
+
+
     {{!-- Items Tab --}}
     <div class="tab items" data-group="primary" data-tab="items">
       <section class="main">
@@ -242,13 +244,24 @@
             <input type="text" name="system.race" class="grid-span-3" value="{{system.race}}" />
           </div>
           <div class="grid grid-4col flex-group-center">
+            {{#if system.aux.showTCheaders}}
+            <label class="resource-label align-left">EXP Rate</label>
+            <label class="resource-label">Human</label>
+            <label class="resource-label">Fiend</label>
+            <label class="resource-label">Demon</label>
+            {{else}}
             <label class="resource-label align-left">Awakening Tier</label>
             <label class="resource-label">I Gifted</label>
             <label class="resource-label">II Awakened</label>
             <label class="resource-label">III Metahuman</label>
+            {{/if}}
           </div>
           <div class="grid grid-4col">
+            {{#if system.aux.showTCheaders}}
+            <label class="resource-label">Details</label>
+            {{else}}
             <label class="resource-label">Classes</label>
+            {{/if}}
             <input type="text" name="system.class1" value="{{system.class1}}" />
             <input type="text" name="system.class2" value="{{system.class2}}" />
             <input type="text" name="system.class3" value="{{system.class3}}" />
@@ -291,7 +304,7 @@
             <input type="text" name="system.alignment" value="{{system.contacts}}" />
           </div>
         </div>
-        <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="height: 220px" />
+        <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="height: 300px" />
       </div>
       <hr>
       {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
@@ -302,6 +315,10 @@
 
     {{!-- Active Effects Tab --}}
     <div class="tab effects flexcol" data-group="primary" data-tab="effects">
+      {{> "systems/smt-200x/templates/actor/parts/actor-buffs.hbs"}}
+
+      <hr>
+
       <section class="main">
         {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
       </section>
@@ -361,11 +378,6 @@
           </div>
 
           <div class="flexcol">
-            <label for="system.aux.showTCheaders" class="resource-label">Show TC Headers</label>
-            <input type="checkbox" name="system.aux.showTCheaders" {{#if system.aux.showTCheaders}}checked{{/if}} />
-          </div>
-
-          <div class="flexcol">
             <label for="system.aux.showTCheaders" class="resource-label">Set TC formulas</label>
             <button class="set-tc-formulas"
               style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
@@ -385,67 +397,6 @@
               style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
               X Demon</button>
           </div>
-      </section>
-
-      <hr>
-
-      <section class="main">
-        <div class="flexcol grid-span-2">
-          <div class="flexrow flex-group-center">
-            <span class="clear-buffs clickable">Dekaja</span>
-            <span class="clear-debuffs clickable">Dekunda</span>
-            <span class="clear-buffs-and-debuffs clickable">Clear All</span>
-          </div>
-
-          <div class="flexrow flex-group-center">
-            <label for="system.suku" class="resource-label align-left">Suku</label>
-            {{#each system.suku.buff}}
-            <input type="text" class="buff-field flex0" name="system.suku.buff[{{@index}}]" value="{{this}}"
-              data-dtype="Number" />
-            {{/each}}
-            //
-            {{#each system.suku.debuff}}
-            <input type="text" class="buff-field flex0" name="system.suku.debuff[{{@index}}]" value="{{this}}"
-              data-dtype="Number" />
-            {{/each}}
-          </div>
-          <div class="flexrow flex-group-center">
-            <label for="system.taru" class="resource-label align-left">Taru</label>
-            {{#each system.taru.buff}}
-            <input type="text" class="buff-field flex0" name="system.taru.buff[{{@index}}]" value="{{this}}"
-              data-dtype="Number" />
-            {{/each}}
-            //
-            {{#each system.taru.debuff}}
-            <input type="text" class="buff-field flex0" name="system.taru.debuff[{{@index}}]" value="{{this}}"
-              data-dtype="Number" />
-            {{/each}}
-          </div>
-          <div class="flexrow flex-group-center">
-            <label for="system.raku" class="resource-label align-left">Raku</label>
-            {{#each system.raku.buff}}
-            <input type="text" class="buff-field flex0" name="system.raku.buff[{{@index}}]" value="{{this}}"
-              data-dtype="Number" />
-            {{/each}}
-            //
-            {{#each system.raku.debuff}}
-            <input type="text" class="buff-field flex0" name="system.raku.debuff[{{@index}}]" value="{{this}}"
-              data-dtype="Number" />
-            {{/each}}
-          </div>
-          <div class="flexrow flex-group-center">
-            <label for="system.maka" class="resource-label align-left">Maka</label>
-            {{#each system.maka.buff}}
-            <input type="text" class="buff-field flex0" name="system.maka.buff[{{@index}}]" value="{{this}}"
-              data-dtype="Number" />
-            {{/each}}
-            //
-            {{#each system.maka.debuff}}
-            <input type="text" class="buff-field flex0" name="system.maka.debuff[{{@index}}]" value="{{this}}"
-              data-dtype="Number" />
-            {{/each}}
-          </div>
-        </div>
       </section>
 
       <hr>

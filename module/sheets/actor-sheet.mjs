@@ -29,7 +29,11 @@ export class SMTXActorSheet extends ActorSheet {
     return `systems/smt-200x/templates/actor/actor-${this.actor.type}-sheet.hbs`;
   }
 
+
+
   /* -------------------------------------------- */
+
+
 
   /** @override */
   async getData() {
@@ -56,7 +60,7 @@ export class SMTXActorSheet extends ActorSheet {
     }
 
     // Prepare NPC data and items.
-    if (actorData.type == 'npc-demon') {
+    if (actorData.type == 'npc') {
       this._prepareItems(context);
     }
 
@@ -86,6 +90,8 @@ export class SMTXActorSheet extends ActorSheet {
     return context;
   }
 
+
+
   /**
    * Character-specific context modifications
    *
@@ -95,6 +101,8 @@ export class SMTXActorSheet extends ActorSheet {
     // This is where you can enrich character-specific editor fields
     // or setup anything else that's specific to this type
   }
+
+
 
   /**
    * Organize and classify Items for Actor sheets.
@@ -137,7 +145,11 @@ export class SMTXActorSheet extends ActorSheet {
     context.consumables = consumables;
   }
 
+
+
   /* -------------------------------------------- */
+
+
 
   /** @override */
   activateListeners(html) {

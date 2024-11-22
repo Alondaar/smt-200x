@@ -12,6 +12,8 @@ export class SMTXActor extends Actor {
     super.prepareData();
   }
 
+
+
   /** @override */
   prepareBaseData() {
     // Data modifications in this step occur before processing embedded documents or derived data.
@@ -19,20 +21,24 @@ export class SMTXActor extends Actor {
     const actorData = this;
     const systemData = actorData.system;
 
-    let levelMultiplier = 0.8;
-    if (systemData.attributes.exp.tierTwo > 0)
-      levelMultiplier = 1.0;
-    if (systemData.attributes.exp.tierThree > 0)
-      levelMultiplier = 1.3;
+    systemData.aux.showTCheaders = game.settings.get("smt-200x", "showTCheaders");
 
-    systemData.attributes.totalexp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree
+    if (actorData.type == 'character') {
+      let levelMultiplier = 0.8;
+      if (systemData.attributes.exp.tierTwo > 0)
+        levelMultiplier = 1.0;
+      if (systemData.attributes.exp.tierThree > 0)
+        levelMultiplier = 1.3;
 
-    const levelsFromTierOne = Math.floor(Math.pow((systemData.attributes.exp.tierOne) / 0.8, 1 / 3));
-    const levelsFromTierTwo = Math.floor(Math.pow((systemData.attributes.exp.tierTwo) / 1.0, 1 / 3));
-    const levelsFromTierThree = Math.floor(Math.pow((systemData.attributes.exp.tierThree) / 1.3, 1 / 3));
+      systemData.attributes.totalexp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree
 
-    systemData.attributes.level = Math.max(levelsFromTierOne + levelsFromTierTwo + levelsFromTierThree, 1);
-    systemData.attributes.expnext = Math.floor(Math.pow(systemData.attributes.level + 1, 3) * levelMultiplier);
+      const levelsFromTierOne = Math.floor(Math.pow((systemData.attributes.exp.tierOne) / 0.8, 1 / 3));
+      const levelsFromTierTwo = Math.floor(Math.pow((systemData.attributes.exp.tierTwo) / 1.0, 1 / 3));
+      const levelsFromTierThree = Math.floor(Math.pow((systemData.attributes.exp.tierThree) / 1.3, 1 / 3));
+
+      systemData.attributes.level = Math.max(levelsFromTierOne + levelsFromTierTwo + levelsFromTierThree, 1);
+      systemData.attributes.expnext = Math.floor(Math.pow(systemData.attributes.level + 1, 3) * levelMultiplier);
+    }
 
     // Collect buff / debuff stacks
     systemData.sumRaku = systemData.raku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.raku.debuff.reduce((total, num) => total + num, 0));
@@ -49,8 +55,8 @@ export class SMTXActor extends Actor {
 
     // POWERS
     systemData.meleePower = systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
-    systemData.spellPower = systemData.stats.mg.value + systemData.attributes.level + systemData.sumMaka;
-    systemData.rangedPower = systemData.stats.ag.value + systemData.sumTaru;
+    systemData.spellPower = systemData.stats.mg.value + systemData.attributes.level + (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
+    systemData.rangedPower = systemData.stats.ag.value + (game.settings.get("smt-200x", "addLevelToRangedPower") ? systemData.attributes.level : 0) + systemData.sumTaru;
 
     // Loop through stats, and add their TNs to our sheet output.
     for (let [key, stat] of Object.entries(systemData.stats)) {
@@ -60,7 +66,7 @@ export class SMTXActor extends Actor {
     systemData.dodgetn = 10 + systemData.stats.ag.value + systemData.sumSuku;
     systemData.talktn = 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
 
-    // get hp/mp multipliers
+    // Set Max HP / MP / Fate
     systemData.hp.max = (systemData.stats.vt.value + systemData.attributes.level) * systemData.hp.mult;
     systemData.mp.max = (systemData.stats.mg.value + systemData.attributes.level) * systemData.mp.mult;
     systemData.fate.max = 5 + Math.floor(systemData.stats.lk.value / 5);
@@ -71,7 +77,23 @@ export class SMTXActor extends Actor {
     } else if (systemData.hp.value < systemData.hp.min) {
       systemData.hp.value = systemData.hp.min;
     }
+
+    // clamp MP
+    if (systemData.mp.value > systemData.mp.max) {
+      systemData.mp.value = systemData.mp.max;
+    } else if (systemData.mp.value < systemData.mp.min) {
+      systemData.mp.value = systemData.mp.min;
+    }
+
+    // clamp Fate
+    if (systemData.fate.value > systemData.fate.max) {
+      systemData.fate.value = systemData.fate.max;
+    } else if (systemData.fate.value < systemData.fate.min) {
+      systemData.fate.value = systemData.fate.min;
+    }
   }
+
+
 
   /**
    * @override
@@ -92,6 +114,8 @@ export class SMTXActor extends Actor {
     this._prepareCharacterData(actorData);
     this._prepareNpcData(actorData);
   }
+
+
 
   /**
    * Prepare Character type specific data
@@ -123,12 +147,33 @@ export class SMTXActor extends Actor {
     this.system.init += initiative;
   }
 
+
+
   /**
    * Prepare NPC type specific data.
    */
   _prepareNpcData(actorData) {
     if (actorData.type !== 'npc') return;
+    const systemData = actorData.system;
+
+    systemData.wepA.hit = systemData.stats.ag.value;
+    systemData.wepA.power = systemData.meleePower;
+    systemData.wepA.type = "Demon";
+    systemData.wepA.name = "Innate Weapon";
+
+    if (systemData.autoEXP) {
+      const lvl = systemData.attributes.level;
+      systemData.attributes.exp.tierOne = lvl * (3 + Math.floor(lvl / 10)) * (systemData.isBoss ? lvl : 1);
+      systemData.macca = systemData.attributes.exp.tierOne;
+    }
+
+    if (systemData.isBoss) {
+      systemData.hp.max *= 5;
+      systemData.mp.max *= 2;
+    }
   }
+
+
 
   parseFormula(formula) {
     // Evaluate the mathematical expression
@@ -141,6 +186,8 @@ export class SMTXActor extends Actor {
       return null;
     }
   }
+
+
 
   /**
    * Override getRollData() that's supplied to rolls.
@@ -155,6 +202,8 @@ export class SMTXActor extends Actor {
 
     return data;
   }
+
+
 
   /**
    * Prepare character roll data.

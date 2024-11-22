@@ -2,75 +2,381 @@
 
   {{!-- Sheet Header --}}
   <header class="sheet-header">
-    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100" />
     <div class="header-fields">
-      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name"/></h1>
+      <div class="grid grid-12col">
+        <h1 class="charname grid-span-8"><input name="name" type="text" value="{{actor.name}}" placeholder="Name" />
+        </h1>
+
+        <div class="resource flex-group-center grid-span-2">
+          <label for="system.attributes.level" class="resource-label">Level</label>
+          <div class="resource-content flexrow flex-center flex-between">
+            <input type="text" name="system.attributes.level" value="{{system.attributes.level}}" data-dtype="Number" />
+          </div>
+        </div>
+
+        <div class="resource flex-group-center grid-span-2">
+          <label for="system.race" class="resource-label">Race</label>
+          <div class="resource-content flexrow flex-center flex-between">
+            <input type="text" name="system.race" value="{{system.race}}" />
+          </div>
+        </div>
+      </div>
       {{!-- The grid classes are defined in scss/global/_grid.scss. To use,
       use both the "grid" and "grid-Ncol" class where "N" can be any number
-      from 1 to 12 and will create that number of columns.  --}}
+      from 1 to 12 and will create that number of columns. --}}
       <div class="resources grid grid-3col">
-
         {{!-- "flex-group-center" is also defined in the _grid.scss file
         and it will add a small amount of padding, a border, and will
         center all of its child elements content and text. --}}
         <div class="resource flex-group-center">
-          <label for="system.health.value" class="resource-label">Health</label>
+          <label for="system.hp.value" class="resource-label">HP</label>
           <div class="resource-content flexrow flex-center flex-between">
-            <input type="text" name="system.health.value" value="{{system.health.value}}" data-dtype="Number"/>
-            <span> / </span>
-            <input type="text" name="system.health.max" value="{{system.health.max}}" data-dtype="Number"/>
+            <input type="text" name="system.hp.value" value="{{system.hp.value}}" data-dtype="Number" />
+            <input type="text" name="system.hp.max" value="{{system.hp.max}}" data-dtype="Number" disabled />
           </div>
         </div>
 
         <div class="resource flex-group-center">
-          <label for="system.power.value" class="resource-label">Power</label>
+          <label for="system.mp.value" class="resource-label">MP</label>
           <div class="resource-content flexrow flex-center flex-between">
-            <input type="text" name="system.power.value" value="{{system.power.value}}" data-dtype="Number"/>
-            <span> / </span>
-            <input type="text" name="system.power.max" value="{{system.power.max}}" data-dtype="Number"/>
+            <input type="text" name="system.mp.value" value="{{system.mp.value}}" data-dtype="Number" />
+            <input type="text" name="system.mp.max" value="{{system.mp.max}}" data-dtype="Number" disabled />
           </div>
         </div>
 
         <div class="resource flex-group-center">
-          <label for="system.cr" class="resource-label">CR / XP</label>
+          <label for="system.fate.value" class="resource-label">Fate</label>
           <div class="resource-content flexrow flex-center flex-between">
-            <input type="text" name="system.cr" value="{{system.cr}}" data-dtype="Number"/>
-            <span> / </span>
-            <input type="text" disabled="true" name="system.xp" value="{{system.xp}}" data-dtype="Number"/>
+            <input type="text" name="system.fate.value" value="{{system.fate.value}}" data-dtype="Number" />
+            <input type="text" name="system.fate.max" value="{{system.fate.max}}" data-dtype="Number" disabled />
           </div>
         </div>
+      </div>
+    </div>
+    <div class="grid grid-5col" style="flex-basis: 100%;">
+      <div class="abilities flexcol">
+        {{#each system.stats as |ability key|}}
+        <div class="ability flexrow flex-group-center">
+          <label for="system.stats.{{key}}.value" class="resource-label rollable align-left" data-roll="d100"
+            data-label="{{localize (lookup @root.config.statAbbreviations key)}}">{{localize
+            (lookup @root.config.statAbbreviations key)}}</label>
+          <input type="text" name="system.stats.{{key}}.value" value="{{ability.value}}" data-dtype="Number" />
+          <span class="ability-mod" data-label="{{localize (lookup @root.config.stats key)}}">{{ability.tn}}%</span>
+        </div>
+        {{/each}}
+      </div>
 
+      <div class="flexrow grid-span-2">
+        <div class="align-center" style="border: 2px groove #eeede0;">
+          <label for="system.meleePower" class="resource-label">Melee</label>
+          <div>
+            <h1>{{system.meleePower}}</h1>
+          </div>
+          <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
+              name="system.powerDice.melee" value="{{system.powerDice.melee}}" data-dtype="Number" />&nbsp;d10</div>
+        </div>
+
+        <div class="align-center" style="border: 2px groove #eeede0;">
+          <label for="system.rangedPower" class="resource-label">Ranged</label>
+          <div>
+            <h1>{{system.rangedPower}}</h1>
+          </div>
+          <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
+              name="system.powerDice.ranged" value="{{system.powerDice.ranged}}" data-dtype="Number" />&nbsp;d10</div>
+        </div>
+
+        <div class="align-center" style="border: 2px groove #eeede0;">
+          <label for="system.spellPower" class="resource-label">Spell</label>
+          <div>
+            <h1>{{system.spellPower}}</h1>
+          </div>
+          <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
+              name="system.powerDice.spell" value="{{system.powerDice.spell}}" data-dtype="Number" />&nbsp;d10</div>
+        </div>
+
+        <div class="align-center" style="border: 2px groove #eeede0;">
+          <label for="system.init" class="resource-label">Init</label>
+          <div>
+            <h1 class="initiative-roll clickable">{{system.init}}</h1>
+          </div>
+          <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
+              name="system.powerDice.init" value="{{system.powerDice.init}}" data-dtype="Number" />&nbsp;d10</div>
+        </div>
+
+
+        <div class="flexrow" style="flex-basis: 100%;">
+          <div class="align-center" style="border: 2px groove #eeede0;">
+            <label for="system.init" class="resource-label">Dodge TN</label>
+            <div>
+              <h1>{{system.dodgetn}}%</h1>
+            </div>
+          </div>
+
+          <div class="align-center" style="border: 2px groove #eeede0;">
+            <label for="system.init" class="resource-label">Talk TN</label>
+            <div>
+              <h1>{{system.talktn}}%</h1>
+            </div>
+          </div>
+
+          <div class="align-center" style="border: 2px groove #eeede0;">
+            <label for="system.init" class="resource-label">Phy Def</label>
+            <div>
+              <h1>{{system.phydef}}</h1>
+            </div>
+          </div>
+
+          <div class="align-center" style="border: 2px groove #eeede0;">
+            <label for="system.init" class="resource-label">Mag Def</label>
+            <div>
+              <h1>{{system.magdef}}</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flexcol grid-span-2">
+        <div class='flexrow' style="justify-content: center; align-items: center;">
+          <label class="resource-label flex0">Affinity&nbsp;</label>
+          <label for="system.badStatus" class="resource-label align-right">Current BS:&nbsp;</label>
+          <select name="system.badStatus">
+            {{selectOptions @root.config.badStatusList selected=system.badStatus localize=true}}
+          </select>
+          <label for="system.isCursed" class="resource-label align-right">!CURSED!&nbsp;</label>
+          <input type="checkbox" name="system.isCursed" {{#if system.isCursed}}checked{{/if}} />
+        </div>
+        <div class='flexrow'>
+          <input type="text" name="system.affinityField" value="{{system.affinityField}}" />
+        </div>
+
+        <textarea name="ystem.biography" rows="5" cols="40">{{ystem.biography}}</textarea>
+      </div>
+
+      <div class="flexcol grid-span-3">
+        <div class="flexrow">
+          <label for="system.alignment" class="resource-label">Alignment&nbsp;</label>
+          <input type="text" name="system.alignment" class="flex2" value="{{system.alignment}}" />
+
+          {{#if system.aux.showTCheaders}}
+          <label for="system.tone" class="resource-label">&emsp;Behavior&nbsp;</label>
+          {{else}}
+          <label for="system.tone" class="resource-label">&emsp;Tone&nbsp;</label>
+          {{/if}}
+          <input type="text" name="system.tone" class="flex2" value="{{system.tone}}" />
+        </div>
+
+        <div class="flexrow">
+          {{#if system.aux.showTCheaders}}
+          <label for="system.keywords" class="resource-label">Evolve?&nbsp;</label>
+          {{else}}
+          <label for="system.keywords" class="resource-label">Keywords&nbsp;</label>
+          {{/if}}
+          <input type="text" name="system.keywords" class="flex2" value="{{system.keywords}}" />
+
+
+          {{#if system.aux.showTCheaders}}
+          <label for="system.ngWords" class="resource-label">&emsp;Inherits&nbsp;</label>
+          {{else}}
+          <label for="system.ngWords" class="resource-label">&emsp;NG Words&nbsp;</label>
+          {{/if}}
+          <input type="text" name="system.ngWords" class="flex2" value="{{system.ngWords}}" />
+        </div>
+      </div>
+
+      <div class="flexcol grid-span-2">
+        <div class="flexrow">
+          <label for="system.loot" class="resource-label flex0">Loot&nbsp;</label>
+          <input type="text" name="system.loot" class="flex2" value="{{system.loot}}" />
+
+          <label for="system.attributes.exp.tierOne" class="resource-label flex0">&nbsp;EXP&nbsp;</label>
+          <input type="text" name="system.attributes.exp.tierOne" class="flex1"
+            value="{{system.attributes.exp.tierOne}}" {{#if system.autoEXP}}disabled{{/if}} />
+        </div>
+
+        <div class="flexrow">
+          <label for="system.rare" class="resource-label flex0">Rare&nbsp;</label>
+          <input type="text" name="system.rare" class="flex2" value="{{system.rare}}" />
+
+          <label for="system.macca" class="resource-label flex0">&nbsp;Macca&nbsp;</label>
+          <input type="text" name="system.macca" class="flex1" value="{{system.macca}}" {{#if
+            system.autoEXP}}disabled{{/if}} />
+        </div>
       </div>
     </div>
   </header>
 
+
   {{!-- Sheet Tab Navigation --}}
   <nav class="sheet-tabs tabs" data-group="primary">
     {{!-- Default tab is specified in actor-sheet.mjs --}}
-    <a class="item" data-tab="description">Description</a>
-    <a class="item" data-tab="items">Items</a>
-    <a class="item" data-tab="effects">Effects</a>
+    <a class="item" data-tab="features">Features</a>
+    <a class="item" data-tab="effects">Options</a>
   </nav>
+
 
   {{!-- Sheet Body --}}
   <section class="sheet-body">
+    {{!-- Owned Features Tab --}}
+    <div class="tab features" data-group="primary" data-tab="features">
+      <section class="main">
+        {{> "systems/smt-200x/templates/actor/parts/npc-features.hbs"}}
+      </section>
 
-    {{!-- Biography Tab --}}
-    <div class="tab biography" data-group="primary" data-tab="description">
-      {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
-      {{editor enrichedBiography target="system.biography" engine="prosemirror" button=true editable=editable}}
+
+      <section class="main">
+        {{> "systems/smt-200x/templates/actor/parts/actor-passives.hbs"}}
+      </section>
     </div>
 
-    {{!-- Owned Items Tab --}}
-    <div class="tab items" data-group="primary" data-tab="items">
-       {{> "systems/smt-200x/templates/actor/parts/actor-items.hbs"}}
-    </div>
 
     {{!-- Active Effects Tab --}}
     <div class="tab effects flexcol" data-group="primary" data-tab="effects">
-      {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
-    </div>
+      {{> "systems/smt-200x/templates/actor/parts/actor-buffs.hbs"}}
 
+      <hr>
+
+      <section class="main">
+        {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
+      </section>
+      <hr>
+      <section class="main">
+        <div class="flexcol">
+          <label for="system.phydefFormula" class="resource-label">Physical Defense Formula</label>
+          <input style="font-size: 10pt; font-style: italic;"
+            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.vt.value + @system.attributes.level)/2)"
+            disabled />
+          <input type="text" name="system.phydefFormula" value="{{system.phydefFormula}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.magdefFormula" class="resource-label">Magical Defense Formula</label>
+          <input style="font-size: 10pt; font-style: italic;"
+            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.mg.value + @system.attributes.level)/2)"
+            disabled />
+          <input type="text" name="system.magdefFormula" value="{{system.magdefFormula}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.initFormula" class="resource-label">Initiative Formula</label>
+          <input style="font-size: 10pt; font-style: italic;" value="Tokyo Conception: @system.stats.ag.value"
+            disabled />
+          <input type="text" name="system.initFormula" value="{{system.initFormula}}" />
+        </div>
+      </section>
+
+      <hr>
+
+      <section>
+        <div class='flexrow flex-group-center'>
+          <div class="flex2"><strong>Ready Weapon</strong></div>
+          <div><strong>Type</strong></div>
+          <div><strong>Hit Mod</strong></div>
+          <div><strong>Pwr Mod</strong></div>
+        </div>
+
+        <div class='flexrow flex-group-center'>
+          <div class='flexrow flex2 item-name' style="align-items: center">
+            <label for="system.wepA.name" class="flex0"><strong>A:</strong>&nbsp;</label>
+            <input type="text" name="system.wepA.name" value="{{system.wepA.name}}" disabled />
+          </div>
+          <input type="text" name="system.wepA.type" value="{{system.wepA.type}}" disabled />
+          <input type="text" name="system.wepA.hit" value="{{system.wepA.hit}}" data-dtype="Number" disabled />
+          <input type="text" name="system.wepA.power" value="{{system.wepA.power}}" data-dtype="Number" disabled />
+        </div>
+
+        <div class='flexrow flex-group-center'>
+          <div class='flexrow flex2 item-name' style="align-items: center">
+            <label for="system.wepB.name" class="flex0"><strong>B:</strong>&nbsp;</label>
+            <input type="text" name="system.wepB.name" value="{{system.wepB.name}}" />
+          </div>
+          <input type="text" name="system.wepB.type" value="{{system.wepB.type}}" />
+          <input type="text" name="system.wepB.hit" value="{{system.wepB.hit}}" data-dtype="Number" />
+          <input type="text" name="system.wepB.power" value="{{system.wepB.power}}" data-dtype="Number" />
+        </div>
+      </section>
+
+      <hr>
+
+      <section class="main">
+        <div class="grid grid-5col">
+          <div class="flexcol">
+            <label for="system.hp.mult" class="resource-label">HP Multiplier</label>
+            <input type="text" name="system.hp.mult" value="{{system.hp.mult}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.mp.mult" class="resource-label">MP Multiplier</label>
+            <input type="text" name="system.mp.mult" value="{{system.mp.mult}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.unarmed.hit" class="resource-label">Unarmed Hit</label>
+            <input type="text" name="system.unarmed.hit" value="{{system.unarmed.hit}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.unarmed.power" class="resource-label">Unarmed Power</label>
+            <input type="text" name="system.unarmed.power" value="{{system.unarmed.power}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.powerDice.item" class="resource-label">Item Power Dice</label>
+            <input type="text" name="system.powerDice.item" value="{{system.powerDice.item}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.aux.showTCheaders" class="resource-label">Set TC Formulas</label>
+            <button class="set-tc-formulas"
+              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
+              TC Formulas</button>
+          </div>
+
+          <div class="flexcol">
+            <label for="system.aux.showTCheaders" class="resource-label">Set X Demon Formulas</label>
+            <button class="set-x-demon"
+              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
+              X Demon Formulas</button>
+          </div>
+
+          <div class="flexcol">
+            <label for="system.isBoss" class="resource-label">Is X Boss</label>
+            <input type="checkbox" name="system.isBoss" {{#if system.isBoss}}checked{{/if}} />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.autoEXP" class="resource-label">Auto Calc X EXP/Macca</label>
+            <input type="checkbox" name="system.autoEXP" {{#if system.autoEXP}}checked{{/if}} />
+          </div>
+        </div>
+      </section>
+
+      <hr>
+
+      <section class="main">
+        <div class="flexrow">
+          {{#each system.affinity as |aff key|}}
+          <div class="flexcol">
+            <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
+              (lookup @root.config.affinities key)}}</label>
+            <select name="system.affinity.{{key}}">
+              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
+            </select>
+          </div>
+          {{/each}}
+        </div>
+        <div class="flexrow">
+          {{#each system.affinityBS as |aff key|}}
+          <div class="flexcol">
+            <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
+              (lookup @root.config.badStatusList key)}}</label>
+            <select name="system.affinityBS.{{key}}">
+              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
+            </select>
+          </div>
+          {{/each}}
+        </div>
+      </section>
+    </div>
   </section>
 </form>
-
