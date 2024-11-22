@@ -47,6 +47,11 @@
           <label for="system.quantity" class="resource-label">Quantity</label>
           <input type="text" name="system.quantity" value="{{system.quantity}}" data-dtype="Number" />
         </div>
+
+        <div class="flexcol">
+          <label for="system.reloads" class="resource-label">Reloads</label>
+          <input type="checkbox" name="system.reloads" {{#if system.reloads}}checked{{/if}} />
+        </div>
       </div>
 
       <div class="flexcol">

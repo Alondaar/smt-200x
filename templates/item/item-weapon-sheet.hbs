@@ -24,46 +24,97 @@
 
     {{!-- Attributes Tab --}}
     <div class="tab attributes" data-group="primary" data-tab="attributes">
-      <label for="system.gp" class="resource-label">GP</label>
-      <input type="text" name="system.gp" value="{{system.gp}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.buy" class="resource-label">Buy</label>
-      <input type="text" name="system.buy" value="{{system.buy}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.sell" class="resource-label">Sell</label>
-      <input type="text" name="system.sell" value="{{system.sell}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.vt" class="resource-label">VT</label>
-      <input type="text" name="system.vt" value="{{system.vt}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.sex" class="resource-label">Sex</label>
-      <input type="text" name="system.sex" value="{{system.sex}}" />
-      <br><br>
-      <label for="system.alignment" class="resource-label">Alignment</label>
-      <input type="text" name="system.alignment" value="{{system.alignment}}" />
-      <br><br>
+      <div class="tab attributes" data-group="primary" data-tab="attributes">
+        <h2>DISPLAY INFO</h2>
+        <div class="grid grid-4col">
+          <div class="flexcol">
+            <label for="system.gp" class="resource-label">GP</label>
+            <input type="text" name="system.gp" value="{{system.gp}}" data-dtype="Number" />
+          </div>
 
-      <label for="system.type" class="resource-label">Type</label>
-      <input type="text" name="system.type" value="{{system.type}}" />
-      <br><br>
-      <label for="system.hit" class="resource-label">Hit</label>
-      <input type="text" name="system.hit" value="{{system.hit}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.power" class="resource-label">Power</label>
-      <input type="text" name="system.power" value="{{system.power}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.slotA" class="resource-label">Slot A</label>
-      <input type="checkbox" name="system.slotA" {{#if system.slotA}}checked{{/if}} />
-      <br><br>
-      <label for="system.slotB" class="resource-label">Slot B</label>
-      <input type="checkbox" name="system.slotB" {{#if system.slotB}}checked{{/if}} />
-      <br><br>
-    </div>
+          <div class="flexcol">
+            <label for="system.vt" class="resource-label">VT</label>
+            <input type="text" name="system.vt" value="{{system.vt}}" data-dtype="Number" />
+          </div>
 
-    {{!-- Effects Tab --}}
-    <div class="tab effects" data-group="primary" data-tab="effects">
-      {{> "systems/smt-200x/templates/item/parts/item-effects.hbs"}}
-    </div>
+          <div class="flexcol">
+            <label for="system.sex" class="resource-label">Sex</label>
+            <input type="text" name="system.sex" value="{{system.sex}}" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.alignment" class="resource-label">Alignment</label>
+            <input type="text" name="system.alignment" value="{{system.alignment}}" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.buy" class="resource-label">Buy</label>
+            <input type="text" name="system.buy" value="{{system.buy}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.sell" class="resource-label">Sell</label>
+            <input type="text" name="system.sell" value="{{system.sell}}" data-dtype="Number" />
+          </div>
+        </div>
+
+        <div class="flexrow">
+          <div class="flexcol">
+            <label for="system.uses.value" class="resource-label">Uses</label>
+            <input type="text" name="system.uses.value" value="{{system.uses.value}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.uses.max" class="resource-label">Max Uses</label>
+            <input type="text" name="system.uses.max" value="{{system.uses.max}}" data-dtype="Number" />
+          </div>
+        </div>
+
+        <div class="flexcol">
+          <label for="system.shortEffect" class="resource-label">Short Effect</label>
+          <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
+        </div>
+
+        <br><br>
+
+        <h2>WEAPON CONFIGURATION</h2>
+        <div class="grid grid-4col">
+          <div class="flexcol">
+            <label for="system.type" class="resource-label">Type</label>
+            <input type="text" name="system.type" value="{{system.type}}" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.hit" class="resource-label">Hit</label>
+            <input type="text" name="system.hit" value="{{system.hit}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.power" class="resource-label">Power</label>
+            <input type="text" name="system.power" value="{{system.power}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.alignment" class="resource-label">Alignment</label>
+            <input type="text" name="system.alignment" value="{{system.alignment}}" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.ammo" class="resource-label">Ammo</label>
+            <input type="text" name="system.ammo" value="{{system.ammo}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.maxAmmo" class="resource-label">Max Ammo</label>
+            <input type="text" name="system.maxAmmo" value="{{system.maxAmmo}}" data-dtype="Number" />
+          </div>
+        </div>
+      </div>
+
+      {{!-- Effects Tab --}}
+      <div class="tab effects" data-group="primary" data-tab="effects">
+        {{> "systems/smt-200x/templates/item/parts/item-effects.hbs"}}
+      </div>
   </section>
 
 </form>

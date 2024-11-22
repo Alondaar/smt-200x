@@ -194,13 +194,39 @@ export class SMTXActorSheet extends ActorSheet {
       const li = $(ev.currentTarget).parents('.item');
       const item = this.actor.items.get(li.data('itemId'));
 
+      const rollData = this.actor.getRollData();
+
       const currentHP = this.actor.system.hp.value;
       const currentMP = this.actor.system.mp.value;
       const currentFate = this.actor.system.fate.value;
 
-      const hpCost = Math.floor(Math.abs(item.system.hpCost));
-      const mpCost = Math.floor(Math.abs(item.system.mpCost));
-      const fateCost = Math.floor(Math.abs(item.system.fateCost));
+      const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true })));
+      const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true })));
+      const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true })));
+      const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true })));
+
+      if (ammoCost > 0) {
+        if (item.system.wep == "x") {
+          ui.notifications.info(`You do not have a weapon equipped.`);
+          return
+        }
+        if (item.system.wep == "a") {
+          if (this.actor.system.wepA.ammo - ammoCost >= 0)
+            this.actor.update({
+              "system.wepA.ammo": this.actor.system.wepA.ammo - ammoCost,
+            });
+          else
+            ui.notifications.info(`You do not have enough ammo.`);
+        }
+        else {
+          if (this.actor.system.wepB.ammo - ammoCost >= 0)
+            this.actor.update({
+              "system.wepA.ammo": this.actor.system.wepB.ammo - ammoCost,
+            });
+          else
+            ui.notifications.info(`You do not have enough ammo.`);
+        }
+      }
 
       if (/*currentHP - hpCost >= 0 &&*/ currentMP - mpCost >= 0 && currentMP - fateCost >= 0)
         this.actor.update({
@@ -308,6 +334,31 @@ export class SMTXActorSheet extends ActorSheet {
 
       this.actor.update({ "system.wepB": weaponObj })
     });
+
+
+
+
+    html.on('click', '.weapon-reload-a', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      const ammoReady = Math.min(item.system.quantity, this.actor.system.wepA.maxAmmo - this.actor.system.wepA.ammo);
+
+      item.update({ "system.quantity": item.system.quantity - ammoReady })
+      this.actor.update({ "system.wepA.ammo": this.actor.system.wepA.ammo + ammoReady })
+    });
+
+    html.on('click', '.weapon-reload-b', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      const ammoReady = Math.min(item.system.quantity, this.actor.system.wepB.maxAmmo - this.actor.system.wepB.ammo);
+
+      item.update({ "system.quantity": item.system.quantity - ammoReady })
+      this.actor.update({ "system.wepB.ammo": this.actor.system.wepB.ammo + ammoReady })
+    });
+
+
 
 
     html.on('click', '.weapon-rotate', (ev) => {

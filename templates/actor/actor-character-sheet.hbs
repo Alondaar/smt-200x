@@ -161,29 +161,27 @@
         </div>
 
 
-        <div class='flexrow flex-group-center'>
-          <div class="flex2"><strong>Ready Weapon</strong></div>
-          <div><strong>Type</strong></div>
-          <div><strong>Hit Mod</strong></div>
-          <div><strong>Pwr Mod</strong></div>
-        </div>
+        <div class='grid grid-8col flex-group-center'>
+          <div class="grid-span-4"><strong>Ready Weapon</strong></div>
+          <div class="grid-span-2"><strong>Ammo</strong></div>
+          <div><strong>Hit</strong></div>
+          <div><strong>Pwr</strong></div>
 
-        <div class='flexrow flex-group-center'>
-          <div class='flexrow flex2 item-name' style="align-items: center">
+          <div class='flexrow grid-span-4 item-name' style="align-items: center">
             <label for="system.wepA.name" class="flex0"><strong>A:</strong>&nbsp;</label>
             <input type="text" name="system.wepA.name" value="{{system.wepA.name}}" />
           </div>
-          <input type="text" name="system.wepA.type" value="{{system.wepA.type}}" />
+          <input type="text" name="system.wepA.ammo" value="{{system.wepA.ammo}}" data-dtype="Number" />
+          <input type="text" name="system.wepA.maxAmmo" value="{{system.wepA.maxAmmo}}" data-dtype="Number" />
           <input type="text" name="system.wepA.hit" value="{{system.wepA.hit}}" data-dtype="Number" />
           <input type="text" name="system.wepA.power" value="{{system.wepA.power}}" data-dtype="Number" />
-        </div>
 
-        <div class='flexrow flex-group-center'>
-          <div class='flexrow flex2 item-name' style="align-items: center">
+          <div class='flexrow grid-span-4 item-name' style="align-items: center">
             <label for="system.wepB.name" class="flex0"><strong>B:</strong>&nbsp;</label>
             <input type="text" name="system.wepB.name" value="{{system.wepB.name}}" />
           </div>
-          <input type="text" name="system.wepB.type" value="{{system.wepB.type}}" />
+          <input type="text" name="system.wepB.ammo" value="{{system.wepB.ammo}}" data-dtype="Number" />
+          <input type="text" name="system.wepB.maxAmmo" value="{{system.wepB.maxAmmo}}" data-dtype="Number" />
           <input type="text" name="system.wepB.hit" value="{{system.wepB.hit}}" data-dtype="Number" />
           <input type="text" name="system.wepB.power" value="{{system.wepB.power}}" data-dtype="Number" />
         </div>
@@ -290,22 +288,29 @@
 
           <div class="grid grid-12col">
             <label for="system.law" class="resource-label">Law</label>
-            <input type="text" name="system.law" value="{{system.law}}" />
+            <input type="text" name="system.law" value="{{system.law}}" data-dtype="Number" />
             <label for="system.chaos" class="resource-label">Chaos</label>
-            <input type="text" name="system.chaos" value="{{system.chaos}}" />
+            <input type="text" name="system.chaos" value="{{system.chaos}}" data-dtype="Number" />
             <label for="system.neutral" class="resource-label">Neutral</label>
-            <input type="text" name="system.neutral" value="{{system.neutral}}" />
+            <input type="text" name="system.neutral" value="{{system.neutral}}" data-dtype="Number" />
             <label for="system.light" class="resource-label">Light</label>
-            <input type="text" name="system.light" value="{{system.light}}" />
+            <input type="text" name="system.light" value="{{system.light}}" data-dtype="Number" />
             <label for="system.dark" class="resource-label">Dark</label>
-            <input type="text" name="system.dark" value="{{system.dark}}" />
+            <input type="text" name="system.dark" value="{{system.dark}}" data-dtype="Number" />
             <label for="system.heeho" class="resource-label">Hee-ho</label>
-            <input type="text" name="system.heeho" value="{{system.heeho}}" />
+            <input type="text" name="system.heeho" value="{{system.heeho}}" data-dtype="Number" />
           </div>
 
-          <div>
-            <label for="x" class="resource-label">Alignment</label>
-            <input type="text" name="system.alignment" value="{{system.contacts}}" />
+          <div class="flexrow">
+            <div class="flexcol">
+              <label for="system.alignment" class="resource-label">Alignment</label>
+              <input type="text" name="system.alignment" value="{{system.alignment}}" />
+            </div>
+
+            <div class="flexcol">
+              <label for="system.macca" class="resource-label">Held Macca</label>
+              <input type="text" name="system.macca" value="{{system.macca}}" data-dtype="Number" />
+            </div>
           </div>
         </div>
         <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="height: 300px" />

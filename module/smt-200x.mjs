@@ -150,6 +150,8 @@ Handlebars.registerHelper('range', function (start, end, options) {
   return new Handlebars.SafeString(result);
 });
 
+
+
 /* -------------------------------------------- */
 /*  Ready Hook                                  */
 /* -------------------------------------------- */
@@ -158,7 +160,6 @@ Hooks.once('ready', function () {
   // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 });
-
 /* -------------------------------------------- */
 /*  Hotbar Macros                               */
 /* -------------------------------------------- */
@@ -198,6 +199,8 @@ async function createItemMacro(data, slot) {
   game.user.assignHotbarMacro(macro, slot);
   return false;
 }
+
+
 
 /**
  * Create a Macro from an Item drop.

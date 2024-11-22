@@ -23,22 +23,46 @@ export class SMTXActor extends Actor {
 
     systemData.aux.showTCheaders = game.settings.get("smt-200x", "showTCheaders");
 
-    if (actorData.type == 'character') {
-      let levelMultiplier = 0.8;
+    if (actorData.type === 'character') {
+      // Define multipliers for each tier
+      const tierMultipliers = {
+        tierOne: 0.8,
+        tierTwo: 1.0,
+        tierThree: 1.3
+      };
+
+      // Total EXP from all tiers
+      const totalExp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree;
+
+      let currentLevel = 1; // Track the current level
+      let nextThreshold = 0; // EXP required for the next level
+      let currentMultiplier = tierMultipliers.tierOne; // Multiplier based on the active tier
+
+      // Function to calculate the threshold for a given level and multiplier
+      const calculateThreshold = (level, multiplier) => Math.floor(Math.pow(level, 3) * multiplier);
+
+      // Determine the tier and calculate the level
       if (systemData.attributes.exp.tierTwo > 0)
-        levelMultiplier = 1.0;
+        currentMultiplier = tierMultipliers.tierTwo;
       if (systemData.attributes.exp.tierThree > 0)
-        levelMultiplier = 1.3;
+        currentMultiplier = tierMultipliers.tierThree;
 
-      systemData.attributes.totalexp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree
+      // Calculate the level dynamically
+      while (true) {
+        const threshold = calculateThreshold(currentLevel + 1, currentMultiplier);
+        if (totalExp < threshold) {
+          nextThreshold = threshold;
+          break;
+        }
+        currentLevel++;
+      }
 
-      const levelsFromTierOne = Math.floor(Math.pow((systemData.attributes.exp.tierOne) / 0.8, 1 / 3));
-      const levelsFromTierTwo = Math.floor(Math.pow((systemData.attributes.exp.tierTwo) / 1.0, 1 / 3));
-      const levelsFromTierThree = Math.floor(Math.pow((systemData.attributes.exp.tierThree) / 1.3, 1 / 3));
-
-      systemData.attributes.level = Math.max(levelsFromTierOne + levelsFromTierTwo + levelsFromTierThree, 1);
-      systemData.attributes.expnext = Math.floor(Math.pow(systemData.attributes.level + 1, 3) * levelMultiplier);
+      // Update actor's level and EXP requirement for the next level
+      systemData.attributes.level = currentLevel;
+      systemData.attributes.totalexp = totalExp;
+      systemData.attributes.expnext = nextThreshold - totalExp;
     }
+
 
 
     // Loop through stats, and reset temp to 0
@@ -396,5 +420,29 @@ export class SMTXActor extends Actor {
     if (applyTo.makunda) {
       updateBuffs("maka", "debuff");
     }
+  }
+
+  applyEXP(amount) {
+    if (this.system.attributes.exp.tierThree > 0) {
+      this.update({
+        "system.attributes.exp.tierThree": this.system.attributes.exp.tierThree + amount
+      });
+    }
+    else if (this.system.attributes.exp.tierTwo > 0) {
+      this.update({
+        "system.attributes.exp.tierTwo": this.system.attributes.exp.tierTwo + amount
+      });
+    }
+    else {
+      this.update({
+        "system.attributes.exp.tierOne": this.system.attributes.exp.tierOne + amount
+      });
+    }
+  }
+
+  applyMacca(amount) {
+    this.update({
+      "system.macca": this.system.macca + amount
+    });
   }
 }
