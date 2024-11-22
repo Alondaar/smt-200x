@@ -1,0 +1,153 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" />
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name" /></h1>
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">Description</a>
+    <a class="item" data-tab="attributes">Attributes</a>
+    <a class="item" data-tab="effects">Effects</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+
+    {{!-- Description Tab --}}
+    <div class="tab" data-group="primary" data-tab="description">
+      {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
+      {{editor enrichedDescription target="system.description" engine="prosemirror" button=true editable=editable}}
+    </div>
+
+    {{!-- Attributes Tab --}}
+    <div class="tab attributes" data-group="primary" data-tab="attributes">
+      <h2>DISPLAY INFO</h2>
+      <div class="grid grid-4col">
+        <div class="flexcol">
+          <label for="system.type" class="resource-label">Type</label>
+          <input type="text" name="system.type" value="{{system.type}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.target" class="resource-label">Target</label>
+          <input type="text" name="system.target" value="{{system.target}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.affinity" class="resource-label">Affinity</label>
+          <select name="system.affinity">
+            {{selectOptions @root.config.affinities selected=system.affinity localize=true}}
+          </select>
+        </div>
+
+        <div class="flexcol">
+          <label for="system.quantity" class="resource-label">Quantity</label>
+          <input type="text" name="system.quantity" value="{{system.quantity}}" data-dtype="Number" />
+        </div>
+      </div>
+
+      <div class="flexcol">
+        <label for="system.shortEffect" class="resource-label">Short Effect</label>
+        <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
+      </div>
+
+      <br><br>
+
+      <h2>ROLL and CHECK DATA</h2>
+      <div class="flexrow">
+        <div class="flexcol">
+          <label for="system.powerDice" class="resource-label">Power Dice</label>
+          <input type="text" name="system.powerDice" value="{{system.powerDice}}" />
+        </div>
+
+        <div class="flexcol flex2">
+          <label for="system.power" class="resource-label">Power</label>
+          <input type="text" name="system.power" value="{{system.power}}" />
+        </div>
+      </div>
+
+      <br><br>
+
+      <h2>ATTACK CONFIGURATION</h2>
+      <div class="grid grid-4col">
+        <div class="flexcol">
+          <label for="system.ingoreDefense" class="resource-label">Ignores Defense</label>
+          <input type="checkbox" name="system.ingoreDefense" {{#if system.ingoreDefense}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.pierce" class="resource-label">Pierce (unused)</label>
+          <input type="checkbox" name="system.pierce" {{#if system.pierce}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.powerBoost" class="resource-label">Power Boost</label>
+          <input type="text" name="system.powerBoost" value="{{system.powerBoost}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.affectsMP" class="resource-label">Affects MP</label>
+          <input type="checkbox" name="system.affectsMP" {{#if system.affectsMP}}checked{{/if}} />
+        </div>
+      </div>
+
+      <br><br>
+
+      <h2>BUFF and DEBUFFs</h2>
+      <div class="grid grid-4col">
+        <div class="flexcol">
+          <label for="system.buffs.sukukaja" class="resource-label">Sukukaja Effect</label>
+          <input type="checkbox" name="system.buffs.sukukaja" {{#if system.buffs.sukukaja}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.sukunda" class="resource-label">Sukunda Effect</label>
+          <input type="checkbox" name="system.buffs.sukunda" {{#if system.buffs.sukunda}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.tarukaja" class="resource-label">Tarukaja Effect</label>
+          <input type="checkbox" name="system.buffs.tarukaja" {{#if system.buffs.tarukaja}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.tarunda" class="resource-label">Tarunda Effect</label>
+          <input type="checkbox" name="system.buffs.tarunda" {{#if system.buffs.tarunda}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.rakukaja" class="resource-label">Rakukaja Effect</label>
+          <input type="checkbox" name="system.buffs.rakukaja" {{#if system.buffs.rakukaja}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.rakunda" class="resource-label">Rakunda Effect</label>
+          <input type="checkbox" name="system.buffs.rakunda" {{#if system.buffs.rakunda}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.makakaja" class="resource-label">Makakaja Effect</label>
+          <input type="checkbox" name="system.buffs.makakaja" {{#if system.buffs.makakaja}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buffs.makunda" class="resource-label">Makunda Effect</label>
+          <input type="checkbox" name="system.buffs.makunda" {{#if system.buffs.makunda}}checked{{/if}} />
+        </div>
+      </div>
+
+      <label for="system.subBuffRoll" class="resource-label">Sub Buff Roll</label>
+      <input type="text" name="system.subBuffRoll" value="{{system.subBuffRoll}}" />
+
+    </div>
+
+    {{!-- Effects Tab --}}
+    <div class="tab effects" data-group="primary" data-tab="effects">
+      {{> "systems/smt-200x/templates/item/parts/item-effects.hbs"}}
+    </div>
+  </section>
+
+</form>

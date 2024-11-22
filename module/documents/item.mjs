@@ -28,10 +28,12 @@ export class SMTXItem extends Item {
     const systemData = itemData.system;
 
     this.prepareFeature()
+    this.prepareConsumable()
   }
 
   prepareFeature() {
-    if (this.type != 'feature') return
+    if (this.type !== 'feature' && this.type !== 'consumable') return
+
     const itemData = this;
     const systemData = itemData.system;
     const rollData = this.getRollData();
@@ -75,7 +77,17 @@ export class SMTXItem extends Item {
     const preCalcTN = new Roll((systemData.tn || "0").replace(/@/g, "@actor.") + "+(" + weaponTN + ")", rollData).evaluateSync();
     systemData.calcTN = preCalcTN.total;
 
-    systemData.formula = "(" + systemData.powerDice + ")+" + (staticPower || 0);
+    systemData.formula = "(" + (systemData.powerDice || 0) + ")+" + (staticPower || 0);
+  }
+
+
+  prepareConsumable() {
+    if (this.type !== 'consumable') return
+
+    const itemData = this;
+    const systemData = itemData.system;
+
+    // Create header toggles to hide None affinity, blank Power, etc.
   }
 
 
@@ -85,7 +97,7 @@ export class SMTXItem extends Item {
    */
   getRollData() {
     // Starts off by populating the roll data with a shallow copy of `this.system`
-    const rollData = { ...this.system };
+    const rollData = foundry.utils.deepClone(this.system);
 
     // Quit early if there's no parent actor
     if (!this.actor) return rollData;
@@ -461,6 +473,7 @@ export class SMTXItem extends Item {
         ${showBuffButtons ? `<p><strong>Results:</strong> ${nonZeroValues}</p>
           <p><strong>Apply to:</strong> ${activeBuffs}</p>
           <button class='apply-buffs'>Apply Buffs / Debuffs</button>` : ""}
+        <div>${systemData.shortEffect}</div>
     </div>
 `;
 

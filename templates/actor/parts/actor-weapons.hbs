@@ -1,6 +1,6 @@
 <ol class='items-list'>
   <li class='item flexrow items-header'>
-    <div class='item-name'>{{localize 'Name'}}</div>
+    <div class='item-name'>Weapons</div>
     <div class='item-prop'>Type</div>
     <div class='item-prop'>Hit</div>
     <div class='item-prop'>Power</div>
@@ -27,8 +27,6 @@
     <div class='item-prop'>
       <span class="weapon-equip-a clickable"><i class="fa-solid fa-a"> </i></span>
       <span class="weapon-equip-b clickable">&emsp;<i class="fa-solid fa-b"></i></span>
-      <!-- <input type="checkbox" name="item.equipped" class='weapon-equip-a' {{#if item.system.slotA}}checked{{/if}} />
-      <input type="checkbox" name="item.equipped" class='weapon-equip-b' {{#if item.system.slotB}}checked{{/if}} /> -->
     </div>
     <div class='item-controls'>
       <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=' feature'}}'>
@@ -39,5 +37,8 @@
       </a>
     </div>
   </li>
+  <div class='item-prop'
+    style="text-align:left; padding:4px; border-bottom: 1px solid #c9c7b8 ;margin-bottom: 4px; justify-content: left;">
+    {{item.system.shortEffect}}</div>
   {{/each}}
 </ol>

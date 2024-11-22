@@ -12,6 +12,7 @@ export const preloadHandlebarsTemplates = async function () {
     'systems/smt-200x/templates/actor/parts/actor-armor.hbs',
     'systems/smt-200x/templates/actor/parts/actor-weapons.hbs',
     'systems/smt-200x/templates/actor/parts/actor-items.hbs',
+    'systems/smt-200x/templates/actor/parts/actor-consumables.hbs',
     'systems/smt-200x/templates/actor/parts/actor-spells.hbs',
     'systems/smt-200x/templates/actor/parts/actor-buffs.hbs',
     'systems/smt-200x/templates/actor/parts/actor-effects.hbs',

@@ -40,6 +40,28 @@ export class SMTXActor extends Actor {
       systemData.attributes.expnext = Math.floor(Math.pow(systemData.attributes.level + 1, 3) * levelMultiplier);
     }
 
+
+    // Loop through stats, and reset temp to 0
+    for (let [key, stat] of Object.entries(systemData.stats)) {
+      systemData.stats[key].temp = 0;
+    }
+
+    this.items.forEach((item) => {
+      if (item.type === "armor" && item.system.equipped) {
+        systemData.stats.st.temp += item.system.st || 0;
+        systemData.stats.mg.temp += item.system.mg || 0;
+        systemData.stats.vt.temp += item.system.vt || 0;
+        systemData.stats.ag.temp += item.system.ag || 0;
+        systemData.stats.lk.temp += item.system.lk || 0;
+      }
+    });
+
+    // Loop through stats, and total up
+    for (let [key, stat] of Object.entries(systemData.stats)) {
+      systemData.stats[key].value = stat.base + stat.temp;
+    }
+
+
     // Collect buff / debuff stacks
     systemData.sumRaku = systemData.raku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.raku.debuff.reduce((total, num) => total + num, 0));
     systemData.sumTaru = systemData.taru.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.taru.debuff.reduce((total, num) => total + num, 0));
@@ -83,6 +105,32 @@ export class SMTXActor extends Actor {
     } else if (systemData.fate.value < systemData.fate.min) {
       systemData.fate.value = systemData.fate.min;
     }
+
+
+    // Loop through stats, and add their TNs to sheet output
+    for (let [key, stat] of Object.entries(systemData.stats)) {
+      systemData.stats[key].tn = (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
+    }
+
+    systemData.dodgetn = 10 + systemData.stats.ag.value + systemData.sumSuku;
+    systemData.talktn = 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
+  }
+
+
+  prepareEmbeddedDocuments() {
+    // Call the parent class to ensure other embedded documents are processed
+    super.prepareEmbeddedDocuments();
+
+    // Process non-"Skill" items first
+    const nonSkills = this.items.filter(item => item.type !== "feature");
+    nonSkills.forEach(item => item.prepareData());
+
+    // Ensure the actor stats are fully prepared here
+    this.prepareDerivedData(); // Ensure derived stats are finalized
+
+    // Process "Skill" items last
+    const skills = this.items.filter(item => item.type === "feature");
+    skills.forEach(item => item.prepareData());
   }
 
 
@@ -100,16 +148,6 @@ export class SMTXActor extends Actor {
     const actorData = this;
     const systemData = actorData.system;
     const flags = actorData.flags.smt200x || {};
-
-
-    // Loop through stats, and add their TNs to sheet output
-    for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].tn = (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
-    }
-
-    systemData.dodgetn = 10 + systemData.stats.ag.value + systemData.sumSuku;
-    systemData.talktn = 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
-
 
     // Make separate methods for each Actor type (character, npc, etc.) to keep
     // things organized.
@@ -195,46 +233,30 @@ export class SMTXActor extends Actor {
    * Override getRollData() that's supplied to rolls.
    */
   getRollData() {
-    // Starts off by populating the roll data with a shallow copy of `this.system`
-    const data = { ...this.system };
+    // Copy the system data (core stats) into the roll data
+    const data = foundry.utils.deepClone(this.system);
 
-    // Copy the stats to the top level, so that rolls can use
-    // formulas like `@st + 4`.
+    // Loop through stats, and add their TNs to sheet output
+    for (let [key, stat] of Object.entries(data.stats)) {
+      data.stats[key].tn = (stat.value * 5) + data.attributes.level + (data.sumSuku || 0);
+    }
+
+    // Copy stats to the top level for shorthand usage in rolls
     if (data.stats) {
       for (let [k, v] of Object.entries(data.stats)) {
-        data[k] = foundry.utils.deepClone(v);
+        data[k] = v;
       }
     }
 
-    // Add level for easier access, or fall back to 0.
+    // Add derived data (e.g., level) for easier access
     if (data.attributes.level) {
       data.lvl = data.attributes.level ?? 0;
     }
-
-    // Prepare character roll data.
-    this._getCharacterRollData(data);
-    this._getNpcRollData(data);
 
     return data;
   }
 
 
-
-  /**
-   * Prepare character roll data.
-   */
-  _getCharacterRollData(data) {
-    if (this.type !== 'character') return;
-  }
-
-  /**
-   * Prepare NPC roll data.
-   */
-  _getNpcRollData(data) {
-    if (this.type !== 'npc') return;
-
-    // Process additional NPC data here.
-  }
 
   applyDamage(amount, affinity = "almighty", ignoreDefense = false, pierce = false, affectsMP = false) {
     const currentHP = this.system.hp.value;

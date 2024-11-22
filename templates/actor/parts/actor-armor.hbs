@@ -3,10 +3,6 @@
     <div class='item-name'>Equipable</div>
     <div class='item-prop'>Slot</div>
     <div class='item-prop'>Equip</div>
-    <div class='item-prop'>Phy Def</div>
-    <div class='item-prop'>Mag Def</div>
-    <div class='item-prop'>Melee</div>
-    <div class='item-prop'>Init</div>
     <div class='item-controls'>
       <a class='item-control item-create' title='Create item' data-type='armor'>
         <i class='fas fa-plus'></i>
@@ -27,10 +23,6 @@
     <div class='item-prop armor-equip'>
       <input type="checkbox" name="item.equipped" {{#if item.system.equipped}}checked{{/if}} />
     </div>
-    <div class='item-prop'>{{item.system.phydef}}</div>
-    <div class='item-prop'>{{item.system.magdef}}</div>
-    <div class='item-prop'>{{item.system.meleePower}}</div>
-    <div class='item-prop'>{{item.system.init}}</div>
     <div class='item-controls'>
       <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=' feature'}}'>
         <i class='fas fa-edit'></i>
