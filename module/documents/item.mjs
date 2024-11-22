@@ -9,8 +9,10 @@ export class SMTXItem extends Item {
   prepareData() {
     // As with the actor class, items are documents that can have their data
     // preparation methods overridden (such as prepareBaseData()).
+
     super.prepareData();
   }
+
 
   /**
  * @override

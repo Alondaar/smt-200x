@@ -58,16 +58,34 @@ Hooks.once('init', function () {
 
 
   // Register a boolean setting
-  /*game.settings.register("my-system", "enableFeature", {
-    name: "Enable Special Feature",
-    hint: "Toggle this to enable or disable the special feature.",
+  game.settings.register("smt-200x", "taruOnly", {
+    name: "Taru- affects Spell Power",
+    hint: "Makes Tarukaja/unda effects apply to Spell Power.",
     scope: "world", // World-level setting (shared by all players)
-    config: true, // Expose in the configuration UI
+    config: true,
     type: Boolean,
-    default: true // Default value
+    default: false
   });
 
-  // Register a number setting
+  game.settings.register("smt-200x", "showTCheaders", {
+    name: "Show Tokyo Conception Headers",
+    hint: "Exchanges X-specific labels and text with TC equivalents",
+    scope: "world", // World-level setting (shared by all players)
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
+  game.settings.register("smt-200x", "addLevelToRangedPower", {
+    name: "Add Level to Ranged Power",
+    hint: "A common homebrew that brings ranged power in line with other types.",
+    scope: "world", // World-level setting (shared by all players)
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
+  /*// Register a number setting
   game.settings.register("my-system", "maxItems", {
     name: "Maximum Items",
     hint: "Set the maximum number of items allowed.",

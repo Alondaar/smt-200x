@@ -170,7 +170,13 @@
           "useTCDef": false,
           "useTCInit": false,
           "showTCheaders": false
-        }
+        },
+        "phydefFormula": "@system.vt.value + @system.attributes.level",
+        "magdefFormula": "@system.vt.value + @system.attributes.level",
+        "initFormula": "floor((@system.ag.value + @system.attributes.level)/2)",
+        "race": "",
+        "alignment": "",
+        "macca": "0"
       }
     },
     "character": {
@@ -181,19 +187,34 @@
       "contacts": "",
       "sex": "",
       "age": "",
-      "race": "",
-      "alignment": "",
       "class1": "",
       "class2": "",
-      "class3": "",
-      "phydefFormula": "@system.vt.value",
-      "magdefFormula": "@system.vt.value",
-      "initFormula": "floor((@system.ag.value + @system.attributes.level)/2)"
+      "class3": ""
     },
     "npc": {
       "templates": [
         "base"
-      ]
+      ],
+      "hp": {
+        "value": 10,
+        "min": 0,
+        "max": 10,
+        "mult": 6
+      },
+      "mp": {
+        "value": 10,
+        "min": 0,
+        "max": 10,
+        "mult": 3
+      },
+      "tone": "",
+      "keywords": "",
+      "ngWords": "",
+      "shortbio": "",
+      "loot": "",
+      "rare": "",
+      "isBoss": false,
+      "autoEXP": true
     }
   },
   "Item": {
@@ -216,7 +237,7 @@
         "sell": "0"
       },
       "equipment": {
-        "vt": 0,
+        "vtReq": 0,
         "sex": "-",
         "alignment": "-"
       }
@@ -242,7 +263,12 @@
       "magdef": 0,
       "equipped": false,
       "meleePower": 0,
-      "init": 0
+      "init": 0,
+      "st": 0,
+      "mg": 0,
+      "vt": 0,
+      "ag": 0,
+      "lk": 0
     },
     "consumable": {
       "templates": [
@@ -293,6 +319,7 @@
       "fateCost": "0",
       "hideCritDamage": false,
       "affectsMP": false,
+      "actionPattern": "-",
       "buffs": {
         "sukukaja": false,
         "sukunda": false,

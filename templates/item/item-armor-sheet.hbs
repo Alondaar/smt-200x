@@ -24,43 +24,106 @@
 
     {{!-- Attributes Tab --}}
     <div class="tab attributes" data-group="primary" data-tab="attributes">
-      <label for="system.gp" class="resource-label">GP</label>
-      <input type="text" name="system.gp" value="{{system.gp}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.buy" class="resource-label">Buy</label>
-      <input type="text" name="system.buy" value="{{system.buy}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.sell" class="resource-label">Sell</label>
-      <input type="text" name="system.sell" value="{{system.sell}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.vt" class="resource-label">VT</label>
-      <input type="text" name="system.vt" value="{{system.vt}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.sex" class="resource-label">Sex</label>
-      <input type="text" name="system.sex" value="{{system.sex}}" />
-      <br><br>
-      <label for="system.alignment" class="resource-label">Alignment</label>
-      <input type="text" name="system.alignment" value="{{system.alignment}}" />
-      <br><br>
+      <h2>Item Data</h2>
+      <div class="grid grid-6col">
+        <div class="flexcol">
+          <label for="system.type" class="resource-label">Type</label>
+          <input type="text" name="system.type" value="{{system.type}}" />
+        </div>
 
-      <label for="system.type" class="resource-label">Type</label>
-      <input type="text" name="system.type" value="{{system.type}}" />
+        <div class="flexcol">
+          <label for="system.phydef" class="resource-label">Physical Defense</label>
+          <input type="text" name="system.phydef" value="{{system.phydef}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.magdef" class="resource-label">Magical Defense</label>
+          <input type="text" name="system.magdef" value="{{system.magdef}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.meleePower" class="resource-label">Melee Power Bonus</label>
+          <input type="text" name="system.meleePower" value="{{system.meleePower}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.init" class="resource-label">Initiative Bonus</label>
+          <input type="text" name="system.init" value="{{system.init}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.equipped" class="resource-label">Equipped</label>
+          <input type="checkbox" name="system.equipped" {{#if system.equipped}}checked{{/if}} />
+        </div>
+      </div>
+
+      <div class="flexcol">
+        <label for="system.shortEffect" class="resource-label">Display Description</label>
+        <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
+      </div>
+
       <br><br>
-      <label for="system.phydef" class="resource-label">Physical Defense</label>
-      <input type="text" name="system.phydef" value="{{system.phydef}}" data-dtype="Number" />
+      <h2>Magatama Stat Bonuses (unused)</h2>
+      <div class="grid grid-6col">
+        <div class="flexcol">
+          <label for="system.st" class="resource-label">Strength</label>
+          <input type="text" name="system.st" value="{{system.st}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.mg" class="resource-label">Magic</label>
+          <input type="text" name="system.mg" value="{{system.mg}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.vt" class="resource-label">Vitality</label>
+          <input type="text" name="system.vt" value="{{system.vt}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.ag" class="resource-label">Agility</label>
+          <input type="text" name="system.ag" value="{{system.ag}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.lk" class="resource-label">Luck</label>
+          <input type="text" name="system.lk" value="{{system.lk}}" data-dtype="Number" />
+        </div>
+      </div>
+
       <br><br>
-      <label for="system.magdef" class="resource-label">Magical Defense</label>
-      <input type="text" name="system.magdef" value="{{system.magdef}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.meleePower" class="resource-label">Melee Power Bonus</label>
-      <input type="text" name="system.meleePower" value="{{system.meleePower}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.init" class="resource-label">Initiative Bonus</label>
-      <input type="text" name="system.init" value="{{system.init}}" data-dtype="Number" />
-      <br><br>
-      <label for="system.equipped" class="resource-label">Equipped</label>
-      <input type="checkbox" name="system.equipped" {{#if system.equipped}}checked{{/if}} />
-      <br><br>
+      <h2>Unused display/aux info</h2>
+      <div class="grid grid-6col">
+        <div class="flexcol">
+          <label for="system.gp" class="resource-label">GP</label>
+          <input type="text" name="system.gp" value="{{system.gp}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.buy" class="resource-label">Buy</label>
+          <input type="text" name="system.buy" value="{{system.buy}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.sell" class="resource-label">Sell</label>
+          <input type="text" name="system.sell" value="{{system.sell}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.vtReq" class="resource-label">VT</label>
+          <input type="text" name="system.vtReq" value="{{system.vtReq}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.sex" class="resource-label">Sex</label>
+          <input type="text" name="system.sex" value="{{system.sex}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.alignment" class="resource-label">Alignment</label>
+          <input type="text" name="system.alignment" value="{{system.alignment}}" />
+        </div>
+      </div>
     </div>
 
     {{!-- Effects Tab --}}

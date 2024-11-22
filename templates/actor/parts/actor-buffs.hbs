@@ -1,0 +1,62 @@
+<section class="main">
+  <div class="flexcol">
+    <div class="flexrow flex-group-center">
+      <h2 class="clear-buffs clickable">Remove Buffs (Dekaja)</h2>
+      <h2 class="clear-buffs-and-debuffs clickable">
+        << Clear All>>
+      </h2>
+      <h2 class="clear-debuffs clickable">Remove Debuffs (Dekunda)</h2>
+    </div>
+    <div class="grid grid-12col flex-group-center">
+      <label for="system.suku" class="resource-label align-left grid-span-2">Sukukaja (Raise TNs)</label>
+      {{#each system.suku.buff}}
+      <input type="text" class="buff-field flex1" name="system.suku.buff[{{@index}}]" value="{{this}}"
+        data-dtype="Number" />
+      {{/each}}
+      <label for="system.suku" class="resource-label align-left grid-span-2">Sukukaja (Lower TNs)</label>
+      {{#each system.suku.debuff}}
+      <input type="text" class="buff-field flex1" name="system.suku.debuff[{{@index}}]" value="{{this}}"
+        data-dtype="Number" />
+      {{/each}}
+    </div>
+    <hr>
+    <div class="grid grid-12col flex-group-center">
+      <label for="system.taru" class="resource-label align-left grid-span-2">Tarukaja (Raise Phys Power)</label>
+      {{#each system.taru.buff}}
+      <input type="text" class="buff-field flex1" name="system.taru.buff[{{@index}}]" value="{{this}}"
+        data-dtype="Number" />
+      {{/each}}
+      <label for="system.taru" class="resource-label align-left grid-span-2">Tarunda (Lower Phys Power)</label>
+      {{#each system.taru.debuff}}
+      <input type="text" class="buff-field flex1" name="system.taru.debuff[{{@index}}]" value="{{this}}"
+        data-dtype="Number" />
+      {{/each}}
+    </div>
+    <hr>
+    <div class="grid grid-12col flex-group-center">
+      <label for="system.raku" class="resource-label align-left grid-span-2">Rakukaja (Raise Defense)</label>
+      {{#each system.raku.buff}}
+      <input type="text" class="buff-field flex1" name="system.raku.buff[{{@index}}]" value="{{this}}"
+        data-dtype="Number" />
+      {{/each}}
+      <label for="system.raku" class="resource-label align-left grid-span-2">Rakunda (Lower Defense)</label>
+      {{#each system.raku.debuff}}
+      <input type="text" class="buff-field flex1" name="system.raku.debuff[{{@index}}]" value="{{this}}"
+        data-dtype="Number" />
+      {{/each}}
+    </div>
+    <hr>
+    <div class="grid grid-12col flex-group-center">
+      <label for="system.maka" class="resource-label align-left grid-span-2">Makakaja (Raise Spell Power)</label>
+      {{#each system.maka.buff}}
+      <input type="text" class="buff-field flex1" name="system.maka.buff[{{@index}}]" value="{{this}}"
+        data-dtype="Number" />
+      {{/each}}
+      <label for="system.maka" class="resource-label align-left grid-span-2">Makakunda (Lower Spell Power)</label>
+      {{#each system.maka.debuff}}
+      <input type="text" class="buff-field flex1" name="system.maka.debuff[{{@index}}]" value="{{this}}"
+        data-dtype="Number" />
+      {{/each}}
+    </div>
+  </div>
+</section>
