@@ -246,14 +246,57 @@ export class SMTXActor extends Actor {
 
     if (ignoreDefense) defense = 0
 
-    if (affectsMP)
-      this.update({ "system.mp.value": currentMP - Math.max((amount - defense), 0) });
-    else
-      this.update({ "system.hp.value": currentHP - Math.max((amount - defense), 0) });
-    //ui.notifications.info(`Applied ${Math.max((amount - defense), 0)} damage to ${this.name}`);
+    // Prompt for Fate points if available
+    if (this.type == 'character') {
+      new Dialog({
+        title: "Fate Points Adjustment",
+        content: `
+      <p>Enter the number of Fate points to spend to reduce incoming damage:</p>
+      <div class="form-group">
+        <label for="fate-points">Fate Points:</label>
+        <input type="number" id="fate-points" name="fate-points" value="0" min="0" />
+      </div>
+    `,
+        buttons: {
+          apply: {
+            icon: '<i class="fas fa-check"></i>',
+            label: "Apply",
+            callback: (html) => {
+              const fatePoints = parseInt(html.find('input[name="fate-points"]').val()) || 0;
+              const adjustedAmount = fatePoints > 0 ? Math.floor(amount / (fatePoints + 1)) : amount;
+
+              const finalAmount = Math.max((adjustedAmount - defense), 0);
+              this._applyFinalDamage(finalAmount, affectsMP);
+            }
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: "Cancel"
+          }
+        },
+        default: "apply"
+      }).render(true);
+    }
+    else {
+      const finalAmount = Math.max((amount - defense), 0);
+      this._applyFinalDamage(finalAmount, affectsMP);
+    }
+  }
+
+  // Helper function to apply the final damage
+  _applyFinalDamage(amount, affectsMP) {
+    const currentHP = this.system.hp.value;
+    const currentMP = this.system.mp.value;
+
+    if (affectsMP) {
+      this.update({ "system.mp.value": currentMP - amount });
+    } else {
+      this.update({ "system.hp.value": currentHP - amount });
+    }
+
     ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-      content: `Applied ${Math.max((amount - defense), 0)} damage`
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      content: `Applied ${amount} damage to ${this.name}.`
     });
   }
 
