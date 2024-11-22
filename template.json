@@ -237,7 +237,7 @@
         "sell": "0"
       },
       "equipment": {
-        "vt": 0,
+        "vtReq": 0,
         "sex": "-",
         "alignment": "-"
       }
@@ -263,7 +263,12 @@
       "magdef": 0,
       "equipped": false,
       "meleePower": 0,
-      "init": 0
+      "init": 0,
+      "st": 0,
+      "mg": 0,
+      "vt": 0,
+      "ag": 0,
+      "lk": 0
     },
     "consumable": {
       "templates": [

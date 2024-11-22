@@ -69,7 +69,8 @@
           <label for="system.stats.{{key}}.value" class="resource-label rollable align-left" data-roll="d100"
             data-label="{{localize (lookup @root.config.statAbbreviations key)}}">{{localize
             (lookup @root.config.statAbbreviations key)}}</label>
-          <input type="text" name="system.stats.{{key}}.value" value="{{ability.value}}" data-dtype="Number" />
+          <input type="text" name="system.stats.{{key}}.value" class="update-stat" value="{{ability.value}}"
+            data-dtype="Number" />
           <span class="ability-mod" data-label="{{localize (lookup @root.config.stats key)}}">{{ability.tn}}%</span>
         </div>
         {{/each}}

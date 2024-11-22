@@ -58,14 +58,6 @@ export class SMTXActor extends Actor {
     systemData.spellPower = systemData.stats.mg.value + systemData.attributes.level + (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
     systemData.rangedPower = systemData.stats.ag.value + (game.settings.get("smt-200x", "addLevelToRangedPower") ? systemData.attributes.level : 0) + systemData.sumTaru;
 
-    // Loop through stats, and add their TNs to our sheet output.
-    for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].tn = (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
-    }
-
-    systemData.dodgetn = 10 + systemData.stats.ag.value + systemData.sumSuku;
-    systemData.talktn = 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
-
     // Set Max HP / MP / Fate
     systemData.hp.max = (systemData.stats.vt.value + systemData.attributes.level) * systemData.hp.mult;
     systemData.mp.max = (systemData.stats.mg.value + systemData.attributes.level) * systemData.mp.mult;
@@ -109,6 +101,16 @@ export class SMTXActor extends Actor {
     const systemData = actorData.system;
     const flags = actorData.flags.smt200x || {};
 
+
+    // Loop through stats, and add their TNs to sheet output
+    for (let [key, stat] of Object.entries(systemData.stats)) {
+      systemData.stats[key].tn = (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
+    }
+
+    systemData.dodgetn = 10 + systemData.stats.ag.value + systemData.sumSuku;
+    systemData.talktn = 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
+
+
     // Make separate methods for each Actor type (character, npc, etc.) to keep
     // things organized.
     this._prepareCharacterData(actorData);
@@ -141,10 +143,10 @@ export class SMTXActor extends Actor {
     });
 
     // Update the derived defense attribute
-    this.system.phydef += physicalDefense;
-    this.system.magdef += magicalDefense;
-    this.system.meleePower += meleePower;
-    this.system.init += initiative;
+    systemData.phydef += physicalDefense;
+    systemData.magdef += magicalDefense;
+    systemData.meleePower += meleePower;
+    systemData.init += initiative;
   }
 
 
@@ -196,6 +198,19 @@ export class SMTXActor extends Actor {
     // Starts off by populating the roll data with a shallow copy of `this.system`
     const data = { ...this.system };
 
+    // Copy the stats to the top level, so that rolls can use
+    // formulas like `@st + 4`.
+    if (data.stats) {
+      for (let [k, v] of Object.entries(data.stats)) {
+        data[k] = foundry.utils.deepClone(v);
+      }
+    }
+
+    // Add level for easier access, or fall back to 0.
+    if (data.attributes.level) {
+      data.lvl = data.attributes.level ?? 0;
+    }
+
     // Prepare character roll data.
     this._getCharacterRollData(data);
     this._getNpcRollData(data);
@@ -210,19 +225,6 @@ export class SMTXActor extends Actor {
    */
   _getCharacterRollData(data) {
     if (this.type !== 'character') return;
-
-    // Copy the stats to the top level, so that rolls can use
-    // formulas like `@st + 4`.
-    if (data.stats) {
-      for (let [k, v] of Object.entries(data.stats)) {
-        data[k] = foundry.utils.deepClone(v);
-      }
-    }
-
-    // Add level for easier access, or fall back to 0.
-    if (data.attributes.level) {
-      data.lvl = data.attributes.level ?? 0;
-    }
   }
 
   /**

@@ -1,6 +1,6 @@
 <ol class='items-list'>
   <li class='item flexrow items-header'>
-    <div class='item-prop'>d10</div>
+    <div class='item-prop roll-d10'>d10</div>
     <div class='item-name'>Actions / Skills</div>
     <div class='item-prop'>Type</div>
     <div class='item-prop'>Cost</div>
@@ -16,7 +16,8 @@
   </li>
   {{#each features as |item id|}}
   <li class='item flexrow' class='align-items: center;' data-item-id='{{item._id}}'>
-    <div class='item-prop'>{{item.system.actionPattern}}</div>
+    <input type="text" name="item.system.actionPattern" class='item-prop actionPattern'
+      value="{{item.system.actionPattern}}">
     <div class='item-name flex3'>
       <div class='item-image'>
         <a class='rollable' data-roll-type='item'>

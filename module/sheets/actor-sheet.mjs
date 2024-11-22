@@ -377,6 +377,31 @@ export class SMTXActorSheet extends ActorSheet {
 
 
 
+    html.on('change', '.update-stat', (ev) => {
+      const input = ev.currentTarget;
+      const path = input.name; // e.g., "system.suku.buff[0]"
+      const value = parseInt(input.value) || 0;
+
+      console.log(input)
+      this.actor.update({
+        [path]: value
+      })
+    });
+
+
+
+    html.on('change', '.actionPattern', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      console.log(ev.currentTarget)
+
+      item.update({ "system.actionPattern": ev.currentTarget.value })
+    });
+
+
+
+
     // Left-click: Roll initiative
     html.on('click', '.initiative-roll', async (event) => {
       event.preventDefault();
