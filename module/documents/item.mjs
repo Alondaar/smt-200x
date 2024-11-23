@@ -290,7 +290,8 @@ export class SMTXItem extends Item {
       ignoreDefense: systemData.ignoreDefense || false,
       pierce: systemData.pierce || false,
       critMult: systemData.critMult || 2,
-      extraModifier: "0"
+      extraModifier: "0",
+      baseMult: 1
     };
 
     const affinityTemplateSource = `
@@ -335,7 +336,7 @@ export class SMTXItem extends Item {
                         <input type="checkbox" id="ignoreDefense" name="ignoreDefense" ${overrides.ignoreDefense ? "checked" : ""} />
                     </div>
                     <div class="form-group">
-                        <label for="pierce">Pierce:</label>
+                        <label for="pierce">Pierce (unusued):</label>
                         <input type="checkbox" id="pierce" name="pierce" ${overrides.pierce ? "checked" : ""} />
                     </div>
                     <div class="form-group">
@@ -345,6 +346,10 @@ export class SMTXItem extends Item {
                     <div class="form-group">
                         <label for="extraModifier">Additional Modifier:</label>
                         <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="baseMult">Base Multiplier (Charge/Focus):</label>
+                        <input type="text" id="baseMult" name="baseMult" value="${overrides.baseMult}" />
                     </div>
                 </form>
                 `,
@@ -357,7 +362,8 @@ export class SMTXItem extends Item {
                 const pierce = html.find('input[name="pierce"]').is(":checked");
                 const critMult = parseFloat(html.find('input[name="critMult"]').val()) || 2;
                 const extraModifier = html.find('input[name="extraModifier"]').val() || "0";
-                resolve({ affinity, ignoreDefense, pierce, critMult, extraModifier });
+                const baseMult = html.find('input[name="extraModifier"]').val() || "1";
+                resolve({ affinity, ignoreDefense, pierce, critMult, extraModifier, baseMult });
               },
             },
             cancel: {
@@ -383,6 +389,8 @@ export class SMTXItem extends Item {
     // Roll for regular damage
     const regularRoll = new Roll(systemData.formula, rollData);
     await regularRoll.evaluate();
+
+    const finalBaseDmg = (regularRoll.total) * overrides.baseMult
 
     // Roll for sub-formula
     const hasBuffSubRoll = systemData.subBuffRoll != "" ? true : false;
@@ -421,7 +429,7 @@ export class SMTXItem extends Item {
       .join(", "); // Join the values into a string
 
     // Calculate critical damage
-    const critDamage = (regularRoll.total * overrides.critMult) + systemData.flatCritDamage;
+    const critDamage = (finalBaseDmg * overrides.critMult) + systemData.flatCritDamage;
 
     // Determine button visibility based on affinity
     const hideDamage = (hasBuffs && !hasBuffSubRoll);
@@ -439,7 +447,7 @@ export class SMTXItem extends Item {
          data-ignore-defense="${overrides.ignoreDefense}" 
          data-pierce="${overrides.pierce}" 
          data-affects-mp='${systemData.affectsMP}' 
-         data-regular-damage="${regularRoll.total}" 
+         data-regular-damage="${finalBaseDmg}" 
          data-critical-damage="${critDamage}" 
          data-buffs='${JSON.stringify(buffArray)}' 
          data-apply-buffs-to='${JSON.stringify(systemData.buffs)}'>
@@ -447,7 +455,7 @@ export class SMTXItem extends Item {
         <section class="grid grid-2col">
         <div class="flexcol">
         ${!hideDamage ? `<p><strong>Affinity:</strong> ${game.i18n.localize("SMT_X.Affinity." + overrides.affinity)}</p>
-          <p style="font-size:32px;margin:0;" class="align-center"><strong>${regularRoll.total}</strong></p>` : ""}
+          <p style="font-size:32px;margin:0;" class="align-center"><strong>${finalBaseDmg}</strong></p>` : ""}
         <div class="damage-buttons grid grid-4col">
             ${showDamageButtons ? `
                 <button class='apply-full-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>

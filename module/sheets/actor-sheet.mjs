@@ -314,7 +314,9 @@ export class SMTXActorSheet extends ActorSheet {
         "name": item.name,
         "type": item.system.type,
         "hit": item.system.hit,
-        "power": item.system.power
+        "power": item.system.power,
+        "ammo": item.system.maxAmmo, // set fully loaded
+        "maxAmmo": item.system.maxAmmo
       };
 
       this.actor.update({ "system.wepA": weaponObj })
@@ -329,7 +331,9 @@ export class SMTXActorSheet extends ActorSheet {
         "name": item.name,
         "type": item.system.type,
         "hit": item.system.hit,
-        "power": item.system.power
+        "power": item.system.power,
+        "ammo": item.system.maxAmmo, // set fully loaded
+        "maxAmmo": item.system.maxAmmo
       };
 
       this.actor.update({ "system.wepB": weaponObj })
