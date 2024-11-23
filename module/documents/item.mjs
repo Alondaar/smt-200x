@@ -435,7 +435,7 @@ export class SMTXItem extends Item {
     const hideDamage = (hasBuffs && !hasBuffSubRoll);
     const showCrit = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !systemData.hideCritDamage && !hideDamage;
     const showDamageButtons = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !hideDamage;
-    const showHealing = overrides.affinity !== "none";
+    const showHealing = overrides.affinity == "recovery";
     const showBuffButtons = hasBuffs || hasBuffSubRoll;
 
     let btnStyling = 'width: 28px; height: 28px; font-size: 14px;';
@@ -451,22 +451,23 @@ export class SMTXItem extends Item {
          data-critical-damage="${critDamage}" 
          data-buffs='${JSON.stringify(buffArray)}' 
          data-apply-buffs-to='${JSON.stringify(systemData.buffs)}'>
-        <h3>${this.name} Effect Roll</h3>
-        <section class="grid grid-2col">
-        <div class="flexcol">
-        ${!hideDamage ? `<p><strong>Affinity:</strong> ${game.i18n.localize("SMT_X.Affinity." + overrides.affinity)}</p>
-          <p style="font-size:32px;margin:0;" class="align-center"><strong>${finalBaseDmg}</strong></p>` : ""}
-        <div class="damage-buttons grid grid-4col">
-            ${showDamageButtons ? `
-                <button class='apply-full-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>
-                <button class='apply-half-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Click to apply half damage to selected token(s)."></i></button>
-                <button class='apply-double-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Click to apply double damage to selected token(s)."></i></button>
-                <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>
-            ` : ""}
-            ${!showHealing ? `<button class='apply-full-healing'>Full Healing</button>` : ""}
-        </div>
+        <h3>${this.name} Roll</h3>
+        <section class="flexrow">
+          <div class="flexcol">
+          ${!hideDamage ? `<p><strong>Affinity:</strong> ${game.i18n.localize("SMT_X.Affinity." + overrides.affinity)}</p>
+            <p style="font-size:32px;margin:0;" class="align-center"><strong>${finalBaseDmg}</strong></p>` : ""}
+          <div class="damage-buttons grid grid-4col">
+              ${showDamageButtons ? `
+                  <button class='apply-full-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>
+                  <button class='apply-half-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Click to apply half damage to selected token(s)."></i></button>
+                  <button class='apply-double-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Click to apply double damage to selected token(s)."></i></button>
+                  <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>
+              ` : ""}
+              ${showHealing ? `<button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>` : ""}
+          </div>
         </div>
         ${showCrit ? `
+          <div style="margin-left: 25px;" class="flex0"></div>
         <div class="flexcol">
         <p><strong>Critical:</strong></p>
         <p style="font-size:32px;margin:0;" class="align-center"><strong>${critDamage}</strong></p>
