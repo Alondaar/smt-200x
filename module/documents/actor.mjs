@@ -109,27 +109,10 @@ export class SMTXActor extends Actor {
     systemData.mp.max = (systemData.stats.mg.value + systemData.attributes.level) * systemData.mp.mult;
     systemData.fate.max = 5 + Math.floor(systemData.stats.lk.value / 5);
 
-    // clamp HP
-    if (systemData.hp.value > systemData.hp.max) {
-      systemData.hp.value = systemData.hp.max;
-    } else if (systemData.hp.value < systemData.hp.min) {
-      systemData.hp.value = systemData.hp.min;
+    if (systemData.isBoss) {
+      systemData.hp.max *= 5;
+      systemData.mp.max *= 2;
     }
-
-    // clamp MP
-    if (systemData.mp.value > systemData.mp.max) {
-      systemData.mp.value = systemData.mp.max;
-    } else if (systemData.mp.value < systemData.mp.min) {
-      systemData.mp.value = systemData.mp.min;
-    }
-
-    // clamp Fate
-    if (systemData.fate.value > systemData.fate.max) {
-      systemData.fate.value = systemData.fate.max;
-    } else if (systemData.fate.value < systemData.fate.min) {
-      systemData.fate.value = systemData.fate.min;
-    }
-
 
     // Loop through stats, and add their TNs to sheet output
     for (let [key, stat] of Object.entries(systemData.stats)) {
@@ -177,6 +160,27 @@ export class SMTXActor extends Actor {
     // things organized.
     this._prepareCharacterData(actorData);
     this._prepareNpcData(actorData);
+
+    // clamp HP
+    if (systemData.hp.value > systemData.hp.max) {
+      systemData.hp.value = systemData.hp.max;
+    } else if (systemData.hp.value < systemData.hp.min) {
+      systemData.hp.value = systemData.hp.min;
+    }
+
+    // clamp MP
+    if (systemData.mp.value > systemData.mp.max) {
+      systemData.mp.value = systemData.mp.max;
+    } else if (systemData.mp.value < systemData.mp.min) {
+      systemData.mp.value = systemData.mp.min;
+    }
+
+    // clamp Fate
+    if (systemData.fate.value > systemData.fate.max) {
+      systemData.fate.value = systemData.fate.max;
+    } else if (systemData.fate.value < systemData.fate.min) {
+      systemData.fate.value = systemData.fate.min;
+    }
   }
 
 
@@ -229,11 +233,6 @@ export class SMTXActor extends Actor {
       const lvl = systemData.attributes.level;
       systemData.attributes.exp.tierOne = lvl * (3 + Math.floor(lvl / 10)) * (systemData.isBoss ? lvl : 1);
       systemData.macca = systemData.attributes.exp.tierOne;
-    }
-
-    if (systemData.isBoss) {
-      systemData.hp.max *= 5;
-      systemData.mp.max *= 2;
     }
   }
 
