@@ -435,7 +435,7 @@ export class SMTXItem extends Item {
     const hideDamage = (hasBuffs && !hasBuffSubRoll);
     const showCrit = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !systemData.hideCritDamage && !hideDamage;
     const showDamageButtons = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !hideDamage;
-    const showHealing = overrides.affinity !== "none";
+    const showHealing = overrides.affinity == "recovery";
     const showBuffButtons = hasBuffs || hasBuffSubRoll;
 
     let btnStyling = 'width: 28px; height: 28px; font-size: 14px;';
@@ -463,7 +463,7 @@ export class SMTXItem extends Item {
                 <button class='apply-double-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Click to apply double damage to selected token(s)."></i></button>
                 <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>
             ` : ""}
-            ${!showHealing ? `<button class='apply-full-healing'>Full Healing</button>` : ""}
+            ${showHealing ? `<button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>` : ""}
         </div>
         </div>
         ${showCrit ? `
