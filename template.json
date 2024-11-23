@@ -223,7 +223,8 @@
       "loot": "",
       "rare": "",
       "isBoss": false,
-      "autoEXP": true
+      "autoEXP": true,
+      "fuseID": ""
     }
   },
   "Item": {

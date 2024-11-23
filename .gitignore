@@ -1,0 +1,6 @@
+packs/system-macros/
+packs/system-macros/MANIFEST*
+packs/system-macros/LOG.old
+packs/system-macros/LOG
+packs/system-macros/CURRENT
+packs/system-macros/*.log
