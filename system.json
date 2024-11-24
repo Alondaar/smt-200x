@@ -50,7 +50,7 @@
   "packFolders": [],
   "socket": false,
   "manifest": "https://github.com/Alondaar/smt-200x/raw/main/system.json",
-  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-013.zip",
+  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-014.zip",
   "background": "systems/smt-200x/assets/anvil-impact.png",
   "gridDistance": 2,
   "gridUnits": "m",
