@@ -471,22 +471,22 @@ export class SMTXActorSheet extends ActorSheet {
 
     html.on('click', '.melee-power-roll', async (event) => {
       event.preventDefault();
-      this.actor.rollPower("(@powerDice.melee)d10x + @meleePower", true)
+      this.actor.rollPower("(@powerDice.melee)d10x + @meleePower", "strike", true)
     });
 
     html.on('contextmenu', '.melee-power-roll', async (event) => {
       event.preventDefault();
-      this.actor.rollPower("(@powerDice.melee)d10x + @meleePower")
+      this.actor.rollPower("(@powerDice.melee)d10x + @meleePower", "strike")
     });
 
     html.on('click', '.ranged-power-roll', async (event) => {
       event.preventDefault();
-      this.actor.rollPower("(@powerDice.ranged)d10x + @rangedPower", true)
+      this.actor.rollPower("(@powerDice.ranged)d10x + @rangedPower", "gun", true)
     });
 
     html.on('contextmenu', '.ranged-power-roll', async (event) => {
       event.preventDefault();
-      this.actor.rollPower("(@powerDice.ranged)d10x + @rangedPower")
+      this.actor.rollPower("(@powerDice.ranged)d10x + @rangedPower", "gun")
     });
 
     html.on('click', '.spell-power-roll', async (event) => {

@@ -32,7 +32,7 @@ export class SMTXItem extends Item {
   }
 
   prepareFeature() {
-    if (this.type !== 'feature' && this.type !== 'consumable') return
+    if (this.type !== 'feature'/* && this.type !== 'consumable'*/) return
 
     const itemData = this;
     const systemData = itemData.system;
@@ -77,17 +77,19 @@ export class SMTXItem extends Item {
     const preCalcTN = new Roll((systemData.tn || "0").replace(/@/g, "@actor.") + "+(" + weaponTN + ")", rollData).evaluateSync();
     systemData.calcTN = preCalcTN.total;
 
-    systemData.formula = "(" + (systemData.powerDice || 0) + ")+" + (staticPower || 0);
+    systemData.formula = "(" + (systemData.powerDice.replace(/@/g, "@actor.") || 0) + ")+" + (staticPower || 0);
   }
 
 
   prepareConsumable() {
     if (this.type !== 'consumable') return
-
     const itemData = this;
     const systemData = itemData.system;
+    const rollData = this.getRollData();
 
-    // Create header toggles to hide None affinity, blank Power, etc.
+    const preCalcPower = new Roll((systemData.power || "0").replace(/@/g, "@actor."), rollData).evaluateSync({ minimize: true });
+
+    systemData.formula = "(" + (systemData.powerDice.replace(/@/g, "@actor.") || 0) + ")+" + (preCalcPower || 0);
   }
 
 

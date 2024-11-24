@@ -96,6 +96,30 @@ export class SMTXActor extends Actor {
     systemData.phydef = this.parseFormula(systemData.phydefFormula) + systemData.sumRaku;
     systemData.magdef = this.parseFormula(systemData.magdefFormula) + systemData.sumRaku;
 
+    if (actorData.type === 'character') {
+      // Start with base values
+      let physicalDefense = 0;
+      let magicalDefense = 0;
+      let meleePower = 0;
+      let initiative = 0;
+
+      // Add defense bonuses from equipped armor
+      this.items.forEach((item) => {
+        if (item.type === "armor" && item.system.equipped) {
+          physicalDefense += item.system.phydef || 0;
+          magicalDefense += item.system.magdef || 0;
+          meleePower += item.system.meleePower || 0;
+          initiative += item.system.init || 0;
+        }
+      });
+
+      // Update the derived defense attribute
+      systemData.phydef += physicalDefense;
+      systemData.magdef += magicalDefense;
+      systemData.meleePower += meleePower;
+      systemData.init += initiative;
+    }
+
     // INITIATIVE
     systemData.init = this.parseFormula(systemData.initFormula);
 
@@ -191,28 +215,6 @@ export class SMTXActor extends Actor {
   _prepareCharacterData(actorData) {
     if (actorData.type !== 'character') return;
     const systemData = actorData.system;
-
-    // Start with base values
-    let physicalDefense = 0;
-    let magicalDefense = 0;
-    let meleePower = 0;
-    let initiative = 0;
-
-    // Add defense bonuses from equipped armor
-    this.items.forEach((item) => {
-      if (item.type === "armor" && item.system.equipped) {
-        physicalDefense += item.system.phydef || 0;
-        magicalDefense += item.system.magdef || 0;
-        meleePower += item.system.meleePower || 0;
-        initiative += item.system.init || 0;
-      }
-    });
-
-    // Update the derived defense attribute
-    systemData.phydef += physicalDefense;
-    systemData.magdef += magicalDefense;
-    systemData.meleePower += meleePower;
-    systemData.init += initiative;
   }
 
 
@@ -560,11 +562,11 @@ export class SMTXActor extends Actor {
 * @param {Event} event   The originating click event
 * @private
 */
-  async rollPower(formula = "0", skipDialog = false) {
+  async rollPower(formula = "0", defAffinity = "almighty", skipDialog = false) {
     const rollData = this.getRollData();
 
     let overrides = {
-      affinity: "almighty",
+      affinity: defAffinity || "almighty",
       ignoreDefense: false,
       affectsMP: false,
       critMult: 2,
