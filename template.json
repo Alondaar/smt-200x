@@ -115,7 +115,8 @@
           "ranged": 1,
           "spell": 1,
           "init": 1,
-          "item": 0
+          "item": 0,
+          "unarmed": 1
         },
         "dark": 0,
         "light": 0,
