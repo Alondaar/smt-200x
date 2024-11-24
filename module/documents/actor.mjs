@@ -310,7 +310,7 @@ export class SMTXActor extends Actor {
             label: "Apply",
             callback: (html) => {
               const fatePoints = parseInt(html.find('input[name="fate-points"]').val()) || 0;
-              const adjustedAmount = fatePoints > 0 ? Math.floor(amount / (fatePoints + 1)) : amount;
+              const adjustedAmount = fatePoints > 0 ? Math.floor(amount / (fatePoints * 2)) : amount;
 
               const finalAmount = Math.max((adjustedAmount - defense), 0);
               this._applyFinalDamage(finalAmount, affectsMP);
