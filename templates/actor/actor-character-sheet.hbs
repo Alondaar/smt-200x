@@ -66,8 +66,8 @@
       <div class="abilities flexcol">
         {{#each system.stats as |ability key|}}
         <div class="ability flexrow flex-group-center">
-          <label for="system.stats.{{key}}.value" class="resource-label rollable align-left" data-roll="d100"
-            data-label="{{localize (lookup @root.config.statAbbreviations key)}}">{{localize
+          <label for="system.stats.{{key}}.value" class="resource-label clickable {{key}}-roll align-left"
+            data-roll="d100" data-label="{{localize (lookup @root.config.statAbbreviations key)}}">{{localize
             (lookup @root.config.statAbbreviations key)}}</label>
           <input type="text" name="system.stats.{{key}}.value" class="update-stat" value="{{ability.value}}"
             data-dtype="Number" />
