@@ -25,8 +25,13 @@ NOTE: Exploding rolls (such as for Power rolls) should be made with "d10x"
 - `@powerDice.`
   - `.melee`, `.ranged`, `.spell`, `.item`, `.init` written as `@powerDice.melee`
   - Note this returns a single value, you will need to add the "d10x" if you want an actual dice roll to occur.
+
+ ## System Tour Video
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/1BWq_6YXBZk/0.jpg)](https://www.youtube.com/watch?v=1BWq_6YXBZk)
  
 
 Please report any bugs, issues, or feedback to Alondaar on Discord (my own, or in the dedicated thread on LionWing's SMT-Homebrew channel). You may also file issues on this repository.
+
 Feel free to fork or get in touch with me if you want to make contributions to the system. This is my first time making a system at all, so "best practices" were not employed.
+
 Made using <https://github.com/asacolips-projects/boilerplate> as a base.
