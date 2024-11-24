@@ -469,6 +469,108 @@ export class SMTXActorSheet extends ActorSheet {
 
 
 
+    html.on('click', '.melee-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower("(@powerDice.melee)d10x + @meleePower", true)
+    });
+
+    html.on('contextmenu', '.melee-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower("(@powerDice.melee)d10x + @meleePower")
+    });
+
+    html.on('click', '.ranged-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower("(@powerDice.ranged)d10x + @rangedPower", true)
+    });
+
+    html.on('contextmenu', '.ranged-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower("(@powerDice.ranged)d10x + @rangedPower")
+    });
+
+    html.on('click', '.spell-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower("(@powerDice.spell)d10x + @spellPower", true)
+    });
+
+    html.on('contextmenu', '.spell-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower("(@powerDice.spell)d10x + @spellPower")
+    });
+
+    html.on('click', '.dodge-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.dodgetn, "Dodge", true)
+    });
+
+    html.on('contextmenu', '.dodge-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.dodgetn, "Dodge")
+    });
+
+    html.on('click', '.talk-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.talktn, "Talk", true)
+    });
+
+    html.on('contextmenu', '.talk-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.talktn, "Talk")
+    });
+
+    html.on('click', '.st-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.st.tn, "Strength", true)
+    });
+
+    html.on('contextmenu', '.st-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.st.tn, "Strength")
+    });
+
+    html.on('click', '.mg-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.mg.tn, "Magic", true)
+    });
+
+    html.on('contextmenu', '.mg-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.mg.tn, "Magic")
+    });
+
+    html.on('click', '.vt-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.vt.tn, "Vitality", true)
+    });
+
+    html.on('contextmenu', '.vt-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.vt.tn, "Vitality")
+    });
+
+    html.on('click', '.ag-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.ag.tn, "Agility", true)
+    });
+
+    html.on('contextmenu', '.ag-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.ag.tn, "Agility")
+    });
+
+    html.on('click', '.lk-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.lk.tn, "Luck", true)
+    });
+
+    html.on('contextmenu', '.lk-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollSplitD100(this.actor.system.stats.lk.tn, "Luck")
+    });
+
+
+
 
     // Left-click: Roll initiative
     html.on('click', '.initiative-roll', async (event) => {
@@ -518,7 +620,6 @@ export class SMTXActorSheet extends ActorSheet {
 
 
 
-
     // Drag events for macros.
     if (this.actor.isOwner) {
       let handler = (ev) => this._onDragStart(ev);
@@ -529,6 +630,8 @@ export class SMTXActorSheet extends ActorSheet {
       });
     }
   }
+
+
 
   /**
    * Handle creating a new Owned Item for the actor using initial data defined in the HTML dataset

@@ -171,6 +171,8 @@ export class SMTXItem extends Item {
     }
   }
 
+
+
   /**
  * Handle clickable rolls.
  * @param {Event} event   The originating click event
@@ -241,6 +243,9 @@ export class SMTXItem extends Item {
         const roll = new Roll("1d100");
         await roll.evaluate();
 
+        if (game.dice3d)
+          await game.dice3d.showForRoll(roll, game.user, true)
+
         // Evaluate the roll result
         let result = "Fail";
         if (roll.total === 1) {
@@ -276,11 +281,13 @@ export class SMTXItem extends Item {
     });
   }
 
+
+
   /**
-* Handle clickable rolls.
-* @param {Event} event   The originating click event
-* @private
-*/
+  * Handle clickable rolls.
+  * @param {Event} event   The originating click event
+  * @private
+  */
   async rollPower(skipDialog = false) {
     const systemData = this.system;
     const rollData = this.getRollData();
@@ -362,7 +369,7 @@ export class SMTXItem extends Item {
                 const pierce = html.find('input[name="pierce"]').is(":checked");
                 const critMult = parseFloat(html.find('input[name="critMult"]').val()) || 2;
                 const extraModifier = html.find('input[name="extraModifier"]').val() || "0";
-                const baseMult = html.find('input[name="extraModifier"]').val() || "1";
+                const baseMult = html.find('input[name="baseMult"]').val() || "1";
                 resolve({ affinity, ignoreDefense, pierce, critMult, extraModifier, baseMult });
               },
             },
@@ -390,12 +397,18 @@ export class SMTXItem extends Item {
     const regularRoll = new Roll(systemData.formula, rollData);
     await regularRoll.evaluate();
 
+    if (game.dice3d)
+      await game.dice3d.showForRoll(regularRoll, game.user, true)
+
     const finalBaseDmg = (regularRoll.total) * overrides.baseMult
 
     // Roll for sub-formula
     const hasBuffSubRoll = systemData.subBuffRoll != "" ? true : false;
     const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData);
     await subBuffRoll.evaluate();
+
+    if (game.dice3d && hasBuffSubRoll)
+      await game.dice3d.showForRoll(subBuffRoll, game.user, true)
 
     // Function to process the roll and populate buffArray
     function processRoll(roll) {
@@ -495,7 +508,6 @@ export class SMTXItem extends Item {
 
 // Event listeners for buttons
 Hooks.on('renderChatMessage', (message, html, data) => {
-
   // Find the power-roll-card element
   const powerRollCard = html.find('.power-roll-card');
   if (!powerRollCard.length) return; // Exit if no power-roll-card is found

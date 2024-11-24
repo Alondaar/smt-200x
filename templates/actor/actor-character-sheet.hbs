@@ -66,8 +66,8 @@
       <div class="abilities flexcol">
         {{#each system.stats as |ability key|}}
         <div class="ability flexrow flex-group-center">
-          <label for="system.stats.{{key}}.value" class="resource-label rollable align-left" data-roll="d100"
-            data-label="{{localize (lookup @root.config.statAbbreviations key)}}">{{localize
+          <label for="system.stats.{{key}}.value" class="resource-label clickable {{key}}-roll align-left"
+            data-roll="d100" data-label="{{localize (lookup @root.config.statAbbreviations key)}}">{{localize
             (lookup @root.config.statAbbreviations key)}}</label>
           <input type="text" name="system.stats.{{key}}.value" class="update-stat" value="{{ability.value}}"
             data-dtype="Number" />
@@ -80,7 +80,7 @@
         <div class="align-center" style="border: 2px groove #eeede0;">
           <label for="system.meleePower" class="resource-label">Melee</label>
           <div>
-            <h1>{{system.meleePower}}</h1>
+            <h1 class="melee-power-roll clickable">{{system.meleePower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.melee" value="{{system.powerDice.melee}}" data-dtype="Number" />&nbsp;d10</div>
@@ -89,7 +89,7 @@
         <div class="align-center" style="border: 2px groove #eeede0;">
           <label for="system.rangedPower" class="resource-label">Ranged</label>
           <div>
-            <h1>{{system.rangedPower}}</h1>
+            <h1 class="ranged-power-roll clickable">{{system.rangedPower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.ranged" value="{{system.powerDice.ranged}}" data-dtype="Number" />&nbsp;d10</div>
@@ -98,7 +98,7 @@
         <div class="align-center" style="border: 2px groove #eeede0;">
           <label for="system.spellPower" class="resource-label">Spell</label>
           <div>
-            <h1>{{system.spellPower}}</h1>
+            <h1 class="spell-power-roll clickable">{{system.spellPower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.spell" value="{{system.powerDice.spell}}" data-dtype="Number" />&nbsp;d10</div>
@@ -118,14 +118,14 @@
           <div class="align-center" style="border: 2px groove #eeede0;">
             <label for="system.init" class="resource-label">Dodge TN</label>
             <div>
-              <h1>{{system.dodgetn}}%</h1>
+              <h1 class="dodge-roll clickable">{{system.dodgetn}}%</h1>
             </div>
           </div>
 
           <div class="align-center" style="border: 2px groove #eeede0;">
             <label for="system.init" class="resource-label">Talk TN</label>
             <div>
-              <h1>{{system.talktn}}%</h1>
+              <h1 class="talk-roll clickable">{{system.talktn}}%</h1>
             </div>
           </div>
 
