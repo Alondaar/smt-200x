@@ -342,7 +342,7 @@ export class SMTXActor extends Actor {
       this.update({ "system.hp.value": Math.max(currentHP - finalAmount, 0) });
     }
 
-    let chatContent = `Applied <strong>${finalAmount}</strong> ${affinity.toUpperCase()} (${mult}x) damage to ${this.name}.`;
+    let chatContent = `Applied <strong>${finalAmount}</strong> ${affinity.toUpperCase()} (<span title="Affinity Multiplier">${mult}x</span>) damage to ${this.name}.`;
     if (fateUsed > 0) {
         chatContent += ` <em>(spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>`;
     }
