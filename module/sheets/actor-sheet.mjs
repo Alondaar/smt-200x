@@ -403,6 +403,8 @@ export class SMTXActorSheet extends ActorSheet {
 
 
     html.on('click', '.set-tc-formulas', (ev) => {
+      console.log("hello")
+      ev.preventDefault();
       this.actor.update({
         "system.phydefFormula": "floor((@system.stats.vt.value + @system.attributes.level)/2)",
         "system.magdefFormula": "floor((@system.stats.mg.value + @system.attributes.level)/2)",
@@ -411,6 +413,7 @@ export class SMTXActorSheet extends ActorSheet {
     });
 
     html.on('click', '.set-x-human', (ev) => {
+      ev.preventDefault();
       this.actor.update({
         "system.phydefFormula": "@system.stats.vt.value",
         "system.magdefFormula": "@system.stats.vt.value",
@@ -421,6 +424,7 @@ export class SMTXActorSheet extends ActorSheet {
     });
 
     html.on('click', '.set-x-demon', (ev) => {
+      ev.preventDefault();
       this.actor.update({
         "system.phydefFormula": "@system.stats.vt.value + @system.attributes.level",
         "system.magdefFormula": "@system.stats.vt.value + @system.attributes.level",
