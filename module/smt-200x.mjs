@@ -85,6 +85,15 @@ Hooks.once('init', function () {
     default: false
   });
 
+  game.settings.register("smt-200x", "resistAfterDefense", {
+    name: "Apply Resist/Strong After Defense",
+    hint: "Changes how the Resist/Strong Affinity multiplier is handled. It will be factored in AFTER subtracting Defense, making it less powerful.",
+    scope: "world", // World-level setting (shared by all players)
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
   /*// Register a number setting
   game.settings.register("my-system", "maxItems", {
     name: "Maximum Items",

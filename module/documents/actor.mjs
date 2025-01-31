@@ -244,7 +244,7 @@ export class SMTXActor extends Actor {
     // Evaluate the mathematical expression
     try {
       // Use Function with an explicit Math object
-      const result = new Roll(formula, this).evaluateSync().total;
+      const result = new Roll(formula, this).evaluateSync({ minimize: true }).total;
       return result;
     } catch (error) {
       console.error("Error evaluating formula:", formula, error);
@@ -283,7 +283,7 @@ export class SMTXActor extends Actor {
 
 
 
-  applyDamage(amount, affinity = "almighty", ignoreDefense = false, affectsMP = false) {
+  applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, affectsMP = false) {
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value
     let defense = this.system.magdef;
@@ -312,7 +312,13 @@ export class SMTXActor extends Actor {
               const fatePoints = parseInt(html.find('input[name="fate-points"]').val()) || 0;
               const adjustedAmount = fatePoints > 0 ? Math.floor(amount / (fatePoints * 2)) : amount;
 
-              const finalAmount = Math.max((adjustedAmount - defense), 0);
+              // Normal Resist Mult Order of Operations
+              let finalAmount = Math.max(Math.floor(adjustedAmount * mult) - defense, 0);
+              // Apply Resist/Strong AFTER subtracting defense
+              if (game.settings.get("smt-200x", "resistAfterDefense") && mult < 1) {
+                finalAmount = Math.max(Math.floor((adjustedAmount - defense) * mult), 0);
+              }
+
               this._applyFinalDamage(finalAmount, affectsMP);
             }
           },
@@ -355,7 +361,11 @@ export class SMTXActor extends Actor {
       this.update({ "system.mp.value": currentMP + amount });
     else
       this.update({ "system.hp.value": currentHP + amount });
-    //ui.notifications.info(`Applied ${amount} healing to ${this.name}`);
+
+    ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      content: `Applied ${amount} healing to ${this.name}.`
+    });
   }
 
   dekaja() {

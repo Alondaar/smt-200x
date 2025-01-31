@@ -525,7 +525,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   const applyBuffsTo = powerRollCard.data('apply-buffs-to');
 
   // Define the function to apply damage
-  const applyDamage = function (amount, heals = false) {
+  const applyDamage = function (amount, mult = 1, heals = false) {
     const tokens = canvas.tokens.controlled;
     if (!tokens.length) {
       ui.notifications.warn("No tokens selected.");
@@ -538,7 +538,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       if (heals)
         actor.applyHeal(amount, affectsMP);
       else
-        actor.applyDamage(amount, affinity, ignoreDefense, pierce, affectsMP);
+        actor.applyDamage(amount, mult, affinity, ignoreDefense, pierce, affectsMP);
     });
   };
 
@@ -559,14 +559,14 @@ Hooks.on('renderChatMessage', (message, html, data) => {
 
   // Set up button click handlers
   html.find('.apply-full-damage').click(() => applyDamage(regularDamage));
-  html.find('.apply-half-damage').click(() => applyDamage(Math.floor(regularDamage / 2)));
-  html.find('.apply-double-damage').click(() => applyDamage(regularDamage * 2));
-  html.find('.apply-full-healing').click(() => applyDamage(regularDamage, true));
+  html.find('.apply-half-damage').click(() => applyDamage(regularDamage, 0.5));
+  html.find('.apply-double-damage').click(() => applyDamage(regularDamage, 2));
+  html.find('.apply-full-healing').click(() => applyDamage(regularDamage, 1, true));
 
   html.find('.apply-full-crit-damage').click(() => applyDamage(criticalDamage));
-  html.find('.apply-half-crit-damage').click(() => applyDamage(Math.floor(criticalDamage / 2)));
-  html.find('.apply-double-crit-damage').click(() => applyDamage(criticalDamage * 2));
-  html.find('.apply-full-crit-healing').click(() => applyDamage(criticalDamage, true));
+  html.find('.apply-half-crit-damage').click(() => applyDamage(criticalDamage, 0.5));
+  html.find('.apply-double-crit-damage').click(() => applyDamage(criticalDamage, 2));
+  html.find('.apply-full-crit-healing').click(() => applyDamage(criticalDamage, 1, true));
 
   html.find('.apply-buffs').click(() => applyBuffs(buffsArray, applyBuffsTo));
 });
