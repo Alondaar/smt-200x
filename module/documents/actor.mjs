@@ -283,7 +283,7 @@ export class SMTXActor extends Actor {
 
 
 
-  applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, affectsMP = false) {
+  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, affectsMP = false) {
     let defense = this.system.magdef;
     if (affinity === "strike" || affinity === "gun") defense = this.system.phydef;
     if (ignoreDefense) defense = 0;
@@ -293,44 +293,44 @@ export class SMTXActor extends Actor {
 
     // If character, ask for Fate points and adjust damage accordingly
     if (this.type === 'character') {
-        const fatePoints = await new Promise((resolve) => {
-            new Dialog({
-                title: "Fate Points Adjustment",
-                content: `
+      const fatePoints = await new Promise((resolve) => {
+        new Dialog({
+          title: "Fate Points Adjustment",
+          content: `
                     <p>Enter the number of Fate points to spend to reduce incoming damage:</p>
                     <div class="form-group">
                         <label for="fate-points">Fate Points:</label>
                         <input type="number" id="fate-points" name="fate-points" value="0" min="0" />
                     </div>
                 `,
-                buttons: {
-                    apply: {
-                        icon: '<i class="fas fa-check"></i>',
-                        label: "Apply",
-                        callback: (html) => {
-                            const fatePointsInput = parseInt(html.find('input[name="fate-points"]').val(), 10);
-                            resolve(fatePointsInput);
-                        }
-                    },
-                    cancel: {
-                        icon: '<i class="fas fa-times"></i>',
-                        label: "Cancel",
-                        callback: () => resolve(0) // Default to 0 if canceled
-                    }
-                },
-                default: "apply"
-            }).render(true);
-        });
+          buttons: {
+            apply: {
+              icon: '<i class="fas fa-check"></i>',
+              label: "Apply",
+              callback: (html) => {
+                const fatePointsInput = parseInt(html.find('input[name="fate-points"]').val(), 10);
+                resolve(fatePointsInput);
+              }
+            },
+            cancel: {
+              icon: '<i class="fas fa-times"></i>',
+              label: "Cancel",
+              callback: () => resolve(0) // Default to 0 if canceled
+            }
+          },
+          default: "apply"
+        }).render(true);
+      });
 
-        if (fatePoints > 0) {
-            damage = Math.floor(amount / (fatePoints * 2));
-            fateUsed = fatePoints;
-        }
+      if (fatePoints > 0) {
+        damage = Math.floor(amount / (fatePoints * 2));
+        fateUsed = fatePoints;
+      }
     }
 
     let finalAmount = Math.max(Math.floor(damage * mult) - defense, 0);
     if (game.settings.get("smt-200x", "resistAfterDefense") && mult < 1) {
-        finalAmount = Math.max(Math.floor((damage - defense) * mult), 0);
+      finalAmount = Math.max(Math.floor((damage - defense) * mult), 0);
     }
 
     const currentHP = this.system.hp.value;
@@ -342,16 +342,16 @@ export class SMTXActor extends Actor {
       this.update({ "system.hp.value": Math.max(currentHP - finalAmount, 0) });
     }
 
-    let chatContent = `Applied <strong>${finalAmount}</strong> ${affinity.toUpperCase()} (<span title="Affinity Multiplier">${mult}x</span>) damage to ${this.name}.`;
+    let chatContent = `<span style="font-size: var(--font-size-16);">Received <strong>${finalAmount}</strong> <span title="Affinity Multiplier x${mult}">${game.i18n.localize("SMT_X.Affinity." + affinity)} damage.</span></span>`;
     if (fateUsed > 0) {
-        chatContent += ` <em>(spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>`;
+      chatContent += `<br><em>(spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>`;
     }
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: chatContent
     });
-}
+  }
 
   applyHeal(amount, affectsMP = false) {
     const currentHP = this.system.hp.value;
@@ -364,7 +364,7 @@ export class SMTXActor extends Actor {
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
-      content: `Applied ${amount} healing to ${this.name}.`
+      content: `<span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>`
     });
   }
 
