@@ -355,7 +355,11 @@ export class SMTXActor extends Actor {
       this.update({ "system.mp.value": currentMP + amount });
     else
       this.update({ "system.hp.value": currentHP + amount });
-    //ui.notifications.info(`Applied ${amount} healing to ${this.name}`);
+
+    ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: this }),
+      content: `Applied ${amount} helaing to ${this.name}.`
+    });
   }
 
   dekaja() {
