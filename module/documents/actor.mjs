@@ -284,74 +284,74 @@ export class SMTXActor extends Actor {
 
 
   applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, affectsMP = false) {
-    const currentHP = this.system.hp.value;
-    const currentMP = this.system.mp.value
     let defense = this.system.magdef;
+    if (affinity === "strike" || affinity === "gun") defense = this.system.phydef;
+    if (ignoreDefense) defense = 0;
 
-    if (affinity === "strike" || affinity === "gun")
-      defense = this.system.phydef;
+    let damage = amount;
+    let fateUsed = 0;
 
-    if (ignoreDefense) defense = 0
+    // If character, ask for Fate points and adjust damage accordingly
+    if (this.type === 'character') {
+        const fatePoints = await new Promise((resolve) => {
+            new Dialog({
+                title: "Fate Points Adjustment",
+                content: `
+                    <p>Enter the number of Fate points to spend to reduce incoming damage:</p>
+                    <div class="form-group">
+                        <label for="fate-points">Fate Points:</label>
+                        <input type="number" id="fate-points" name="fate-points" value="0" min="0" />
+                    </div>
+                `,
+                buttons: {
+                    apply: {
+                        icon: '<i class="fas fa-check"></i>',
+                        label: "Apply",
+                        callback: (html) => {
+                            const fatePointsInput = parseInt(html.find('input[name="fate-points"]').val(), 10);
+                            resolve(fatePointsInput);
+                        }
+                    },
+                    cancel: {
+                        icon: '<i class="fas fa-times"></i>',
+                        label: "Cancel",
+                        callback: () => resolve(0) // Default to 0 if canceled
+                    }
+                },
+                default: "apply"
+            }).render(true);
+        });
 
-    // Prompt for Fate points if available
-    if (this.type == 'character') {
-      new Dialog({
-        title: "Fate Points Adjustment",
-        content: `
-      <p>Enter the number of Fate points to spend to reduce incoming damage:</p>
-      <div class="form-group">
-        <label for="fate-points">Fate Points:</label>
-        <input type="number" id="fate-points" name="fate-points" value="0" min="0" />
-      </div>
-    `,
-        buttons: {
-          apply: {
-            icon: '<i class="fas fa-check"></i>',
-            label: "Apply",
-            callback: (html) => {
-              const fatePoints = parseInt(html.find('input[name="fate-points"]').val()) || 0;
-              const adjustedAmount = fatePoints > 0 ? Math.floor(amount / (fatePoints * 2)) : amount;
-
-              // Normal Resist Mult Order of Operations
-              let finalAmount = Math.max(Math.floor(adjustedAmount * mult) - defense, 0);
-              // Apply Resist/Strong AFTER subtracting defense
-              if (game.settings.get("smt-200x", "resistAfterDefense") && mult < 1) {
-                finalAmount = Math.max(Math.floor((adjustedAmount - defense) * mult), 0);
-              }
-
-              this._applyFinalDamage(finalAmount, affectsMP);
-            }
-          },
-          cancel: {
-            icon: '<i class="fas fa-times"></i>',
-            label: "Cancel"
-          }
-        },
-        default: "apply"
-      }).render(true);
+        if (fatePoints > 0) {
+            damage = Math.floor(amount / (fatePoints * 2));
+            fateUsed = fatePoints;
+        }
     }
-    else {
-      const finalAmount = Math.max((amount - defense), 0);
-      this._applyFinalDamage(finalAmount, affectsMP);
-    }
-  }
 
-  // Helper function to apply the final damage
-  _applyFinalDamage(amount, affectsMP) {
+    let finalAmount = Math.max(Math.floor(damage * mult) - defense, 0);
+    if (game.settings.get("smt-200x", "resistAfterDefense") && mult < 1) {
+        finalAmount = Math.max(Math.floor((damage - defense) * mult), 0);
+    }
+
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value;
 
     if (affectsMP) {
-      this.update({ "system.mp.value": currentMP - amount });
+      this.update({ "system.mp.value": Math.max(currentMP - finalAmount, 0) });
     } else {
-      this.update({ "system.hp.value": currentHP - amount });
+      this.update({ "system.hp.value": Math.max(currentHP - finalAmount, 0) });
+    }
+
+    let chatContent = `Applied <strong>${finalAmount}</strong> ${affinity.toUpperCase()} (<span title="Affinity Multiplier">${mult}x</span>) damage to ${this.name}.`;
+    if (fateUsed > 0) {
+        chatContent += ` <em>(spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>`;
     }
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
-      content: `Applied ${amount} damage to ${this.name}.`
+      content: chatContent
     });
-  }
+}
 
   applyHeal(amount, affectsMP = false) {
     const currentHP = this.system.hp.value;
