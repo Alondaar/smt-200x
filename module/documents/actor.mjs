@@ -284,57 +284,50 @@ export class SMTXActor extends Actor {
 
 
   applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, affectsMP = false) {
-    const currentHP = this.system.hp.value;
-    const currentMP = this.system.mp.value
     let defense = this.system.magdef;
+    if (affinity === "strike" || affinity === "gun") defense = this.system.phydef;
+    if (ignoreDefense) defense = 0;
 
-    if (affinity === "strike" || affinity === "gun")
-      defense = this.system.phydef;
+    const calculateFinalDamage = (damage) => {
+        let finalAmount = Math.max(Math.floor(damage * mult) - defense, 0);
+        if (game.settings.get("smt-200x", "resistAfterDefense") && mult < 1) {
+            finalAmount = Math.max(Math.floor((damage - defense) * mult), 0);
+        }
+      
+        return finalAmount;
+    };
 
-    if (ignoreDefense) defense = 0
-
-    // Prompt for Fate points if available
-    if (this.type == 'character') {
-      new Dialog({
-        title: "Fate Points Adjustment",
-        content: `
-      <p>Enter the number of Fate points to spend to reduce incoming damage:</p>
-      <div class="form-group">
-        <label for="fate-points">Fate Points:</label>
-        <input type="number" id="fate-points" name="fate-points" value="0" min="0" />
-      </div>
-    `,
-        buttons: {
-          apply: {
-            icon: '<i class="fas fa-check"></i>',
-            label: "Apply",
-            callback: (html) => {
-              const fatePoints = parseInt(html.find('input[name="fate-points"]').val()) || 0;
-              const adjustedAmount = fatePoints > 0 ? Math.floor(amount / (fatePoints * 2)) : amount;
-
-              // Normal Resist Mult Order of Operations
-              let finalAmount = Math.max(Math.floor(adjustedAmount * mult) - defense, 0);
-              // Apply Resist/Strong AFTER subtracting defense
-              if (game.settings.get("smt-200x", "resistAfterDefense") && mult < 1) {
-                finalAmount = Math.max(Math.floor((adjustedAmount - defense) * mult), 0);
-              }
-
-              this._applyFinalDamage(finalAmount, affectsMP);
-            }
-          },
-          cancel: {
-            icon: '<i class="fas fa-times"></i>',
-            label: "Cancel"
-          }
-        },
-        default: "apply"
-      }).render(true);
+    if (this.type === 'character') {
+        new Dialog({
+            title: "Fate Points Adjustment",
+            content: `
+                <p>Enter the number of Fate points to spend to reduce incoming damage:</p>
+                <div class="form-group">
+                    <label for="fate-points">Fate Points:</label>
+                    <input type="number" id="fate-points" name="fate-points" value="0" min="0" />
+                </div>
+            `,
+            buttons: {
+                apply: {
+                    icon: '<i class="fas fa-check"></i>',
+                    label: "Apply",
+                    callback: (html) => {
+                        const fatePoints = parseInt(html.find('input[name="fate-points"]').val()) || 0;
+                        const adjustedAmount = fatePoints > 0 ? Math.floor(amount / (fatePoints * 2)) : amount;
+                        this._applyFinalDamage(calculateFinalDamage(adjustedAmount), affectsMP);
+                    }
+                },
+                cancel: {
+                    icon: '<i class="fas fa-times"></i>',
+                    label: "Cancel"
+                }
+            },
+            default: "apply"
+        }).render(true);
+    } else {
+        this._applyFinalDamage(calculateFinalDamage(amount), affectsMP);
     }
-    else {
-      const finalAmount = Math.max((amount - defense), 0);
-      this._applyFinalDamage(finalAmount, affectsMP);
-    }
-  }
+}
 
   // Helper function to apply the final damage
   _applyFinalDamage(amount, affectsMP) {
@@ -342,9 +335,9 @@ export class SMTXActor extends Actor {
     const currentMP = this.system.mp.value;
 
     if (affectsMP) {
-      this.update({ "system.mp.value": currentMP - amount });
+      this.update({ "system.mp.value": Math.max(currentMP - amount, 0) });
     } else {
-      this.update({ "system.hp.value": currentHP - amount });
+      this.update({ "system.hp.value": Math.max(currentHP - amount, 0) });
     }
 
     ChatMessage.create({
