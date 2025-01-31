@@ -364,7 +364,7 @@ export class SMTXActor extends Actor {
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
-      content: `Applied ${amount} helaing to ${this.name}.`
+      content: `Applied ${amount} healing to ${this.name}.`
     });
   }
 
