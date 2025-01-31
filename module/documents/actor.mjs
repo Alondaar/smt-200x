@@ -244,7 +244,7 @@ export class SMTXActor extends Actor {
     // Evaluate the mathematical expression
     try {
       // Use Function with an explicit Math object
-      const result = new Roll(formula, this).evaluateSync().total;
+      const result = new Roll(formula, this).evaluateSync({ minimize: true }).total;
       return result;
     } catch (error) {
       console.error("Error evaluating formula:", formula, error);
