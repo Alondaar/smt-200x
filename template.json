@@ -186,7 +186,8 @@
         "initFormula": "floor((@system.ag.value + @system.attributes.level)/2)",
         "race": "",
         "alignment": "",
-        "macca": "0"
+        "macca": "0",
+        "favoredStat": "None"
       }
     },
     "character": {

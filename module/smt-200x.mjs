@@ -168,6 +168,9 @@ Handlebars.registerHelper('range', function (start, end, options) {
   return new Handlebars.SafeString(result);
 });
 
+Handlebars.registerHelper("ifEq", function (a, b, options) {
+  return (a === b) ? options.fn(this) : options.inverse(this);
+});
 
 
 /* -------------------------------------------- */
