@@ -355,7 +355,7 @@ export class SMTXActor extends Actor {
 
     if (game.settings.get("smt-200x", "showFloatingDamage")) {
       for (let t of this.getActiveTokens()) {
-        createFloatingNumber(t.document, `-${finalAmount}`, { fillColor: "#FF0000", crit: crit });
+        createFloatingNumber(t.document, `-${finalAmount}`, { fillColor: "#FF0000", crit: crit, mult: mult });
       }
     }
   }
@@ -838,7 +838,7 @@ export function createFloatingNumber(token, textValue, options = {}) {
   // Simple manual animation
   const animDistance = options.animDistance ?? 50;
   const animDuration = options.animDuration ?? 1250; // in ms
-  const initialScale = options.crit ? 1.5 : 1.0; // Start bigger if crit
+  const initialScale = (options.crit ? 1.5 : 1.0) * ((options.mult == 0.5 ? 0.75 : options.mult == 2 ? 1.25 : 1) || 1); // Start bigger if crit
   floatingText.scale.set(initialScale);
   const startY = floatingText.y;
   const endY = floatingText.y - animDistance;
