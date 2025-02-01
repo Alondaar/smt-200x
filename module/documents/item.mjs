@@ -296,8 +296,8 @@ export class SMTXItem extends Item {
 
     let overrides = {
       affinity: systemData.affinity || "strike",
-      ignoreDefense: systemData.ignoreDefense || false,
-      pierce: systemData.pierce || false,
+      ignoreDefense: systemData.ingoreDefense,
+      pierce: systemData.pierce,
       critMult: systemData.critMult || 2,
       extraModifier: "0",
       baseMult: 1
