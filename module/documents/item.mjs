@@ -73,9 +73,13 @@ export class SMTXItem extends Item {
 
     systemData.calcPower = displayDice + (displayDice != "" && staticPower != "" ? "+" : "") + staticPower;
 
-
-    const preCalcTN = new Roll((systemData.tn || "0").replace(/@/g, "@actor.") + "+(" + weaponTN + ")", rollData).evaluateSync();
-    systemData.calcTN = preCalcTN.total;
+    if (systemData.tn.toLowerCase() != "auto") {
+      const preCalcTN = new Roll((systemData.tn || "0").replace(/@/g, "@actor.") + "+(" + weaponTN + ")", rollData).evaluateSync();
+      systemData.calcTN = preCalcTN.total;
+    }
+    else {
+      systemData.calcTN = systemData.tn;
+    }
 
     systemData.formula = "(" + (systemData.powerDice.replace(/@/g, "@actor.") || 0) + ")+" + (staticPower || 0);
   }
@@ -164,6 +168,19 @@ export class SMTXItem extends Item {
   async rollSplitD100(skipDialog = false) {
     const systemData = this.system;
     let [modifier, split] = [0, 1];
+    const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+
+    if (systemData.tn.toLowerCase() == "auto") {
+      ChatMessage.create({
+        speaker,
+        content: `
+      <h3>${this.name} Check</h3>
+      Automatically Successful.
+    `,
+      });
+
+      return
+    }
 
     // Step 1: Prompt the user for modifier and TN split
     if (!skipDialog) {
@@ -248,7 +265,6 @@ export class SMTXItem extends Item {
     );
 
     // Step 4: Send results to chat
-    const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollResults = rolls.map(
       ({ roll, tn, result }, index) =>
         `<span style="font-size:18px;"><strong>Roll ${index + 1}:</strong> ${roll.total} vs. ${tn}% (${result})</span>`
