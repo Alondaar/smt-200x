@@ -73,7 +73,6 @@ export class SMTXItem extends Item {
 
     systemData.calcPower = displayDice + (displayDice != "" && staticPower != "" ? "+" : "") + staticPower;
 
-    this.system.rollableTN = false;
     try {
       const expression = (systemData.tn || "0").replace(/@/g, "@actor.") + `+(${weaponTN})`;
       const preCalcTN = new Roll(expression, rollData).evaluateSync();
@@ -83,7 +82,6 @@ export class SMTXItem extends Item {
         systemData.calcTN = systemData.tn;
       } else {
         systemData.calcTN = preCalcTN.total;
-        this.system.noRollTN = true;
       }
     } catch (err) {
       // If the roll or parse fails entirely, fallback to plain text
@@ -180,7 +178,7 @@ export class SMTXItem extends Item {
     let [modifier, split] = [0, 1];
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
 
-    if (!systemData.rollableTN) {
+    if (isNaN(systemData.calcTN)) {
       ChatMessage.create({
         speaker,
         content: `
