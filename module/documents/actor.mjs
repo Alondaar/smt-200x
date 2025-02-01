@@ -806,10 +806,10 @@ export function createFloatingNumber(token, textValue, options = {}) {
   // Example style; tweak to fit your theme
   const style = new PIXI.TextStyle({
     fontFamily: "Arial",
-    fontSize: options.crit ? 96 : 48,
-    fill: options.crit ? "FFDD00" : (options.fillColor || "#FF0000"),
+    fontSize: 48,
+    fill: options.crit ? "FFCC00" : (options.fillColor || "#FF0000"),
     stroke: "#000000",
-    strokeThickness: 4,
+    strokeThickness: options.crit ? 6 : 4,
     dropShadow: true,
     dropShadowColor: "#000000",
     dropShadowBlur: 4,
@@ -838,6 +838,8 @@ export function createFloatingNumber(token, textValue, options = {}) {
   // Simple manual animation
   const animDistance = options.animDistance ?? 50;
   const animDuration = options.animDuration ?? 1250; // in ms
+  const initialScale = options.crit ? 1.5 : 1.0; // Start bigger if crit
+  floatingText.scale.set(initialScale);
   const startY = floatingText.y;
   const endY = floatingText.y - animDistance;
   const startTime = performance.now();
@@ -850,6 +852,11 @@ export function createFloatingNumber(token, textValue, options = {}) {
 
     floatingText.y = startY - animDistance * progress;
     floatingText.alpha = 1 - progress;
+
+    if (options.crit) {
+      const scaleProgress = 1 - progress;
+      floatingText.scale.set(1 + (initialScale - 1) * scaleProgress);
+    }
 
     if (progress < 1) {
       requestAnimationFrame(animate);
