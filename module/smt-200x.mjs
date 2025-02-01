@@ -94,6 +94,15 @@ Hooks.once('init', function () {
     default: false
   });
 
+  game.settings.register("smt-200x", "showFloatingDamage", {
+    name: "Show Floating Damage Text",
+    hint: "Shows floating text for the damage or healing applied to a token.",
+    scope: "world", // World-level setting (shared by all players)
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
   /*// Register a number setting
   game.settings.register("my-system", "maxItems", {
     name: "Maximum Items",

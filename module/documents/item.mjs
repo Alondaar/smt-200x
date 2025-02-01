@@ -296,8 +296,9 @@ export class SMTXItem extends Item {
 
     let overrides = {
       affinity: systemData.affinity || "strike",
-      ignoreDefense: systemData.ignoreDefense || false,
-      pierce: systemData.pierce || false,
+      ignoreDefense: systemData.ingoreDefense,
+      halfDefense: systemData.halfDefense,
+      pierce: systemData.pierce,
       critMult: systemData.critMult || 2,
       extraModifier: "0",
       baseMult: 1
@@ -345,6 +346,10 @@ export class SMTXItem extends Item {
                         <input type="checkbox" id="ignoreDefense" name="ignoreDefense" ${overrides.ignoreDefense ? "checked" : ""} />
                     </div>
                     <div class="form-group">
+                        <label for="halfDefense">Half Defense:</label>
+                        <input type="checkbox" id="halfDefense" name="halfDefense" ${overrides.halfDefense ? "checked" : ""} />
+                    </div>
+                    <div class="form-group">
                         <label for="pierce">Pierce (unusued):</label>
                         <input type="checkbox" id="pierce" name="pierce" ${overrides.pierce ? "checked" : ""} />
                     </div>
@@ -368,11 +373,12 @@ export class SMTXItem extends Item {
               callback: (html) => {
                 const affinity = html.find('select[name="affinity"]').val() || "strike";
                 const ignoreDefense = html.find('input[name="ignoreDefense"]').is(":checked");
+                const halfDefense = html.find('input[name="halfDefense"]').is(":checked");
                 const pierce = html.find('input[name="pierce"]').is(":checked");
                 const critMult = parseFloat(html.find('input[name="critMult"]').val()) || 2;
                 const extraModifier = html.find('input[name="extraModifier"]').val() || "0";
                 const baseMult = html.find('input[name="baseMult"]').val() || "1";
-                resolve({ affinity, ignoreDefense, pierce, critMult, extraModifier, baseMult });
+                resolve({ affinity, ignoreDefense, halfDefense, pierce, critMult, extraModifier, baseMult });
               },
             },
             cancel: {
@@ -460,6 +466,7 @@ export class SMTXItem extends Item {
     <div class="power-roll-card"
          data-affinity="${overrides.affinity}" 
          data-ignore-defense="${overrides.ignoreDefense}" 
+         data-half-defense="${overrides.halfDefense}" 
          data-pierce="${overrides.pierce}" 
          data-affects-mp='${systemData.affectsMP}' 
          data-regular-damage="${finalBaseDmg}" 
@@ -519,6 +526,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   const criticalDamage = parseFloat(powerRollCard.data('critical-damage'));
   const affinity = powerRollCard.data('affinity');
   const ignoreDefense = powerRollCard.data('ignore-defense');
+  const halfDefense = powerRollCard.data('half-defense');
   const pierce = powerRollCard.data('pierce');
   const affectsMP = powerRollCard.data('affects-mp');
   const buffsArray = powerRollCard.data('buffs');
@@ -538,7 +546,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       if (heals)
         actor.applyHeal(amount, affectsMP);
       else
-        actor.applyDamage(amount, mult, affinity, (crit || ignoreDefense), pierce, affectsMP);
+        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsMP);
     });
   };
 

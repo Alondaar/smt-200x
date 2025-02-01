@@ -495,7 +495,7 @@ export class SMTXActorSheet extends ActorSheet {
 
     html.on('click', '.spell-power-roll', async (event) => {
       event.preventDefault();
-      this.actor.rollPower("(@powerDice.spell)d10x + @spellPower", true)
+      this.actor.rollPower("(@powerDice.spell)d10x + @spellPower", "almighty", true)
     });
 
     html.on('contextmenu', '.spell-power-roll', async (event) => {

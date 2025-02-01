@@ -283,10 +283,11 @@ export class SMTXActor extends Actor {
 
 
 
-  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, affectsMP = false) {
+  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
     let defense = this.system.magdef;
     if (affinity === "strike" || affinity === "gun") defense = this.system.phydef;
-    if (ignoreDefense) defense = 0;
+    if (ignoreDefense || crit) defense = 0;
+    if (halfDefense) defense = Math.floor(defense / 2);
 
     let damage = amount;
     let fateUsed = 0;
@@ -351,6 +352,12 @@ export class SMTXActor extends Actor {
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: chatContent
     });
+
+    if (game.settings.get("smt-200x", "showFloatingDamage")) {
+      for (let t of this.getActiveTokens()) {
+        createFloatingNumber(t.document, `-${finalAmount}`, { fillColor: "#FF0000", crit: crit, mult: mult });
+      }
+    }
   }
 
   applyHeal(amount, affectsMP = false) {
@@ -366,6 +373,12 @@ export class SMTXActor extends Actor {
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: `<span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>`
     });
+
+    if (game.settings.get("smt-200x", "showFloatingDamage")) {
+      for (let t of this.getActiveTokens()) {
+        createFloatingNumber(t.document, `+${amount}`, { fillColor: "#00FF00" });
+      }
+    }
   }
 
   dekaja() {
@@ -407,29 +420,72 @@ export class SMTXActor extends Actor {
       });
     };
 
+    let taruPowerContent = "Melee & Ranged";
+    if (game.settings.get("smt-200x", "taruOnly")) taruPowerContent = "All"
+
     if (applyTo.sukukaja) {
       updateBuffs("suku", "buff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">All TN Accuracy Up.</span>`
+      });
     }
     if (applyTo.tarukaja) {
       updateBuffs("taru", "buff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Power Up.</span>`
+      });
     }
     if (applyTo.rakukaja) {
       updateBuffs("raku", "buff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">Defense Up.</span>`
+      });
     }
     if (applyTo.makakaja) {
       updateBuffs("maka", "buff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">Spell Power Up.</span>`
+      });
     }
     if (applyTo.sukunda) {
       updateBuffs("suku", "debuff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">All TN Accuracy Down.</span>`
+      });
     }
     if (applyTo.tarunda) {
       updateBuffs("taru", "debuff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Power Down.</span>`
+      });
     }
     if (applyTo.rakunda) {
       updateBuffs("raku", "debuff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">Defense Down.</span>`
+      });
     }
     if (applyTo.makunda) {
       updateBuffs("maka", "debuff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">Spell Power Down.</span>`
+      });
     }
   }
 
@@ -737,4 +793,79 @@ export class SMTXActor extends Actor {
       content
     });
   }
+}
+
+/**
+ * Creates a floating text that rises and fades above a token.
+ *
+ * @param {Token} token      The token (Document) above which the text appears
+ * @param {string|number} textValue  The text to display (e.g. -10, +5)
+ * @param {object} [options={}]      Optional styling/animation configs
+ */
+export function createFloatingNumber(token, textValue, options = {}) {
+  // Example style; tweak to fit your theme
+  const style = new PIXI.TextStyle({
+    fontFamily: "Arial",
+    fontSize: 48,
+    fill: options.crit ? "FFCC00" : (options.fillColor || "#FF0000"),
+    stroke: "#000000",
+    strokeThickness: options.crit ? 6 : 4,
+    dropShadow: true,
+    dropShadowColor: "#000000",
+    dropShadowBlur: 4,
+    dropShadowAngle: Math.PI / 6,
+    dropShadowDistance: 4,
+    fontWeight: options.crit ? "bolder" : "normal"
+  });
+
+  // Create the text
+  const floatingText = new PIXI.Text(String(textValue), style);
+  floatingText.anchor.set(0.5); // Center the text
+
+  console.log(token)
+  // Position at the token’s center
+  const gridSize = canvas.dimensions.size;
+  const tokenWidthPx = token.width * gridSize;
+  const tokenHeightPx = token.height * gridSize;
+  const centerX = token.x + tokenWidthPx / 2;
+  const centerY = token.y + tokenHeightPx / 4;
+
+  floatingText.position.set(centerX, centerY);
+
+  // Add to a container. 
+  canvas.tokens.addChild(floatingText);
+
+  // Simple manual animation
+  const animDistance = options.animDistance ?? 50;
+  const animDuration = options.animDuration ?? 1250; // in ms
+  const initialScale = (options.crit ? 1.5 : 1.0) * ((options.mult == 0.5 ? 0.75 : options.mult == 2 ? 1.25 : 1) || 1); // Start bigger if crit
+  floatingText.scale.set(initialScale);
+  const startY = floatingText.y;
+  const endY = floatingText.y - animDistance;
+  const startTime = performance.now();
+
+  function animate() {
+    const now = performance.now();
+    const elapsed = now - startTime;
+    let progress = elapsed / animDuration;
+    if (progress > 1) progress = 1;
+
+    floatingText.y = startY - animDistance * progress;
+    floatingText.alpha = 1 - progress;
+
+    if (options.crit) {
+      const scaleProgress = 1 - progress;
+      floatingText.scale.set(1 + (initialScale - 1) * scaleProgress);
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Remove from the container and destroy it
+      canvas.tokens.removeChild(floatingText);
+      floatingText.destroy();
+    }
+  }
+
+  requestAnimationFrame(animate);
 }
