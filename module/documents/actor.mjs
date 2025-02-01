@@ -407,29 +407,72 @@ export class SMTXActor extends Actor {
       });
     };
 
+    let taruPowerContent = "Melee & Ranged";
+    if (game.settings.get("smt-200x", "taruOnly")) taruPowerContent = "All"
+
     if (applyTo.sukukaja) {
       updateBuffs("suku", "buff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">All TN Accuracy Up.</span>`
+      });
     }
     if (applyTo.tarukaja) {
       updateBuffs("taru", "buff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Powers Up.</span>`
+      });
     }
     if (applyTo.rakukaja) {
       updateBuffs("raku", "buff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">Defenses Up.</span>`
+      });
     }
     if (applyTo.makakaja) {
       updateBuffs("maka", "buff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">Spell Power Up.</span>`
+      });
     }
     if (applyTo.sukunda) {
       updateBuffs("suku", "debuff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">All TN Accuracy Down.</span>`
+      });
     }
     if (applyTo.tarunda) {
       updateBuffs("taru", "debuff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Powers Down.</span>`
+      });
     }
     if (applyTo.rakunda) {
       updateBuffs("raku", "debuff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">Defense Down.</span>`
+      });
     }
     if (applyTo.makunda) {
       updateBuffs("maka", "debuff");
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: this }),
+        content: `<span style="font-size: var(--font-size-16);">Spell Power Down.</span>`
+      });
     }
   }
 
