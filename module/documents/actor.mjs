@@ -423,7 +423,7 @@ export class SMTXActor extends Actor {
 
       ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Powers Up.</span>`
+        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Power Up.</span>`
       });
     }
     if (applyTo.rakukaja) {
@@ -431,7 +431,7 @@ export class SMTXActor extends Actor {
 
       ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Defenses Up.</span>`
+        content: `<span style="font-size: var(--font-size-16);">Defense Up.</span>`
       });
     }
     if (applyTo.makakaja) {
@@ -455,7 +455,7 @@ export class SMTXActor extends Actor {
 
       ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Powers Down.</span>`
+        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Power Down.</span>`
       });
     }
     if (applyTo.rakunda) {
