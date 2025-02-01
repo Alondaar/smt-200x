@@ -347,6 +347,7 @@
       "powerDice": "1d10x",
       "affinity": "strike",
       "ingoreDefense": false,
+      "halfDefense": false,
       "pierce": false,
       "critMult": 2,
       "primaryMult": 1,
