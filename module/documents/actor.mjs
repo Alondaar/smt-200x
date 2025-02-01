@@ -283,10 +283,11 @@ export class SMTXActor extends Actor {
 
 
 
-  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, affectsMP = false) {
+  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
     let defense = this.system.magdef;
     if (affinity === "strike" || affinity === "gun") defense = this.system.phydef;
-    if (ignoreDefense) defense = 0;
+    if (ignoreDefense || crit) defense = 0;
+    if (halfDefense) defense = Math.floor(defense / 2);
 
     let damage = amount;
     let fateUsed = 0;
