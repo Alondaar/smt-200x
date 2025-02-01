@@ -352,6 +352,12 @@ export class SMTXActor extends Actor {
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: chatContent
     });
+
+    if (game.settings.get("smt-200x", "showFloatingDamage")) {
+      for (let t of this.getActiveTokens()) {
+        createFloatingNumber(t.document, `-${finalAmount}`, { fillColor: "#FF0000", crit: crit });
+      }
+    }
   }
 
   applyHeal(amount, affectsMP = false) {
@@ -367,6 +373,12 @@ export class SMTXActor extends Actor {
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: `<span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>`
     });
+
+    if (game.settings.get("smt-200x", "showFloatingDamage")) {
+      for (let t of this.getActiveTokens()) {
+        createFloatingNumber(t.document, `+${amount}`, { fillColor: "#00FF00" });
+      }
+    }
   }
 
   dekaja() {
@@ -781,4 +793,74 @@ export class SMTXActor extends Actor {
       content
     });
   }
+}
+
+/**
+ * Creates a floating text that rises and fades above a token.
+ *
+ * @param {Token} token      The token (PlaceableObject) above which the text appears
+ * @param {string|number} textValue  The text to display (e.g. -10, +5)
+ * @param {object} [options={}]      Optional styling/animation configs
+ */
+export function createFloatingNumber(token, textValue, options = {}) {
+  // Example style; tweak to fit your theme
+  const style = new PIXI.TextStyle({
+    fontFamily: "Arial",
+    fontSize: options.crit ? 96 : 48,
+    fill: options.crit ? "FFFF00" : (options.fillColor || "#FF0000"), // Red for damage, green for healing, etc.
+    stroke: "#000000",
+    strokeThickness: 4,
+    dropShadow: true,
+    dropShadowColor: "#000000",
+    dropShadowBlur: 4,
+    dropShadowAngle: Math.PI / 6,
+    dropShadowDistance: 4,
+    fontWeight: options.crit ? "bolder" : "normal"
+  });
+
+  // Create the text
+  const floatingText = new PIXI.Text(String(textValue), style);
+  floatingText.anchor.set(0.5); // Center the text
+
+  console.log(token)
+  // Position at the token’s center
+  const gridSize = canvas.dimensions.size;
+  const tokenWidthPx = token.width * gridSize;
+  const tokenHeightPx = token.height * gridSize;
+  const centerX = token.x + tokenWidthPx / 2;
+  const centerY = token.y + tokenHeightPx / 4;
+
+  floatingText.position.set(centerX, centerY);
+
+  // Add to a container. 
+  // "canvas.tokens" works in many versions, but you could also use "canvas.foreground" or "canvas.interface"
+  // depending on your preference and Foundry version:
+  canvas.tokens.addChild(floatingText);
+
+  // Simple manual animation
+  const animDistance = options.animDistance ?? 50;
+  const animDuration = options.animDuration ?? 1250; // in ms
+  const startY = floatingText.y;
+  const endY = floatingText.y - animDistance;
+  const startTime = performance.now();
+
+  function animate() {
+    const now = performance.now();
+    const elapsed = now - startTime;
+    let progress = elapsed / animDuration;
+    if (progress > 1) progress = 1;
+
+    floatingText.y = startY - animDistance * progress;
+    floatingText.alpha = 1 - progress;
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Remove from the container and destroy to free resources
+      canvas.tokens.removeChild(floatingText);
+      floatingText.destroy();
+    }
+  }
+
+  requestAnimationFrame(animate);
 }
