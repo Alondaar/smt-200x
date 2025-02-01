@@ -798,7 +798,7 @@ export class SMTXActor extends Actor {
 /**
  * Creates a floating text that rises and fades above a token.
  *
- * @param {Token} token      The token (PlaceableObject) above which the text appears
+ * @param {Token} token      The token (Document) above which the text appears
  * @param {string|number} textValue  The text to display (e.g. -10, +5)
  * @param {object} [options={}]      Optional styling/animation configs
  */
@@ -833,8 +833,6 @@ export function createFloatingNumber(token, textValue, options = {}) {
   floatingText.position.set(centerX, centerY);
 
   // Add to a container. 
-  // "canvas.tokens" works in many versions, but you could also use "canvas.foreground" or "canvas.interface"
-  // depending on your preference and Foundry version:
   canvas.tokens.addChild(floatingText);
 
   // Simple manual animation
@@ -856,7 +854,7 @@ export function createFloatingNumber(token, textValue, options = {}) {
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      // Remove from the container and destroy to free resources
+      // Remove from the container and destroy it
       canvas.tokens.removeChild(floatingText);
       floatingText.destroy();
     }
