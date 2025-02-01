@@ -73,9 +73,21 @@ export class SMTXItem extends Item {
 
     systemData.calcPower = displayDice + (displayDice != "" && staticPower != "" ? "+" : "") + staticPower;
 
+    try {
+      const expression = (systemData.tn || "0").replace(/@/g, "@actor.") + `+(${weaponTN})`;
+      const preCalcTN = new Roll(expression, rollData).evaluateSync();
 
-    const preCalcTN = new Roll((systemData.tn || "0").replace(/@/g, "@actor.") + "+(" + weaponTN + ")", rollData).evaluateSync();
-    systemData.calcTN = preCalcTN.total;
+      // If the total is NaN, fallback to plain text
+      if (isNaN(preCalcTN.total)) {
+        systemData.calcTN = systemData.tn;
+      } else {
+        systemData.calcTN = preCalcTN.total;
+      }
+    } catch (err) {
+      // If the roll or parse fails entirely, fallback to plain text
+      console.warn(`Could not parse systemData.tn: "${systemData.tn}"`, err);
+      systemData.calcTN = systemData.tn;
+    }
 
     systemData.formula = "(" + (systemData.powerDice.replace(/@/g, "@actor.") || 0) + ")+" + (staticPower || 0);
   }
@@ -144,33 +156,14 @@ export class SMTXItem extends Item {
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
-    const label = `[${item.type}] ${item.name}`;
+    const label = `<h2>${item.name}</h2>`; //[${item.type}]
 
-    // If there's no roll data, send a chat message.
-    if (!this.system.formula) {
-      ChatMessage.create({
-        speaker: speaker,
-        rollMode: rollMode,
-        flavor: label,
-        content: item.system.description ?? '',
-      });
-    }
-    // Otherwise, create a roll and send a chat message from it.
-    else {
-      // Retrieve roll data.
-      const rollData = this.getRollData();
-
-      // Invoke the roll and submit it to chat.
-      const roll = new Roll(rollData.formula, rollData);
-      // If you need to store the value first, uncomment the next line.
-      // const result = await roll.evaluate();
-      roll.toMessage({
-        speaker: speaker,
-        rollMode: rollMode,
-        flavor: label,
-      });
-      return roll;
-    }
+    ChatMessage.create({
+      speaker: speaker,
+      rollMode: rollMode,
+      flavor: label,
+      content: (item.system.shortEffect + `<hr>` + item.system.description) ?? '',
+    });
   }
 
 
@@ -183,6 +176,19 @@ export class SMTXItem extends Item {
   async rollSplitD100(skipDialog = false) {
     const systemData = this.system;
     let [modifier, split] = [0, 1];
+    const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+
+    if (isNaN(systemData.calcTN)) {
+      ChatMessage.create({
+        speaker,
+        content: `
+      <h3>${this.name} Check</h3>
+      Automatically Successful.
+    `,
+      });
+
+      return
+    }
 
     // Step 1: Prompt the user for modifier and TN split
     if (!skipDialog) {
@@ -267,7 +273,6 @@ export class SMTXItem extends Item {
     );
 
     // Step 4: Send results to chat
-    const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollResults = rolls.map(
       ({ roll, tn, result }, index) =>
         `<span style="font-size:18px;"><strong>Roll ${index + 1}:</strong> ${roll.total} vs. ${tn}% (${result})</span>`

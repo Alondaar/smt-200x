@@ -186,7 +186,8 @@
         "initFormula": "floor((@system.ag.value + @system.attributes.level)/2)",
         "race": "",
         "alignment": "",
-        "macca": "0"
+        "macca": "0",
+        "favoredStat": "None"
       }
     },
     "character": {
@@ -225,7 +226,8 @@
       "rare": "",
       "isBoss": false,
       "autoEXP": true,
-      "fuseID": ""
+      "fuseID": "",
+      "allowFate": false
     }
   },
   "Item": {
@@ -347,6 +349,7 @@
       "powerDice": "1d10x",
       "affinity": "strike",
       "ingoreDefense": false,
+      "halfDefense": false,
       "pierce": false,
       "critMult": 2,
       "primaryMult": 1,

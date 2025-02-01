@@ -34,7 +34,13 @@
     <div class='item-prop'>{{item.system.target}}</div>
     <div class='item-prop clickable weapon-rotate'>{{localize (lookup @root.config.weaponChoices item.system.wep)}}
     </div>
-    <div class='item-prop clickable roll-tn'>{{item.system.calcTN}}%</div>
+    <div class="item-prop clickable roll-tn">
+      {{#ifNumber item.system.calcTN}}
+      {{item.system.calcTN}}%
+      {{else}}
+      {{item.system.calcTN}}
+      {{/ifNumber}}
+    </div>
     <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
     <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>
     <div class='item-controls'>

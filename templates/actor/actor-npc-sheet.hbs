@@ -65,9 +65,12 @@
       <div class="abilities flexcol">
         {{#each system.stats as |ability key|}}
         <div class="ability flexrow flex-group-center">
-          <label for="system.stats.{{key}}.value" class="resource-label rollable align-left" data-roll="d100"
-            data-label="{{localize (lookup @root.config.statAbbreviations key)}}">{{localize
-            (lookup @root.config.statAbbreviations key)}}</label>
+          <label for="system.stats.{{key}}.value" class="resource-label clickable {{key}}-roll align-left"
+            data-roll="d100" data-label="{{localize (lookup @root.config.statAbbreviations key)}}">
+            {{localize (lookup @root.config.statAbbreviations key)}}
+            {{#ifEq ../system.favoredStat key}}
+            *
+            {{/ifEq}}</label>
           <input type="text" name="system.stats.{{key}}.value" class="update-stat" value="{{ability.value}}"
             data-dtype="Number" />
           <span class="ability-mod" data-label="{{localize (lookup @root.config.stats key)}}">{{ability.tn}}%</span>
@@ -307,7 +310,7 @@
       <hr>
 
       <section class="main">
-        <div class="grid grid-5col">
+        <div class="grid grid-6col">
           <div class="flexcol">
             <label for="system.hp.mult" class="resource-label">HP Multiplier</label>
             <input type="text" name="system.hp.mult" value="{{system.hp.mult}}" data-dtype="Number" />
@@ -316,6 +319,14 @@
           <div class="flexcol">
             <label for="system.mp.mult" class="resource-label">MP Multiplier</label>
             <input type="text" name="system.mp.mult" value="{{system.mp.mult}}" data-dtype="Number" />
+          </div>
+
+          <div class="flexcol">
+            <label class="resource-label">TC Demon Favored Stat</label>
+            <select name="system.favoredStat">
+              <option value="none">None</option>
+              {{selectOptions @root.config.stats selected=system.favoredStat localize=true}}
+            </select>
           </div>
 
           <div class="flexcol">
@@ -345,6 +356,11 @@
             <button class="set-x-demon" type="button"
               style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
               X Demon Formulas</button>
+          </div>
+
+          <div class="flexcol">
+            <label for="system.allowFate" class="resource-label">Show Spend Fate Prompt</label>
+            <input type="checkbox" name="system.allowFate" {{#if system.allowFate}}checked{{/if}} />
           </div>
 
           <div class="flexcol">

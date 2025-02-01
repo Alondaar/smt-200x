@@ -293,7 +293,7 @@ export class SMTXActor extends Actor {
     let fateUsed = 0;
 
     // If character, ask for Fate points and adjust damage accordingly
-    if (this.type === 'character') {
+    if (this.type === 'character' || game.settings.get("smt-200x", "fateForNPCs") || this.system.allowFate) {
       const fatePoints = await new Promise((resolve) => {
         new Dialog({
           title: "Fate Points Adjustment",
@@ -316,12 +316,14 @@ export class SMTXActor extends Actor {
             cancel: {
               icon: '<i class="fas fa-times"></i>',
               label: "Cancel",
-              callback: () => resolve(0) // Default to 0 if canceled
+              callback: () => resolve(-1) // Default to 0 if canceled
             }
           },
           default: "apply"
         }).render(true);
       });
+
+      if (fatePoints == -1) return // Player clicked cancel, don't apply damage.
 
       if (fatePoints > 0) {
         damage = Math.floor(amount / (fatePoints * 2));

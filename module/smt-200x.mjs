@@ -103,6 +103,15 @@ Hooks.once('init', function () {
     default: false
   });
 
+  game.settings.register("smt-200x", "fateForNPCs", {
+    name: "Allow NPCs to use Fate",
+    hint: "Shows the Spend Fate dialogue when applying damage to all NPCs",
+    scope: "world", // World-level setting (shared by all players)
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
   /*// Register a number setting
   game.settings.register("my-system", "maxItems", {
     name: "Maximum Items",
@@ -168,6 +177,18 @@ Handlebars.registerHelper('range', function (start, end, options) {
   return new Handlebars.SafeString(result);
 });
 
+Handlebars.registerHelper("ifEq", function (a, b, options) {
+  return (a === b) ? options.fn(this) : options.inverse(this);
+});
+
+Handlebars.registerHelper("ifNumber", function (value, options) {
+  const isNumber = (typeof value === "number" && !isNaN(value))
+    || (!isNaN(parseFloat(value)) && isFinite(value));
+
+  return isNumber
+    ? options.fn(this)
+    : options.inverse(this);
+});
 
 
 /* -------------------------------------------- */
