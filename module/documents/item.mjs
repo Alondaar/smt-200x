@@ -73,11 +73,21 @@ export class SMTXItem extends Item {
 
     systemData.calcPower = displayDice + (displayDice != "" && staticPower != "" ? "+" : "") + staticPower;
 
-    if (systemData.tn.toLowerCase() != "auto") {
-      const preCalcTN = new Roll((systemData.tn || "0").replace(/@/g, "@actor.") + "+(" + weaponTN + ")", rollData).evaluateSync();
-      systemData.calcTN = preCalcTN.total;
-    }
-    else {
+    this.system.rollableTN = false;
+    try {
+      const expression = (systemData.tn || "0").replace(/@/g, "@actor.") + `+(${weaponTN})`;
+      const preCalcTN = new Roll(expression, rollData).evaluateSync();
+
+      // If the total is NaN, fallback to plain text
+      if (isNaN(preCalcTN.total)) {
+        systemData.calcTN = systemData.tn;
+      } else {
+        systemData.calcTN = preCalcTN.total;
+        this.system.noRollTN = true;
+      }
+    } catch (err) {
+      // If the roll or parse fails entirely, fallback to plain text
+      console.warn(`Could not parse systemData.tn: "${systemData.tn}"`, err);
       systemData.calcTN = systemData.tn;
     }
 
@@ -170,7 +180,7 @@ export class SMTXItem extends Item {
     let [modifier, split] = [0, 1];
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
 
-    if (systemData.tn.toLowerCase() == "auto") {
+    if (!systemData.rollableTN) {
       ChatMessage.create({
         speaker,
         content: `

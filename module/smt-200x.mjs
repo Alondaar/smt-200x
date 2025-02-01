@@ -172,6 +172,15 @@ Handlebars.registerHelper("ifEq", function (a, b, options) {
   return (a === b) ? options.fn(this) : options.inverse(this);
 });
 
+Handlebars.registerHelper("ifNumber", function (value, options) {
+  const isNumber = (typeof value === "number" && !isNaN(value))
+    || (!isNaN(parseFloat(value)) && isFinite(value));
+
+  return isNumber
+    ? options.fn(this)
+    : options.inverse(this);
+});
+
 
 /* -------------------------------------------- */
 /*  Ready Hook                                  */
