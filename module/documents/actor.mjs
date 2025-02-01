@@ -807,7 +807,7 @@ export function createFloatingNumber(token, textValue, options = {}) {
   const style = new PIXI.TextStyle({
     fontFamily: "Arial",
     fontSize: options.crit ? 96 : 48,
-    fill: options.crit ? "FFFF00" : (options.fillColor || "#FF0000"), // Red for damage, green for healing, etc.
+    fill: options.crit ? "FFDD00" : (options.fillColor || "#FF0000"),
     stroke: "#000000",
     strokeThickness: 4,
     dropShadow: true,
