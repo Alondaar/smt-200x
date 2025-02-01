@@ -226,7 +226,8 @@
       "rare": "",
       "isBoss": false,
       "autoEXP": true,
-      "fuseID": ""
+      "fuseID": "",
+      "allowFate": false
     }
   },
   "Item": {
