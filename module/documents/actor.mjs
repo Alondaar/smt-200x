@@ -96,6 +96,14 @@ export class SMTXActor extends Actor {
     systemData.phydef = this.parseFormula(systemData.phydefFormula) + systemData.sumRaku;
     systemData.magdef = this.parseFormula(systemData.magdefFormula) + systemData.sumRaku;
 
+    // INITIATIVE
+    systemData.init = this.parseFormula(systemData.initFormula);
+
+    // POWERS
+    systemData.meleePower = systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
+    systemData.spellPower = systemData.stats.mg.value + systemData.attributes.level + (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
+    systemData.rangedPower = systemData.stats.ag.value + (game.settings.get("smt-200x", "addLevelToRangedPower") ? systemData.attributes.level : 0) + systemData.sumTaru;
+
     if (actorData.type === 'character') {
       // Start with base values
       let physicalDefense = 0;
@@ -106,10 +114,11 @@ export class SMTXActor extends Actor {
       // Add defense bonuses from equipped armor
       this.items.forEach((item) => {
         if (item.type === "armor" && item.system.equipped) {
-          physicalDefense += item.system.phydef || 0;
-          magicalDefense += item.system.magdef || 0;
-          meleePower += item.system.meleePower || 0;
-          initiative += item.system.init || 0;
+          console.log(item.system);
+          physicalDefense += item.system.phydef ?? 0;
+          magicalDefense += item.system.magdef ?? 0;
+          meleePower += item.system.meleePower ?? 0;
+          initiative += item.system.init ?? 0;
         }
       });
 
@@ -119,14 +128,6 @@ export class SMTXActor extends Actor {
       systemData.meleePower += meleePower;
       systemData.init += initiative;
     }
-
-    // INITIATIVE
-    systemData.init = this.parseFormula(systemData.initFormula);
-
-    // POWERS
-    systemData.meleePower = systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
-    systemData.spellPower = systemData.stats.mg.value + systemData.attributes.level + (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
-    systemData.rangedPower = systemData.stats.ag.value + (game.settings.get("smt-200x", "addLevelToRangedPower") ? systemData.attributes.level : 0) + systemData.sumTaru;
 
     // Set Max HP / MP / Fate
     systemData.hp.max = (systemData.stats.vt.value + systemData.attributes.level) * systemData.hp.mult;
