@@ -535,7 +535,7 @@ export class SMTXActor extends Actor {
     if (!skipDialog) {
       const { dia_modifier, dia_split } = await new Promise((resolve) => {
         new Dialog({
-          title: this.name + " Check Dialogue",
+          title: "Check Dialogue",
           content: `
         <form>
           <div class="form-group">
@@ -578,7 +578,7 @@ export class SMTXActor extends Actor {
     }
 
     // Step 2: Calculate modified TN and split values
-    const baseTN = tn || 0;
+    const baseTN = tn ?? 0;
     const modifiedTN = baseTN + modifier;
     const splitTN = Math.max(1, split);
     const tnParts = Array.from({ length: splitTN }, (_, i) => Math.floor(modifiedTN / splitTN));
@@ -601,7 +601,7 @@ export class SMTXActor extends Actor {
           result = "Critical"; // Natural 1 is always a critical
         } else if (roll.total === 100) {
           result = "Fumble"; // Natural 100 is always a fumble
-        } else if (roll.total >= (this.isCursed ? 86 : 96) && roll.total <= 99) {
+        } else if (roll.total >= (this.system.isCursed ? 86 : 96) && roll.total <= 99) {
           result = "Automatic Failure"; // Rolls 96+ (Cursed 86+) are automatic failures
         } else if (roll.total <= (tn * critRate)) {
           result = "Critical"; // Within the crit rate range
@@ -613,19 +613,46 @@ export class SMTXActor extends Actor {
       })
     );
 
+    const tnInfoContent = `
+        <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+            <span><strong>Base TN</strong></span>
+            <span><strong>Modifier</strong></span>
+            <span><strong>Splits</strong></span>
+        </div>
+        <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+            <span>${baseTN}%</span>
+            <span>${modifier >= 0 ? "+" : ""}${modifier}%</span>
+            <span>${splitTN}</span>
+        </div>
+    `;
+
     // Step 4: Send results to chat
-    const speaker = ChatMessage.getSpeaker({ actor: this.actor });
-    const rollResults = rolls.map(
-      ({ roll, tn, result }, index) =>
-        `<span style="font-size:18px;"><strong>Roll ${index + 1}:</strong> ${roll.total} vs. ${tn}% (${result})</span>`
-    ).join("</br>");
+    const speaker = ChatMessage.getSpeaker({ actor: this });
+    const rollMode = game.settings.get('core', 'rollMode');
+    const rollResults = `
+      <div class="flexrow flex-group-center flex-between" style="font-size: 32px; font-weight: bold;">
+        ${rolls.map(({ roll }) => `<span>${roll.total}</span>`).join("")}
+      </div>
+      <div class="flexrow flex-group-center flex-between">
+        ${rolls.map(({ result }) => `<span style="font-size: 12px;"><em>(${result})</em></span>`).join("")}
+      </div>
+    `;
 
     ChatMessage.create({
-      speaker,
+      speaker: speaker,
+      rolMode: rollMode,
+      flavor: `<h2>${rollName} Check</h2>`,
       content: `
-      <h3>${this.name} ${rollName} Check</h3>
-      <p>Base TN: ${baseTN}%, Modifier: ${modifier}%, Split: ${splitTN}</p>
+      <div class="flexrow flex-group-center flex-between" style="font-weight: bold;">
+        <span>TN ${tnParts[0]}%</span>
+      </div>
       ${rollResults}
+      <hr>
+      <details>
+        <summary style="cursor: pointer; font-weight: bold;">Details</summary>
+          ${tnInfoContent}
+          <hr>
+      </details>
     `,
     });
   }

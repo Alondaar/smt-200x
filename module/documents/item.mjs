@@ -315,7 +315,7 @@ export class SMTXItem extends Item {
           result = "Critical"; // Natural 1 is always a critical
         } else if (roll.total === 100) {
           result = "Fumble"; // Natural 100 is always a fumble
-        } else if (roll.total >= (this.actor.isCursed ? 86 : 96) && roll.total <= 99) {
+        } else if (roll.total >= (this.actor.system.isCursed ? 86 : 96) && roll.total <= 99) {
           result = "Automatic Failure"; // Rolls 96+ (Cursed 86+) are automatic failures
         } else if (roll.total <= (tn * critRate) + systemData.flatCritChance) {
           result = "Critical"; // Within the crit rate range
