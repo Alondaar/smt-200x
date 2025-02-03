@@ -522,7 +522,7 @@ export class SMTXItem extends Item {
     if (game.dice3d)
       await game.dice3d.showForRoll(regularRoll, game.user, true)
 
-    const finalBaseDmg = (regularRoll.total) * overrides.baseMult
+    const finalBaseDmg = Math.floor((regularRoll.total) * overrides.baseMult)
 
     // Roll for sub-formula
     const hasBuffSubRoll = systemData.subBuffRoll != "" ? true : false;
@@ -564,7 +564,7 @@ export class SMTXItem extends Item {
       .join(", "); // Join the values into a string
 
     // Calculate critical damage
-    const critDamage = (finalBaseDmg * overrides.critMult) + systemData.flatCritDamage;
+    const critDamage = Math.floor((finalBaseDmg) * overrides.critMult) + systemData.flatCritDamage;
 
     // Determine button visibility based on affinity
     const hideDamage = (hasBuffs && !hasBuffSubRoll);

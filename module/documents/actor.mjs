@@ -665,6 +665,10 @@ export class SMTXActor extends Actor {
 * @private
 */
   async rollPower(formula = "0", defAffinity = "almighty", skipDialog = false) {
+    let rollName = "Melee"
+    if (event.target.classList.value.includes("ranged-power-roll")) rollName = "Ranged"
+    if (event.target.classList.value.includes("spell-power-roll")) rollName = "Spell"
+
     const rollData = this.getRollData();
 
     let overrides = {
@@ -718,8 +722,8 @@ export class SMTXActor extends Actor {
                         <input type="checkbox" id="ignoreDefense" name="ignoreDefense" ${overrides.ignoreDefense ? "checked" : ""} />
                     </div>
                     <div class="form-group">
-                        <label for="affectsMP">Affects MP:</label>
-                        <input type="checkbox" id="affectsMP" name="affectsMP" ${overrides.affectsMP ? "checked" : ""} />
+                        <label for="halfDefense">Half Defense:</label>
+                        <input type="checkbox" id="halfDefense" name="halfDefense" ${overrides.halfDefense ? "checked" : ""} />
                     </div>
                     <div class="form-group">
                         <label for="critMult">Critical Multiplier:</label>
@@ -774,8 +778,8 @@ export class SMTXActor extends Actor {
     if (game.dice3d)
       await game.dice3d.showForRoll(regularRoll, game.user, true)
 
-    const finalBaseDmg = (regularRoll.total) * overrides.baseMult
-    const critDamage = (finalBaseDmg) * overrides.critMult;
+    const finalBaseDmg = Math.floor((regularRoll.total) * overrides.baseMult)
+    const critDamage = Math.floor((finalBaseDmg) * overrides.critMult);
 
     // Determine button visibility based on affinity
     const hideDamage = false;
@@ -783,50 +787,68 @@ export class SMTXActor extends Actor {
     const showDamageButtons = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !hideDamage;
     const showHealing = overrides.affinity == "recovery";
 
-    let btnStyling = 'width: 28px; height: 28px; font-size: 14px;';
+    let btnStyling = 'width: 22px; height: 28px; font-size: 14px; '; //margin: 1px;
+
+    const damageButtonsContent = showDamageButtons ? `
+      <div class="damage-buttons flexrow flex-group-center flex-between">
+        <button class='apply-full-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Apply full damage"></i></button>
+        <button class='apply-half-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Apply half damage"></i></button>
+        <button class='apply-double-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Apply double damage"></i></button>
+        <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Apply full healing"></i></button>
+      </div>
+    ` : "";
+
+    const healingButtonContent = showHealing ? `
+      <div class="healing-buttons flexrow flex-group-center flex-between">
+        <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Apply full healing"></i></button>
+      </div>
+    ` : "";
+
+    const critButtonsContent = showCrit ? `
+      <div class="damage-buttons flexrow flex-group-center flex-between">
+        <button class='apply-full-crit-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Apply full crit damage"></i></button>
+        <button class='apply-half-crit-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Apply half crit damage"></i></button>
+        <button class='apply-double-crit-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Apply double crit damage"></i></button>
+        <button class='apply-full-crit-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Apply full crit healing"></i></button>
+      </div>
+    ` : "";
 
     // HTML with refined logic
     const content = `
-    <div class="power-roll-card"
-         data-affinity="${overrides.affinity}" 
-         data-ignore-defense="${overrides.ignoreDefense}" 
-         data-affects-mp='${overrides.affectsMP}' 
-         data-regular-damage="${finalBaseDmg}" 
-         data-critical-damage="${critDamage}">
-        <h3>${this.name} Power Roll</h3>
+      <div class="power-roll-card" 
+          data-affinity="${overrides.affinity}" 
+          data-ignore-defense="${overrides.ignoreDefense}" 
+          data-half-defense="${overrides.halfDefense}" 
+          data-pierce="${overrides.pierce}" 
+          data-regular-damage="${finalBaseDmg}" 
+          data-critical-damage="${critDamage}">
+        
         <section class="flexrow">
           <div class="flexcol">
-          ${!hideDamage ? `<p><strong>Affinity:</strong> ${game.i18n.localize("SMT_X.Affinity." + overrides.affinity)}</p>
-            <p style="font-size:32px;margin:0;" class="align-center"><strong>${finalBaseDmg}</strong></p>` : ""}
-          <div class="damage-buttons grid grid-4col">
-              ${showDamageButtons ? `
-                  <button class='apply-full-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>
-                  <button class='apply-half-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Click to apply half damage to selected token(s)."></i></button>
-                  <button class='apply-double-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Click to apply double damage to selected token(s)."></i></button>
-                  <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>
-              ` : ""}
-              ${showHealing ? `<button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>` : ""}
+            ${!hideDamage ? `<p><strong>Affinity:</strong> ${game.i18n.localize("SMT_X.Affinity." + overrides.affinity)}</p>
+            <p style="font-size: 32px; margin: 0;" class="align-center"><strong>${finalBaseDmg}</strong></p>` : ""}
+            ${damageButtonsContent}
+            ${healingButtonContent}
           </div>
-        </div>
-        ${showCrit ? `
-          <div style="margin-left: 25px;" class="flex0"></div>
-        <div class="flexcol">
-        <p><strong>Critical:</strong></p>
-        <p style="font-size:32px;margin:0;" class="align-center"><strong>${critDamage}</strong></p>
-        <div class="damage-buttons grid grid-4col">
-            <button class='apply-full-crit-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>
-                <button class='apply-half-crit-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Click to apply half damage to selected token(s)."></i></button>
-                <button class='apply-double-crit-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Click to apply double damage to selected token(s)."></i></button>
-                <button class='apply-full-crit-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>
-        </div></div>
-        ` : ""}
+
+          ${showCrit ? `
+          <div class="flexcol" style="margin-left: 15px;">
+            <p><strong>Critical:</strong></p>
+            <p style="font-size: 32px; margin: 0;" class="align-center"><strong>${critDamage}</strong></p>
+            ${critButtonsContent}
+          </div>` : ""}
         </section>
-    </div>
+      </div>
     `;
 
-    const message = await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-      content
+    const speaker = ChatMessage.getSpeaker({ actor: this });
+    const rollMode = game.settings.get('core', 'rollMode');
+
+    ChatMessage.create({
+      speaker: speaker,
+      rolMode: rollMode,
+      flavor: `<h2>${rollName} Power Roll</h2>`,
+      content: content
     });
   }
 }
