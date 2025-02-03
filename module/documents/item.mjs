@@ -156,14 +156,27 @@ export class SMTXItem extends Item {
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
-    const label = `<h2>${item.name}</h2>`; //[${item.type}]
+    const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
+    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
 
-    ChatMessage.create({
-      speaker: speaker,
-      rollMode: rollMode,
-      flavor: label,
-      content: (item.system.shortEffect + `<hr>` + item.system.description) ?? '',
-    });
+    switch (item.type) {
+      case 'feature':
+        ChatMessage.create({
+          speaker: speaker,
+          rollMode: rollMode,
+          flavor: label,
+          content: (item.system.shortEffect + `<hr>` + item.system.description) ?? '',
+        });
+        break;
+
+      default:
+        ChatMessage.create({
+          speaker: speaker,
+          rollMode: rollMode,
+          flavor: label,
+          content: (item.system.shortEffect + `<hr>` + item.system.description) ?? '',
+        });
+    }
   }
 
 
