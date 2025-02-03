@@ -109,6 +109,8 @@ export class SMTXActor extends Actor {
       let physicalDefense = 0;
       let magicalDefense = 0;
       let meleePower = 0;
+      let rangedPower = 0;
+      let spellPower = 0;
       let initiative = 0;
 
       // Add defense bonuses from equipped armor
@@ -118,6 +120,8 @@ export class SMTXActor extends Actor {
           physicalDefense += item.system.phydef ?? 0;
           magicalDefense += item.system.magdef ?? 0;
           meleePower += item.system.meleePower ?? 0;
+          rangedPower += item.system.rangedPower ?? 0;
+          spellPower += item.system.spellPower ?? 0;
           initiative += item.system.init ?? 0;
         }
       });
@@ -126,6 +130,8 @@ export class SMTXActor extends Actor {
       systemData.phydef += physicalDefense;
       systemData.magdef += magicalDefense;
       systemData.meleePower += meleePower;
+      systemData.rangedPower += rangedPower;
+      systemData.spellPower += spellPower;
       systemData.init += initiative;
     }
 
