@@ -158,25 +158,45 @@ export class SMTXItem extends Item {
     const rollMode = game.settings.get('core', 'rollMode');
     const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
     const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
+    let content = (item.system.shortEffect + `<hr>` + item.system.description) ?? ''
 
     switch (item.type) {
       case 'feature':
-        ChatMessage.create({
-          speaker: speaker,
-          rollMode: rollMode,
-          flavor: label,
-          content: (item.system.shortEffect + `<hr>` + item.system.description) ?? '',
-        });
+        const cost = item.system.cost ?? 'N/A';
+        const target = item.system.target ?? 'N/A';
+        const tn = item.system.calcTN ?? 'N/A';
+        const power = item.system.calcPower ?? 'N/A';
+        const affinity = item.system.affinity ?? 'N/A';
+
+        const featureInfo = `
+          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+            <span><strong>Cost</strong></span>
+            <span><strong>Target</strong></span>
+            <span><strong>Affinity</strong></span>
+          </div>
+          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+            <span>${cost}</span>
+            <span>${target}</span>
+            <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
+          </div>
+          <hr>
+        `;
+
+        // <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;"><span><strong>TN:</strong> ${tn}</span><span><strong>Power:</strong> ${power}</span></div>
+
+        content = featureInfo + content;
         break;
 
       default:
-        ChatMessage.create({
-          speaker: speaker,
-          rollMode: rollMode,
-          flavor: label,
-          content: (item.system.shortEffect + `<hr>` + item.system.description) ?? '',
-        });
+        break;
     }
+
+    ChatMessage.create({
+      speaker: speaker,
+      rollMode: rollMode,
+      flavor: label,
+      content: content,
+    });
   }
 
 
