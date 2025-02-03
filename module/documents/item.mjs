@@ -157,7 +157,8 @@ export class SMTXItem extends Item {
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
     const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
-    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
+    const label = `
+    <h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
     let content = (item.system.shortEffect + `<hr>` + item.system.description) ?? ''
 
     switch (item.type) {
@@ -181,8 +182,6 @@ export class SMTXItem extends Item {
           </div>
           <hr>
         `;
-
-        // <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;"><span><strong>TN:</strong> ${tn}</span><span><strong>Power:</strong> ${power}</span></div>
 
         content = featureInfo + content;
         break;
@@ -230,9 +229,7 @@ export class SMTXItem extends Item {
             <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
           </div>
         `;
-    const descriptionContent = `
-          ${item.system.shortEffect}<hr>${item.system.description}
-        `;
+    const descriptionContent = `${item.system.shortEffect}<hr>${item.system.description}`;
 
     if (isNaN(systemData.calcTN)) {
       ChatMessage.create({
@@ -345,11 +342,11 @@ export class SMTXItem extends Item {
 
     // Step 4: Send results to chat
     const rollResults = `
-      <div class="flexrow flex-group-center flex-between" style="padding-bottom: 4px;">
-        ${rolls.map(({ tn, result }) => `<div><span>TN ${tn}%</span><br><span style="font-size: 12px;"><em>(${result})</em></span></div>`).join("")}
-      </div>
-      <div class="flexrow flex-group-center flex-between" style="font-size: 36px; font-weight: bold;">
+      <div class="flexrow flex-group-center flex-between" style="font-size: 32px; font-weight: bold;">
         ${rolls.map(({ roll }) => `<span>${roll.total}</span>`).join("")}
+      </div>
+      <div class="flexrow flex-group-center flex-between">
+        ${rolls.map(({ result }) => `<span style="font-size: 12px;"><em>(${result})</em></span>`).join("")}
       </div>
     `;
 
@@ -358,13 +355,21 @@ export class SMTXItem extends Item {
       rolMode: rollMode,
       flavor: label,
       content: `
-      ${featureInfoContent}
-      <hr>
-      ${tnInfoContent}
-      <hr>
+      <div class="flexrow flex-group-center flex-between" style="font-weight: bold;">
+        <span>TN ${tnParts[0]}%</span>
+      </div>
       ${rollResults}
       <hr>
-      ${descriptionContent}
+      <details>
+        <summary style="cursor: pointer; font-weight: bold;">Details</summary>
+        <div>
+          ${tnInfoContent}
+          <hr>
+          ${featureInfoContent}
+          <hr>
+          ${descriptionContent}
+        </div>
+      </details>
     `,
     });
   }
@@ -377,8 +382,31 @@ export class SMTXItem extends Item {
   * @private
   */
   async rollPower(skipDialog = false) {
-    const systemData = this.system;
-    const rollData = this.getRollData();
+    const item = this;
+    const systemData = item.system;
+    const rollData = item.getRollData();
+
+    const speaker = ChatMessage.getSpeaker({ actor: item.actor });
+    const rollMode = game.settings.get('core', 'rollMode');
+    const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
+    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name} Power Roll</h2>`;
+
+    const cost = item.system.cost ?? 'N/A';
+    const target = item.system.target ?? 'N/A';
+    const affinity = item.system.affinity ?? 'N/A';
+    const featureInfoContent = `
+          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+            <span><strong>Cost</strong></span>
+            <span><strong>Target</strong></span>
+            <span><strong>Affinity</strong></span>
+          </div>
+          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+            <span>${cost}</span>
+            <span>${target}</span>
+            <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
+          </div>
+        `;
+    const descriptionContent = `${item.system.shortEffect}<hr>${item.system.description}`;
 
     let overrides = {
       affinity: systemData.affinity || "strike",
@@ -545,57 +573,84 @@ export class SMTXItem extends Item {
     const showHealing = overrides.affinity == "recovery";
     const showBuffButtons = hasBuffs || hasBuffSubRoll;
 
-    let btnStyling = 'width: 28px; height: 28px; font-size: 14px;';
+    let btnStyling = 'width: 22px; height: 28px; font-size: 14px; '; //margin: 1px;
+
+    const damageButtonsContent = showDamageButtons ? `
+      <div class="damage-buttons flexrow flex-group-center flex-between">
+        <button class='apply-full-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Apply full damage"></i></button>
+        <button class='apply-half-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Apply half damage"></i></button>
+        <button class='apply-double-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Apply double damage"></i></button>
+        <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Apply full healing"></i></button>
+      </div>
+    ` : "";
+
+    const healingButtonContent = showHealing ? `
+      <div class="healing-buttons flexrow flex-group-center flex-between">
+        <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Apply full healing"></i></button>
+      </div>
+    ` : "";
+
+    const critButtonsContent = showCrit ? `
+      <div class="damage-buttons flexrow flex-group-center flex-between">
+        <button class='apply-full-crit-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Apply full crit damage"></i></button>
+        <button class='apply-half-crit-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Apply half crit damage"></i></button>
+        <button class='apply-double-crit-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Apply double crit damage"></i></button>
+        <button class='apply-full-crit-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Apply full crit healing"></i></button>
+      </div>
+    ` : "";
+
 
     // HTML with refined logic
     const content = `
-    <div class="power-roll-card"
-         data-affinity="${overrides.affinity}" 
-         data-ignore-defense="${overrides.ignoreDefense}" 
-         data-half-defense="${overrides.halfDefense}" 
-         data-pierce="${overrides.pierce}" 
-         data-affects-mp='${systemData.affectsMP}' 
-         data-regular-damage="${finalBaseDmg}" 
-         data-critical-damage="${critDamage}" 
-         data-buffs='${JSON.stringify(buffArray)}' 
-         data-apply-buffs-to='${JSON.stringify(systemData.buffs)}'>
-        <h3>${this.name} Roll</h3>
+      <div class="power-roll-card" 
+          data-affinity="${overrides.affinity}" 
+          data-ignore-defense="${overrides.ignoreDefense}" 
+          data-half-defense="${overrides.halfDefense}" 
+          data-pierce="${overrides.pierce}" 
+          data-affects-mp='${systemData.affectsMP}' 
+          data-regular-damage="${finalBaseDmg}" 
+          data-critical-damage="${critDamage}" 
+          data-buffs='${JSON.stringify(buffArray)}' 
+          data-apply-buffs-to='${JSON.stringify(systemData.buffs)}'>
+        
         <section class="flexrow">
           <div class="flexcol">
-          ${!hideDamage ? `<p><strong>Affinity:</strong> ${game.i18n.localize("SMT_X.Affinity." + overrides.affinity)}</p>
-            <p style="font-size:32px;margin:0;" class="align-center"><strong>${finalBaseDmg}</strong></p>` : ""}
-          <div class="damage-buttons grid grid-4col">
-              ${showDamageButtons ? `
-                  <button class='apply-full-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>
-                  <button class='apply-half-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Click to apply half damage to selected token(s)."></i></button>
-                  <button class='apply-double-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Click to apply double damage to selected token(s)."></i></button>
-                  <button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>
-              ` : ""}
-              ${showHealing ? `<button class='apply-full-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>` : ""}
+            ${!hideDamage ? `<p><strong>Affinity:</strong> ${game.i18n.localize("SMT_X.Affinity." + overrides.affinity)}</p>
+            <p style="font-size: 32px; margin: 0;" class="align-center"><strong>${finalBaseDmg}</strong></p>` : ""}
+            ${damageButtonsContent}
+            ${healingButtonContent}
           </div>
-        </div>
-        ${showCrit ? `
-          <div style="margin-left: 25px;" class="flex0"></div>
-        <div class="flexcol">
-        <p><strong>Critical:</strong></p>
-        <p style="font-size:32px;margin:0;" class="align-center"><strong>${critDamage}</strong></p>
-        <div class="damage-buttons grid grid-4col">
-            <button class='apply-full-crit-damage' style="${btnStyling}"><i class="fas fa-user-minus" title="Click to apply full damage to selected token(s)."></i></i></button>
-                <button class='apply-half-crit-damage' style="${btnStyling}"><i class="fas fa-user-shield" title="Click to apply half damage to selected token(s)."></i></button>
-                <button class='apply-double-crit-damage' style="${btnStyling}"><i class="fas fa-user-injured" title="Click to apply double damage to selected token(s)."></i></button>
-                <button class='apply-full-crit-healing' style="${btnStyling}"><i class="fas fa-user-plus" title="Click to apply full healing to selected token(s)."></i></button>
-        </div></div>
-        ` : ""}
+
+          ${showCrit ? `
+          <div class="flexcol" style="margin-left: 15px;">
+            <p><strong>Critical:</strong></p>
+            <p style="font-size: 32px; margin: 0;" class="align-center"><strong>${critDamage}</strong></p>
+            ${critButtonsContent}
+          </div>` : ""}
         </section>
-        ${showBuffButtons ? `<p><strong>Results:</strong> ${nonZeroValues}</p>
-          <p><strong>Apply to:</strong> ${activeBuffs}</p>
-          <button class='apply-buffs'>Apply Buffs / Debuffs</button>` : ""}
-        <div>${systemData.shortEffect}</div>
-    </div>
-`;
+        
+        ${showBuffButtons ? `
+          <hr>
+          <p><strong>Buff / Debuff Results:</strong> ${nonZeroValues}</p>
+          <button class='apply-buffs'>Apply to:</strong> ${activeBuffs}</button>
+        ` : ""}
+        
+        <hr>
+        <div>${descriptionContent}</div>
+      </div>
+    `;
+
+    /*<details>
+      <summary style="cursor: pointer; font-weight: bold;">Details</summary>
+        ${featureInfoContent}
+        <hr>
+        ${descriptionContent}
+    </details>*/
 
     const message = await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+      speaker: speaker,
+      rolMode: rollMode,
+      flavor: label,
       content
     });
   }
