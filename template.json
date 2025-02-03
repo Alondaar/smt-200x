@@ -278,6 +278,8 @@
       "magdef": 0,
       "equipped": false,
       "meleePower": 0,
+      "rangedPower": 0,
+      "spellPower": 0,
       "init": 0,
       "st": 0,
       "mg": 0,
