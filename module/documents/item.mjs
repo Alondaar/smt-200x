@@ -85,7 +85,7 @@ export class SMTXItem extends Item {
       }
     } catch (err) {
       // If the roll or parse fails entirely, fallback to plain text
-      console.warn(`Could not parse systemData.tn: "${systemData.tn}"`, err);
+      //console.warn(`Could not parse systemData.tn: "${systemData.tn}"`, err);
       systemData.calcTN = systemData.tn;
     }
 
@@ -207,13 +207,38 @@ export class SMTXItem extends Item {
  * @private
  */
   async rollSplitD100(skipDialog = false) {
-    const systemData = this.system;
+    const item = this;
+    const systemData = item.system;
     let [modifier, split] = [0, 1];
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+    const rollMode = game.settings.get('core', 'rollMode');
+    const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
+    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name} Check</h2>`;
+
+    const cost = item.system.cost ?? 'N/A';
+    const target = item.system.target ?? 'N/A';
+    const affinity = item.system.affinity ?? 'N/A';
+    const featureInfoContent = `
+          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+            <span><strong>Cost</strong></span>
+            <span><strong>Target</strong></span>
+            <span><strong>Affinity</strong></span>
+          </div>
+          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+            <span>${cost}</span>
+            <span>${target}</span>
+            <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
+          </div>
+        `;
+    const descriptionContent = `
+          ${item.system.shortEffect}<hr>${item.system.description}
+        `;
 
     if (isNaN(systemData.calcTN)) {
       ChatMessage.create({
-        speaker,
+        speaker: speaker,
+        rolMode: rollMode,
+        flavor: label,
         content: `
       <h3>${this.name} Check</h3>
       Automatically Successful.
@@ -270,13 +295,13 @@ export class SMTXItem extends Item {
     }
 
     // Step 2: Calculate modified TN and split values
-    const baseTN = systemData.calcTN || 0;
+    const baseTN = systemData.calcTN ?? 0;
     const modifiedTN = baseTN + modifier;
     const splitTN = Math.max(1, split);
     const tnParts = Array.from({ length: splitTN }, (_, i) => Math.floor(modifiedTN / splitTN));
 
     // Step 3: Perform the rolls and evaluate results
-    const critRangeParts = (systemData.critRange || "1/10").split("/").map(Number);
+    const critRangeParts = (systemData.critRange ?? "1/10").split("/").map(Number);
     const critRate = critRangeParts.length === 2 ? critRangeParts[0] / critRangeParts[1] : 0.1;
 
     const rolls = await Promise.all(
@@ -305,18 +330,41 @@ export class SMTXItem extends Item {
       })
     );
 
+    const tnInfoContent = `
+    <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+        <span><strong>Base TN</strong></span>
+        <span><strong>Modifier</strong></span>
+        <span><strong>Splits</strong></span>
+    </div>
+    <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+        <span>${baseTN}%</span>
+        <span>${modifier >= 0 ? "+" : ""}${modifier}%</span>
+        <span>${splitTN}</span>
+    </div>
+`;
+
     // Step 4: Send results to chat
-    const rollResults = rolls.map(
-      ({ roll, tn, result }, index) =>
-        `<span style="font-size:18px;"><strong>Roll ${index + 1}:</strong> ${roll.total} vs. ${tn}% (${result})</span>`
-    ).join("</br>");
+    const rollResults = `
+      <div class="flexrow flex-group-center flex-between" style="padding-bottom: 4px;">
+        ${rolls.map(({ tn, result }) => `<div><span>TN ${tn}%</span><br><span style="font-size: 12px;"><em>(${result})</em></span></div>`).join("")}
+      </div>
+      <div class="flexrow flex-group-center flex-between" style="font-size: 36px; font-weight: bold;">
+        ${rolls.map(({ roll }) => `<span>${roll.total}</span>`).join("")}
+      </div>
+    `;
 
     ChatMessage.create({
-      speaker,
+      speaker: speaker,
+      rolMode: rollMode,
+      flavor: label,
       content: `
-      <h3>${this.name} Check</h3>
-      <p>Base TN: ${baseTN}%, Modifier: ${modifier}%, Split: ${splitTN}</p>
+      ${featureInfoContent}
+      <hr>
+      ${tnInfoContent}
+      <hr>
       ${rollResults}
+      <hr>
+      ${descriptionContent}
     `,
     });
   }
