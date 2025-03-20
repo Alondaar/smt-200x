@@ -1,0 +1,91 @@
+<section class="friendly-effects-widget">
+    {{#ifEq effects.show false}}
+    <div class="flexrow flex-group-center">
+        <span class="flex"></span>
+        <span class="flex">Buffs/#</span>
+        <span class="flex">Total</span>
+        <span class="flex">Debuffs/#</span>
+    </div>
+
+    <div class="flexrow flex-group-center">
+        <span class="flex2">Phy Pow</span>
+        <input type="text" data-category="tarukaja" data-field="amount" value="{{effects.tarukaja.amount}}" />
+        <input type="number" data-category="tarukaja" data-field="count" value="{{effects.tarukaja.count}}" />
+        <span class="flex0">+</span>
+        <input type="number" value="{{effects.taruTotal}}" />
+        <span class="flex0">-</span>
+        <input type="number" data-category="tarunda" data-field="amount" value="{{effects.tarunda.amount}}" />
+        <input type="number" data-category="tarunda" data-field="count" value="{{effects.tarunda.count}}" />
+    </div>
+
+    <div class="flexrow flex-group-center">
+        <span class="flex2">Mag Pow</span>
+        <input type="text" data-category="makakaja" data-field="amount" value="{{effects.makakaja.amount}}" />
+        <input type="number" data-category="makakaja" data-field="count" value="{{effects.makakaja.count}}" />
+        <span class="flex0">+</span>
+        <input type="number" value="{{effects.makaTotal}}" />
+        <span class="flex0">-</span>
+        <input type="number" data-category="makunda" data-field="amount" value="{{effects.makunda.amount}}" />
+        <input type="number" data-category="makunda" data-field="count" value="{{effects.makunda.count}}" />
+    </div>
+
+    <div class="flexrow flex-group-center">
+        <span class="flex2">Def</span>
+        <input type="text" data-category="rakukaja" data-field="amount" value="{{effects.rakukaja.amount}}" />
+        <input type="number" data-category="rakukaja" data-field="count" value="{{effects.rakukaja.count}}" />
+        <span class="flex0">+</span>
+        <input type="number" value="{{effects.rakuTotal}}" />
+        <span class="flex0">-</span>
+        <input type="number" data-category="rakunda" data-field="amount" value="{{effects.rakunda.amount}}" />
+        <input type="number" data-category="rakunda" data-field="count" value="{{effects.rakunda.count}}" />
+    </div>
+
+    <div class="flexrow flex-group-center">
+        <span class="flex2">Acc</span>
+        <input type="text" data-category="sukukaja" data-field="amount" value="{{effects.sukukaja.amount}}" />
+        <input type="number" data-category="sukukaja" data-field="count" value="{{effects.sukukaja.count}}" />
+        <span class="flex0">+</span>
+        <input type="number" value="{{effects.sukuTotal}}" />
+        <span class="flex0">-</span>
+        <input type="number" data-category="sukunda" data-field="amount" value="{{effects.sukunda.amount}}" />
+        <input type="number" data-category="sukunda" data-field="count" value="{{effects.sukunda.count}}" />
+    </div>
+    <div class="flexrow flex-group-center">
+        <button class="flex reset-button">Reset</button>
+        <button class="flex dekaja-button">Dekaja</button>
+        <span class="flex"></span>
+        <button class="flex dekunda-button">Dekunda</button>
+    </div>
+    {{/ifEq}}
+
+    {{#if effects.show}}
+    <div class="flexrow flex-group-center">
+        <span>Phy Pow</span>
+        <input type="text" data-category="tarukaja" data-field="amount" value="{{effects.tarukaja.amount}}" />
+    </div>
+
+    <div class="flexrow flex-group-center">
+        <span>Mag Pow</span>
+        <input type="text" data-category="makakaja" data-field="amount" value="{{effects.makakaja.amount}}" />
+    </div>
+
+    <div class="flexrow flex-group-center">
+        <span>Def</span>
+        <input type="text" data-category="rakukaja" data-field="amount" value="{{effects.rakukaja.amount}}" />
+    </div>
+
+    <div class="flexrow flex-group-center">
+        <span>Acc</span>
+        <input type="text" data-category="sukukaja" data-field="amount" value="{{effects.sukukaja.amount}}" />
+    </div>
+    <div class="flexrow flex-group-center">
+        <button class="flex reset-button">Reset</button>
+    </div>
+    <div class="flexrow flex-group-center">
+        <button class="flex dekaja-button">Dekaja</button>
+    </div>
+    <div class="flexrow flex-group-center">
+        <button class="flex dekunda-button">Dekunda</button>
+    </div>
+    {{/if}}
+</section>

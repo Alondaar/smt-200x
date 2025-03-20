@@ -691,8 +691,8 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     });
   };
 
-  // Define the function to apply damage
-  const applyBuffs = function (buffsArray, applyBuffsTo) {
+  // Define the function to apply buffs (selected tokens)
+  /*const applyBuffs = function (buffsArray, applyBuffsTo) {
     const tokens = canvas.tokens.controlled;
     if (!tokens.length) {
       ui.notifications.warn("No tokens selected.");
@@ -704,6 +704,88 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       if (!actor) return;
       actor.applyBuffs(buffsArray, applyBuffsTo);
     });
+  };*/
+
+  // Define the function to apply buffs
+  const applyBuffs = async function (buffsArray, applyBuffsTo) {
+    if (!buffsArray || !applyBuffsTo) return;
+
+    let effects = game.settings.get("smt-200x", "friendlyEffects") || {};
+    const useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
+    const tugOfWarMin = game.settings.get("smt-200x", "tugOfWarMin");
+    const tugOfWarMax = game.settings.get("smt-200x", "tugOfWarMax");
+
+    if (useTugOfWar) {
+      // Tug of War Buffs
+      for (const buffKey in applyBuffsTo) {
+        if (!applyBuffsTo[buffKey]) continue;
+
+        const isDebuff = buffKey.endsWith("nda");
+        const kajaKey = isDebuff ? buffKey.replace("nda", "kaja") : buffKey;
+
+        if (!effects[kajaKey]) effects[kajaKey] = { amount: 0, count: 0 };
+
+        let totalApplied = 0;
+        buffsArray.forEach(buffValue => {
+          let adjustedValue = isDebuff ? -buffValue : buffValue; // Convert debuffs to negative values
+          let newAmount = effects[kajaKey].amount + adjustedValue;
+
+          // Ensure we do not exceed min/max
+          if (newAmount < tugOfWarMin) newAmount = tugOfWarMin;
+          if (newAmount > tugOfWarMax) newAmount = tugOfWarMax;
+
+          totalApplied += newAmount - effects[kajaKey].amount;
+          effects[kajaKey].amount = newAmount;
+        });
+
+        if (totalApplied !== 0) {
+          ui.notifications.info(`Applied ${totalApplied} to ${kajaKey}.`);
+        }
+      }
+    } else {
+      // Default Rules
+      const letBuffsRide = game.settings.get("smt-200x", "letBuffsRide");
+      const MAX_BUFF_STACK = 4;
+
+      for (const buffKey in applyBuffsTo) {
+        if (!applyBuffsTo[buffKey]) continue;
+
+        // Ensure the buff exists in global settings
+        if (!effects[buffKey]) effects[buffKey] = { amount: 0, count: 0 };
+
+        let currentCount = effects[buffKey].count;
+        let appliedCount = 0;
+
+        for (let i = 0; i < buffsArray.length; i++) {
+          let buffValue = buffsArray[i];
+          if (buffValue === 0) continue;
+
+          if (currentCount < MAX_BUFF_STACK) {
+            effects[buffKey].amount += buffValue;
+            effects[buffKey].count += 1;
+            currentCount++;
+            appliedCount++;
+          } else {
+            if (!letBuffsRide) {
+              ui.notifications.warn(`Cannot apply ${buffKey}, max stack of ${MAX_BUFF_STACK} reached.`);
+              return;
+            }
+            break;
+          }
+        }
+
+        if (appliedCount > 0) {
+          ui.notifications.info(`Applied ${appliedCount} stack(s) to ${buffKey}.`);
+        }
+      }
+    }
+
+    await game.settings.set("smt-200x", "friendlyEffects", effects);
+
+    if (game.friendlyEffectsWidget) {
+      game.friendlyEffectsWidget.updateFriendlyTokens(effects);
+      game.friendlyEffectsWidget.render();
+    }
   };
 
   // Set up button click handlers

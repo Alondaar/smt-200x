@@ -54,6 +54,18 @@
             "base": 0
           }
         },
+        "buffs": {
+          "taru": 0,
+          "maka": 0,
+          "suku": 0,
+          "raku": 0
+        },
+        "debuffs": {
+          "taru": 0,
+          "maka": 0,
+          "suku": 0,
+          "raku": 0
+        },
         "suku": {
           "buff": [
             0,

@@ -23,6 +23,8 @@ export class SMTXActor extends Actor {
 
     systemData.aux.showTCheaders = game.settings.get("smt-200x", "showTCheaders");
 
+
+
     if (actorData.type === 'character') {
       // Define multipliers for each tier
       const tierMultipliers = {
@@ -82,15 +84,15 @@ export class SMTXActor extends Actor {
 
     // Loop through stats, and total up
     for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].value = stat.base + stat.temp;
+      systemData.stats[key].value = Math.min(40, stat.base + stat.temp);
     }
 
 
     // Collect buff / debuff stacks
-    systemData.sumRaku = systemData.raku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.raku.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumTaru = systemData.taru.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.taru.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumSuku = systemData.suku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.suku.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumMaka = systemData.maka.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.maka.debuff.reduce((total, num) => total + num, 0));
+    systemData.sumRaku = systemData.buffs.raku + systemData.raku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.raku.debuff.reduce((total, num) => total + num, 0));
+    systemData.sumTaru = systemData.buffs.taru + systemData.taru.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.taru.debuff.reduce((total, num) => total + num, 0));
+    systemData.sumSuku = systemData.buffs.suku + systemData.suku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.suku.debuff.reduce((total, num) => total + num, 0));
+    systemData.sumMaka = systemData.buffs.maka + systemData.maka.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.maka.debuff.reduce((total, num) => total + num, 0));
 
     // DEFENSES
     systemData.phydef = this.parseFormula(systemData.phydefFormula) + systemData.sumRaku;
@@ -927,3 +929,4 @@ export function createFloatingNumber(token, textValue, options = {}) {
 
   requestAnimationFrame(animate);
 }
+
