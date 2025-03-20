@@ -1,5 +1,5 @@
-<section class="friendly-effects-widget">
-    {{#ifEq effects.show false}}
+<section class="buff-effects-widget">
+    {{#ifEq useTugOfWar false}}
     <div class="flexrow flex-group-center">
         <span class="flex"></span>
         <span class="flex">Buffs/#</span>
@@ -51,14 +51,14 @@
         <input type="number" data-category="sukunda" data-field="count" value="{{effects.sukunda.count}}" />
     </div>
     <div class="flexrow flex-group-center">
-        <button class="flex reset-button">Reset</button>
-        <button class="flex dekaja-button">Dekaja</button>
         <span class="flex"></span>
-        <button class="flex dekunda-button">Dekunda</button>
+        <button class="flex dekaja-button">Clear Buffs</button>
+        <span class="flex"></span>
+        <button class="flex dekunda-button">Clear Debuffs</button>
     </div>
     {{/ifEq}}
 
-    {{#if effects.show}}
+    {{#if useTugOfWar}}
     <div class="flexrow flex-group-center">
         <span>Phy Pow</span>
         <input type="text" data-category="tarukaja" data-field="amount" value="{{effects.tarukaja.amount}}" />
@@ -79,13 +79,10 @@
         <input type="text" data-category="sukukaja" data-field="amount" value="{{effects.sukukaja.amount}}" />
     </div>
     <div class="flexrow flex-group-center">
-        <button class="flex reset-button">Reset</button>
+        <button class="flex dekaja-button">Clear Buffs</button>
     </div>
     <div class="flexrow flex-group-center">
-        <button class="flex dekaja-button">Dekaja</button>
-    </div>
-    <div class="flexrow flex-group-center">
-        <button class="flex dekunda-button">Dekunda</button>
+        <button class="flex dekunda-button">Clear Debuffs</button>
     </div>
     {{/if}}
 </section>

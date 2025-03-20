@@ -114,8 +114,16 @@ Hooks.once('init', function () {
 
   game.settings.register("smt-200x", "friendlyEffectsWidgetPosition", {
     name: "Friendly Effects Widget Position",
-    scope: "client",  // Stores per-user, so each user has their own position
-    config: false,    // Hidden from settings menu
+    scope: "client",
+    config: false,
+    type: Object,
+    default: {}
+  });
+
+  game.settings.register("smt-200x", "hostileEffectsWidgetPosition", {
+    name: "Hostile Effects Widget Position",
+    scope: "client",
+    config: false,
     type: Object,
     default: {}
   });
@@ -131,6 +139,23 @@ Hooks.once('init', function () {
 
   game.settings.register("smt-200x", "friendlyEffects", {
     name: "Global Friendly Effects",
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {
+      tarukaja: { amount: 0, count: 0 },
+      makakaja: { amount: 0, count: 0 },
+      rakukaja: { amount: 0, count: 0 },
+      sukukaja: { amount: 0, count: 0 },
+      tarunda: { amount: 0, count: 0 },
+      makunda: { amount: 0, count: 0 },
+      rakunda: { amount: 0, count: 0 },
+      sukunda: { amount: 0, count: 0 }
+    }
+  });
+
+  game.settings.register("smt-200x", "hostileEffects", {
+    name: "Global Hostile Effects",
     scope: "world",
     config: false,
     type: Object,
@@ -264,23 +289,30 @@ Hooks.once('ready', function () {
   // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 
-  // Create a single instance
+  // FRIENDLY
   if (!game.friendlyEffectsWidget) {
-    game.friendlyEffectsWidget = new FriendlyEffectsWidget();
+    game.friendlyEffectsWidget = new BuffEffectsWidget({ mode: "friendly" });
   }
-  // Render it immediately
   game.friendlyEffectsWidget.render(true);
+
+  // HOSTILE
+  if (!game.hostileEffectsWidget) {
+    game.hostileEffectsWidget = new BuffEffectsWidget({ mode: "hostile" });
+  }
+  game.hostileEffectsWidget.render(true);
 });
 
 
 Hooks.on("createToken", (tokenDocument, options, userId) => {
-  if (game.user.id !== userId) return; // Only run for the current user
-  FriendlyEffectsWidget.applyEffectsToToken(tokenDocument.id);
+  if (game.user.id !== userId) return;
+  BuffEffectsWidget.applyEffectsToToken(tokenDocument.id, "friendly");
+  BuffEffectsWidget.applyEffectsToToken(tokenDocument.id, "hostile");
 });
 
 Hooks.on("updateToken", (tokenDocument, changeData, options, userId) => {
   if (game.user.id !== userId) return;
-  FriendlyEffectsWidget.applyEffectsToToken(tokenDocument.id);
+  BuffEffectsWidget.applyEffectsToToken(tokenDocument.id, "friendly");
+  BuffEffectsWidget.applyEffectsToToken(tokenDocument.id, "hostile");
 });
 
 
@@ -353,53 +385,60 @@ function rollItemMacro(itemUuid) {
 }
 
 
-class FriendlyEffectsWidget extends Application {
+class BuffEffectsWidget extends Application {
+  constructor(options = {}) {
+    super(options);
+
+    this.mode = options.mode ?? "friendly";
+    this._positionSettingKey = `${this.mode}EffectsWidgetPosition`;
+  }
+
+
   static get defaultOptions() {
     const options = super.defaultOptions;
-    options.id = "friendly-effects-widget";
-    options.title = "Friendly Effects";
-    options.template = "systems/smt-200x/templates/friendly-effects.hbs";
+    options.id = "buff-effects-widget"; // Overridden later by mode in render()
+    options.title = "Buff Effects";     // Overridden later by mode in render()
+    options.template = "systems/smt-200x/templates/buff-effects.hbs";
     options.popOut = true;
     options.resizable = false;
-    options.width = 300;
+    options.width = "auto";
     options.height = "auto";
     options.minimizable = true;
     options.draggable = true;
-
-    // Hide the close button visually
-    options.classes = [...(options.classes || []), "hide-close-button"];
-
     return options;
   }
 
-  /** @override */
+
+  async close() {
+    if (this._minimized) return this.maximize();
+    return this.minimize();
+  }
+
+
   async render(force = false, options = {}) {
+    // Update ID & Title based on mode
+    this.options.id = `buff-effects-widget-${this.mode}`;
+    this.options.title = this.mode === "friendly" ? "Friendly Effects" : "Hostile Effects";
+    this.options.width = game.settings.get("smt-200x", "tugOfWarBuffs") ? 300 : 200;
+
     await super.render(force, options);
 
-    // Delay restoring position slightly to avoid timing issues
+    // Delay restoring position slightly to ensure the window is fully rendered
     setTimeout(() => this.restorePosition(), 200);
   }
 
-  /** @override Prevent closing this window. */
-  async close() {
-    ui.notifications.warn("This window cannot be closed.");
-    return;
-  }
 
-  /** Restore the last saved position */
   async restorePosition() {
-    const savedPosition = game.settings.get("smt-200x", "friendlyEffectsWidgetPosition") || {};
-
-    // Ensure the position data is valid before proceeding
+    const savedPosition = game.settings.get("smt-200x", this._positionSettingKey) || {};
     if (!savedPosition.left || !savedPosition.top) return;
 
-    // Ensure the application has finished rendering before applying position
+    // Wait for the element to exist
     await this._waitForRender();
 
     this.setPosition(savedPosition);
   }
 
-  /** Helper function to wait for the widget to be fully rendered */
+
   async _waitForRender() {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
@@ -411,25 +450,69 @@ class FriendlyEffectsWidget extends Application {
     });
   }
 
-  /** Save the window's current position */
+
   async savePosition() {
     const pos = this.position;
-    await game.settings.set("smt-200x", "friendlyEffectsWidgetPosition", {
+    await game.settings.set("smt-200x", this._positionSettingKey, {
       left: pos.left,
       top: pos.top,
-      width: game.settings.get("smt-200x", "tugOfWarBuffs") ? 150 : 350,
-      height: pos.height
+      width: "auto",
+      height: "auto"
     });
   }
 
-  /** @override Prepare data for the template. */
+
+  /**
+   * @override
+   * Called after the Application HTML is rendered. Good place to set up listeners.
+   */
+  activateListeners(html) {
+    super.activateListeners(html);
+
+    // Save position on mouse up (after user drags the window)
+    this.element.on("mouseup", async () => {
+      await this.savePosition();
+    });
+
+    // Example: reset button
+    html.on("click", ".reset-button", async (ev) => {
+      ev.preventDefault();
+      await this._resetAllEffects();
+    });
+
+    // Example: Dekaja
+    html.on("click", ".dekaja-button", async (ev) => {
+      ev.preventDefault();
+      await this._dekaja();
+    });
+
+    // Example: Dekunda
+    html.on("click", ".dekunda-button", async (ev) => {
+      ev.preventDefault();
+      await this._dekunda();
+    });
+
+    // Example: numeric inputs
+    html.find("input[data-category]").on("change", this._onInputChange.bind(this));
+  }
+
+
+  /**
+   * Prepare data for the template.
+   */
   getData() {
     const data = super.getData();
 
-    // Retrieve the existing settings
-    data.effects = game.settings.get("smt-200x", "friendlyEffects") || {};
+    // Decide which game setting key to use
+    const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
 
-    data.effects.show = game.settings.get("smt-200x", "tugOfWarBuffs");
+    // Retrieve the stored effects
+    data.effects = game.settings.get("smt-200x", settingKey) || {};
+
+    // Example: If you do Tug of War logic
+    data.useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
+
+    // Example: Summaries
     data.effects.taruTotal = data.effects.tarukaja.amount - data.effects.tarunda.amount;
     data.effects.makaTotal = data.effects.makakaja.amount - data.effects.makunda.amount;
     data.effects.rakuTotal = data.effects.rakukaja.amount - data.effects.rakunda.amount;
@@ -438,200 +521,133 @@ class FriendlyEffectsWidget extends Application {
     return data;
   }
 
-  /** @override Add event listeners on rendered HTML */
-  activateListeners(html) {
-    super.activateListeners(html);
 
-    // Listen for window movement and save position when dragging stops
-    this.element.on("mousedown", async () => {
-      await this.savePosition();
-    });
-
-    // Reset all effects
-    html.on('click', '.reset-button', async (ev) => {
-      ev.preventDefault();
-      const effects = {
-        tarukaja: { amount: 0, count: 0 },
-        makakaja: { amount: 0, count: 0 },
-        rakukaja: { amount: 0, count: 0 },
-        sukukaja: { amount: 0, count: 0 },
-        tarunda: { amount: 0, count: 0 },
-        makunda: { amount: 0, count: 0 },
-        rakunda: { amount: 0, count: 0 },
-        sukunda: { amount: 0, count: 0 }
-      };
-
-      await game.settings.set("smt-200x", "friendlyEffects", effects);
-      await this.updateFriendlyTokens(effects);
-      this.render();
-    });
-
-    // DEKAJA: Reset only positive buffs
-    html.on('click', '.dekaja-button', async (ev) => {
-      ev.preventDefault();
-
-      let effects = game.settings.get("smt-200x", "friendlyEffects");
-      const useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
-
-      if (useTugOfWar) {
-        // When Tug of War is enabled, set only positive values to 0
-        if (effects.tarukaja.amount > 0) effects.tarukaja.amount = 0;
-        if (effects.makakaja.amount > 0) effects.makakaja.amount = 0;
-        if (effects.rakukaja.amount > 0) effects.rakukaja.amount = 0;
-        if (effects.sukukaja.amount > 0) effects.sukukaja.amount = 0;
-      } else {
-        // Normal mode: Reset all buffs
-        effects.tarukaja = { amount: 0, count: 0 };
-        effects.makakaja = { amount: 0, count: 0 };
-        effects.rakukaja = { amount: 0, count: 0 };
-        effects.sukukaja = { amount: 0, count: 0 };
-      }
-
-      await game.settings.set("smt-200x", "friendlyEffects", effects);
-      await this.updateFriendlyTokens(effects);
-      this.render();
-    });
-
-    // DEKUNDA: Reset only negative debuffs
-    html.on('click', '.dekunda-button', async (ev) => {
-      ev.preventDefault();
-
-      let effects = game.settings.get("smt-200x", "friendlyEffects");
-      const useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
-
-      if (useTugOfWar) {
-        // When Tug of War is enabled, set only negative values to 0
-        if (effects.tarukaja.amount < 0) effects.tarukaja.amount = 0;
-        if (effects.makakaja.amount < 0) effects.makakaja.amount = 0;
-        if (effects.rakukaja.amount < 0) effects.rakukaja.amount = 0;
-        if (effects.sukukaja.amount < 0) effects.sukukaja.amount = 0;
-      } else {
-        // Normal mode: Reset all debuffs
-        effects.tarunda = { amount: 0, count: 0 };
-        effects.makunda = { amount: 0, count: 0 };
-        effects.rakunda = { amount: 0, count: 0 };
-        effects.sukunda = { amount: 0, count: 0 };
-      }
-
-      await game.settings.set("smt-200x", "friendlyEffects", effects);
-      await this.updateFriendlyTokens(effects);
-      this.render();
-    });
-
-    // Listen for changes to each numeric input
-    html.find("input[data-category]").on("change", this._onInputChange.bind(this));
-  }
-
-
-  /**
-   * Handle changes to the numeric fields and update settings.
-   */
   async _onInputChange(event) {
     const input = event.currentTarget;
     const category = input.dataset.category;
     const field = input.dataset.field;
-    const useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
-    const tugOfWarMin = game.settings.get("smt-200x", "tugOfWarMin");
-    const tugOfWarMax = game.settings.get("smt-200x", "tugOfWarMax");
-    const maxBuffCount = 4;
-
-
     let newValue = Number(input.value ?? 0);
-    if (newValue == NaN)
-      newValue = 0;
+    if (isNaN(newValue)) newValue = 0;
 
+    const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
+    let effects = game.settings.get("smt-200x", settingKey) || {};
+    if (!effects[category]) return;
 
-    // Get the current friendlyEffects object
-    let effects = game.settings.get("smt-200x", "friendlyEffects") || {};
-    if (!effects[category]) return; // safety check
-    if (effects[category]["count"] >= maxBuffCount && input.value != 0) {
-      this.getData()
-      this.render();
-
-      return ui.notifications.warn(
-        `${category} is already at max effect count, aborting.`
-      );
-    }
-
-
-    if (input.value.includes('+') || effects[category][field] == 0
-      || (useTugOfWar && input.value.includes('-'))) {
-      newValue += effects[category][field];
-      effects[category]["count"] += 1;
-    } else if (input.value == 0) {
-      effects[category]["count"] = 0;
-    }
-
-
+    // Basic assignment
     effects[category][field] = newValue;
-    if (useTugOfWar)
-      effects[category][field] = Math.max(tugOfWarMin,
-        Math.min(tugOfWarMax, effects[category][field]));
 
-    await game.settings.set("smt-200x", "friendlyEffects", effects);
-
-    this.updateFriendlyTokens(effects);
-    this.getData()
+    // Save & update
+    await game.settings.set("smt-200x", settingKey, effects);
+    await this._updateTokens(effects);
     this.render();
   }
 
+  /**
+   * Example: Reset all effects
+   */
+  async _resetAllEffects() {
+    const blank = {
+      tarukaja: { amount: 0, count: 0 },
+      makakaja: { amount: 0, count: 0 },
+      rakukaja: { amount: 0, count: 0 },
+      sukukaja: { amount: 0, count: 0 },
+      tarunda: { amount: 0, count: 0 },
+      makunda: { amount: 0, count: 0 },
+      rakunda: { amount: 0, count: 0 },
+      sukunda: { amount: 0, count: 0 }
+    };
+
+    const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
+    await game.settings.set("smt-200x", settingKey, blank);
+    await this._updateTokens(blank);
+    this.render();
+  }
 
   /**
-   * Updates all friendly tokens in the current scene with the current friendly effects.
+   * Example: Dekaja
    */
-  async updateFriendlyTokens(effects) {
+  async _dekaja() {
+    const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
+    let effects = game.settings.get("smt-200x", settingKey) || {};
+
+    // Example: Zero out positive buffs
+    if (effects.tarukaja.amount > 0) effects.tarukaja.amount = 0;
+    if (effects.makakaja.amount > 0) effects.makakaja.amount = 0;
+    if (effects.rakukaja.amount > 0) effects.rakukaja.amount = 0;
+    if (effects.sukukaja.amount > 0) effects.sukukaja.amount = 0;
+
+    await game.settings.set("smt-200x", settingKey, effects);
+    await this._updateTokens(effects);
+    this.render();
+  }
+
+  /**
+   * Example: Dekunda
+   */
+  async _dekunda() {
+    const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
+    let effects = game.settings.get("smt-200x", settingKey) || {};
+
+    // Example: Zero out negative buffs
+    if (effects.tarukaja.amount < 0) effects.tarukaja.amount = 0;
+    if (effects.makakaja.amount < 0) effects.makakaja.amount = 0;
+    if (effects.rakukaja.amount < 0) effects.rakukaja.amount = 0;
+    if (effects.sukukaja.amount < 0) effects.sukukaja.amount = 0;
+
+    await game.settings.set("smt-200x", settingKey, effects);
+    await this._updateTokens(effects);
+    this.render();
+  }
+
+  /**
+   * Update tokens in the scene, based on the mode.
+   */
+  async _updateTokens(effects) {
     const scene = game.scenes.current;
     if (!scene) return;
 
-    // Find all friendly tokens (disposition = 1)
-    const friendlyTokens = scene.tokens.filter(t => t.disposition === 1);
+    // If mode is "friendly", we update disposition=1. If "hostile", disposition=-1
+    const disposition = (this.mode === "friendly") ? 1 : -1;
+    const tokens = scene.tokens.filter(t => t.disposition === disposition);
 
-    for (let token of friendlyTokens) {
+    // Example: updates to actor data
+    for (let token of tokens) {
       let updates = {};
 
-      if (effects.tarukaja) {
-        updates["system.buffs.taru"] = effects.tarukaja.amount;
-      }
-      if (effects.makakaja) {
-        updates["system.buffs.maka"] = effects.makakaja.amount;
-      }
-      if (effects.rakukaja) {
-        updates["system.buffs.raku"] = effects.rakukaja.amount;
-      }
-      if (effects.sukukaja) {
-        updates["system.buffs.suku"] = effects.sukukaja.amount;
-      }
+      // e.g. tarukaja => taru
+      updates["system.buffs.taru"] = effects.tarukaja.amount;
+      updates["system.buffs.maka"] = effects.makakaja.amount;
+      updates["system.buffs.raku"] = effects.rakukaja.amount;
+      updates["system.buffs.suku"] = effects.sukukaja.amount;
 
-      if (Object.keys(updates).length > 0) {
-        await token.actor.update(updates);
-      }
+      // ... if you handle tarunda differently, add them too
+      // e.g. tarunda => negative taru, etc. (Tug of War, etc.)
+
+      await token.actor.update(updates);
     }
   }
 
-
-  static async applyEffectsToToken(tokenId) {
+  /**
+   * (Optional) Static method to apply effects automatically on token creation/update
+   */
+  static async applyEffectsToToken(tokenId, mode = "friendly") {
     const scene = game.scenes.current;
     if (!scene) return;
-
     const token = scene.tokens.get(tokenId);
-    if (!token || token.disposition !== 1) return; // Only apply to friendly tokens
+    if (!token) return;
 
-    // Get current global effects
-    const effects = game.settings.get("smt-200x", "friendlyEffects") || {};
+    const desiredDisposition = (mode === "friendly") ? 1 : -1;
+    if (token.disposition !== desiredDisposition) return;
+
+    const settingKey = (mode === "friendly") ? "friendlyEffects" : "hostileEffects";
+    const effects = game.settings.get("smt-200x", settingKey) || {};
+
     let updates = {};
-
-    if (effects.tarukaja) {
-      updates["system.buffs.taru"] = effects.tarukaja.amount;
-    }
-    if (effects.makakaja) {
-      updates["system.buffs.maka"] = effects.makakaja.amount;
-    }
-    if (effects.rakukaja) {
-      updates["system.buffs.raku"] = effects.rakukaja.amount;
-    }
-    if (effects.sukukaja) {
-      updates["system.buffs.suku"] = effects.sukukaja.amount;
-    }
+    updates["system.buffs.taru"] = effects.tarukaja.amount;
+    updates["system.buffs.maka"] = effects.makakaja.amount;
+    updates["system.buffs.raku"] = effects.rakukaja.amount;
+    updates["system.buffs.suku"] = effects.sukukaja.amount;
+    // etc.
 
     await token.actor.update(updates);
   }
