@@ -61,6 +61,7 @@
       "b": "B"
     },
     "CharAffinity": {
+      "none": "None",
       "normal": "Normal",
       "resist": "Resist",
       "weak": "Weak",
@@ -83,6 +84,31 @@
       "SHOCK": "SHOCK",
       "HAPPY": "HAPPY",
       "NONE": "NONE"
+    },
+    "Affinity_TC": {
+      "strike": "Phys",
+      "expel": "Light",
+      "death": "Dark",
+      "curse": "Ruin"
+    },
+    "CharAffinity_TC": {
+      "resist": "Strong"
+    },
+    "AffinityBS_TC": {
+      "DEAD": "Death",
+      "STONE": "Stone",
+      "FLY": "Fly",
+      "PARALYZE": "Stun",
+      "CHARM": "Chrm",
+      "POISON": "Poison",
+      "CLOSE": "Mute",
+      "BIND": "Restrain",
+      "FREEZE": "Freeze",
+      "SLEEP": "Sleep",
+      "PANIC": "Panic",
+      "SHOCK": "Shock",
+      "HAPPY": "Happy",
+      "NONE": "None"
     }
   },
   "TYPES": {

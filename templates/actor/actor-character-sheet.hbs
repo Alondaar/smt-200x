@@ -152,7 +152,11 @@
           <label class="resource-label flex0">Affinity&nbsp;</label>
           <label for="system.badStatus" class="resource-label align-right">Current BS:&nbsp;</label>
           <select name="system.badStatus">
+            {{#if (showTC)}}
+            {{selectOptions @root.config.badStatusList_TC selected=system.badStatus localize=true}}
+            {{else}}
             {{selectOptions @root.config.badStatusList selected=system.badStatus localize=true}}
+            {{/if}}
           </select>
           <label for="system.isCursed" class="resource-label align-right">!CURSED!&nbsp;</label>
           <input type="checkbox" name="system.isCursed" {{#if system.isCursed}}checked{{/if}} />
@@ -333,7 +337,7 @@
         {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
       </section>
       <hr>
-      <section class="main">
+      <!-- <section class="main">
         <div class="flexcol">
           <label for="system.phydefFormula" class="resource-label">Physical Defense Formula</label>
           <input style="font-size: 10pt; font-style: italic;"
@@ -356,7 +360,7 @@
             disabled />
           <input type="text" name="system.initFormula" value="{{system.initFormula}}" />
         </div>
-      </section>
+      </section> -->
 
       <hr>
 
@@ -395,7 +399,7 @@
             <input type="text" name="system.powerDice.item" value="{{system.powerDice.item}}" data-dtype="Number" />
           </div>
 
-          <div class="flexcol">
+          <!-- <div class="flexcol">
             <label class="resource-label">Set TC formulas</label>
             <button class="set-tc-formulas" type="button"
               style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
@@ -414,31 +418,49 @@
             <button class="set-x-demon" type="button"
               style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
               X Demon</button>
-          </div>
+          </div> -->
       </section>
 
-      <hr>
 
+      <br><br>
       <section class="main">
-        <div class="flexrow">
+        <h2>Base Affinity Settings</h2>
+        <div class="grid grid-8col">
           {{#each system.affinity as |aff key|}}
           <div class="flexcol">
+            {{#if (showTC)}}
+            <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
+              (lookup @root.config.affinities_TC key)}}</label>
+            <select name="system.affinity.{{key}}">
+              {{selectOptions @root.config.charAffinity_TC selected=aff localize=true}}
+            </select>
+            {{else}}
             <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
               (lookup @root.config.affinities key)}}</label>
             <select name="system.affinity.{{key}}">
               {{selectOptions @root.config.charAffinity selected=aff localize=true}}
             </select>
+            {{/if}}
           </div>
           {{/each}}
         </div>
-        <div class="flexrow">
+        <h2>Base Ailment Settings</h2>
+        <div class="grid grid-8col">
           {{#each system.affinityBS as |aff key|}}
           <div class="flexcol">
+            {{#if (showTC)}}
+            <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
+              (lookup @root.config.badStatusList_TC key)}}</label>
+            <select name="system.affinityBS.{{key}}">
+              {{selectOptions @root.config.charAffinity_TC selected=aff localize=true}}
+            </select>
+            {{else}}
             <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
               (lookup @root.config.badStatusList key)}}</label>
             <select name="system.affinityBS.{{key}}">
               {{selectOptions @root.config.charAffinity selected=aff localize=true}}
             </select>
+            {{/if}}
           </div>
           {{/each}}
         </div>

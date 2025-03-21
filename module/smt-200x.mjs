@@ -57,20 +57,106 @@ Hooks.once('init', function () {
 
 
 
-  // Register a boolean setting
+  game.settings.register("smt-200x", "showTCheaders", {
+    name: "Use Tokyo Conception Stuff",
+    hint: "Exchanges X-specific labels and text with TC equivalents. Toggling this option will SET and OVERWRITE the defense/initiative formulas below when you 'Save Settings,' to TC formulas when TRUE and X formulas when FALSE.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false,
+    onChange: (value) => {
+      if (value) {
+        game.settings.set("smt-200x", "phyDefDemon", "floor((@stats.vt.value + @attributes.level)/2)");
+        game.settings.set("smt-200x", "phyDefHuman", "floor((@stats.vt.value + @attributes.level)/2)");
+        game.settings.set("smt-200x", "magDefDemon", "floor((@stats.mg.value + @attributes.level)/2)");
+        game.settings.set("smt-200x", "magDefHuman", "floor((@stats.mg.value + @attributes.level)/2)");
+        game.settings.set("smt-200x", "initFormula", "@stats.ag.value");
+      } else {
+        game.settings.set("smt-200x", "phyDefDemon", "(@stats.vt.value + @attributes.level)");
+        game.settings.set("smt-200x", "phyDefHuman", "(@stats.vt.value)");
+        game.settings.set("smt-200x", "magDefDemon", "(@stats.vt.value + @attributes.level)");
+        game.settings.set("smt-200x", "magDefHuman", "(@stats.vt.value)");
+        game.settings.set("smt-200x", "initFormula", "floor((@stats.ag.value + @attributes.level)/2)");
+      }
+    }
+  });
+
+  game.settings.register("smt-200x", "phyDefDemon", {
+    name: "Physical Defense Formula (Demon)",
+    hint: "The default physical defense formula for demons.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "(@stats.vt.value + @attributes.level)"
+  });
+
+  game.settings.register("smt-200x", "phyDefHuman", {
+    name: "Physical Defense Formula (Human))",
+    hint: "The default physical defense formula for humans.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "(@stats.vt.value)"
+  });
+
+  game.settings.register("smt-200x", "magDefDemon", {
+    name: "Physical Defense Formula (Demon)",
+    hint: "The default magical defense formula for actors.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "(@stats.vt.value + @attributes.level)"
+  });
+
+  game.settings.register("smt-200x", "magDefHuman", {
+    name: "Physical Defense Formula (Human)",
+    hint: "The default physical defense formula for humans.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "(@stats.vt.value)"
+  });
+
+  game.settings.register("smt-200x", "initFormula", {
+    name: "Initiative Formula",
+    hint: "The default initiative formula.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "floor((@stats.ag.value + @attributes.level)/2)"
+  });
+
+  game.settings.register("smt-200x", "hpFormula", {
+    name: "HP Formula",
+    hint: "The default HP formula, not factoring multipliers.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "(@stats.vt.value + @attributes.level)"
+  });
+
+  game.settings.register("smt-200x", "mpFormula", {
+    name: "MP Formula",
+    hint: "The default MP formula, not factoring multipliers.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "(@stats.mg.value + @attributes.level)"
+  });
+
+  game.settings.register("smt-200x", "fateFormula", {
+    name: "Fate Formula",
+    hint: "The default Fate formula.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "5 + floor(@stats.lk.value/5)"
+  });
+
   game.settings.register("smt-200x", "taruOnly", {
     name: "Taru- affects Spell Power",
     hint: "Makes Tarukaja/unda effects apply to Spell Power.",
-    scope: "world", // World-level setting (shared by all players)
-    config: true,
-    type: Boolean,
-    default: false
-  });
-
-  game.settings.register("smt-200x", "showTCheaders", {
-    name: "Show Tokyo Conception Headers",
-    hint: "Exchanges X-specific labels and text with TC equivalents",
-    scope: "world", // World-level setting (shared by all players)
+    scope: "world",
     config: true,
     type: Boolean,
     default: false
@@ -79,7 +165,7 @@ Hooks.once('init', function () {
   game.settings.register("smt-200x", "addLevelToRangedPower", {
     name: "Add Level to Ranged Power",
     hint: "A common homebrew that brings ranged power in line with other types.",
-    scope: "world", // World-level setting (shared by all players)
+    scope: "world",
     config: true,
     type: Boolean,
     default: false
@@ -88,7 +174,7 @@ Hooks.once('init', function () {
   game.settings.register("smt-200x", "resistAfterDefense", {
     name: "Apply Resist/Strong After Defense",
     hint: "Changes how the Resist/Strong Affinity multiplier is handled. It will be factored in AFTER subtracting Defense, making it less powerful.",
-    scope: "world", // World-level setting (shared by all players)
+    scope: "world",
     config: true,
     type: Boolean,
     default: false
@@ -97,7 +183,7 @@ Hooks.once('init', function () {
   game.settings.register("smt-200x", "showFloatingDamage", {
     name: "Show Floating Damage Text",
     hint: "Shows floating text for the damage or healing applied to a token.",
-    scope: "world", // World-level setting (shared by all players)
+    scope: "world",
     config: true,
     type: Boolean,
     default: false
@@ -106,12 +192,56 @@ Hooks.once('init', function () {
   game.settings.register("smt-200x", "fateForNPCs", {
     name: "Allow NPCs to use Fate",
     hint: "Shows the Spend Fate dialogue when applying damage to all NPCs",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
+  game.settings.register("smt-200x", "letBuffsRide", {
+    name: "Let Buff Effects Ride",
+    hint: "This allows imperfect numbers of in/decreases to stack up to 4. For example, 3 Sukundas (3d10) followed by a Fog Breath (2d10) this setting would allow the first Fog Breath dice to apply to Sukunda, but ignore other die results.",
     scope: "world", // World-level setting (shared by all players)
     config: true,
     type: Boolean,
     default: false
   });
 
+  game.settings.register("smt-200x", "tugOfWarBuffs", {
+    name: "Tug of War Buffs",
+    hint: "Shows only a single buff/debuff field. Use +/- in the widget to affect it easily.",
+    scope: "world", // Shared by all players
+    config: true,
+    type: Boolean,
+    default: false,
+    onChange: value => {
+      game.settings.settings.get("smt-200x.tugOfWarMin").config = value;
+      game.settings.settings.get("smt-200x.tugOfWarMax").config = value;
+      game.settings.sheet.render(true); // Refresh settings UI
+    }
+  });
+
+  game.settings.register("smt-200x", "tugOfWarMin", {
+    name: "Minimum Tug of War Buff Value",
+    hint: "The lowest possible value the Tug of War Buffs can go.",
+    scope: "world",
+    config: game.settings.get("smt-200x", "tugOfWarBuffs"), // Hide if Tug of War is off
+    type: Number,
+    default: -20,
+  });
+
+  game.settings.register("smt-200x", "tugOfWarMax", {
+    name: "Maximum Tug of War Buff Value",
+    hint: "The highest possible value the Tug of War Buffs can go.",
+    scope: "world",
+    config: game.settings.get("smt-200x", "tugOfWarBuffs"), // Hide if Tug of War is off
+    type: Number,
+    default: 20,
+  });
+
+
+
+  // Hidden window position saving settings
   game.settings.register("smt-200x", "friendlyEffectsWidgetPosition", {
     name: "Friendly Effects Widget Position",
     scope: "client",
@@ -126,15 +256,6 @@ Hooks.once('init', function () {
     config: false,
     type: Object,
     default: {}
-  });
-
-  game.settings.register("smt-200x", "letBuffsRide", {
-    name: "Let Buff Effects Ride",
-    hint: "This allows imperfect numbers of in/decreases to stack up to 4. For example, 3 Sukundas (3d10) followed by a Fog Breath (2d10) this setting would allow the first Fog Breath dice to apply to Sukunda, but ignore other die results.",
-    scope: "world", // World-level setting (shared by all players)
-    config: true,
-    type: Boolean,
-    default: false
   });
 
   game.settings.register("smt-200x", "friendlyEffects", {
@@ -169,38 +290,6 @@ Hooks.once('init', function () {
       rakunda: { amount: 0, count: 0 },
       sukunda: { amount: 0, count: 0 }
     }
-  });
-
-  game.settings.register("smt-200x", "tugOfWarBuffs", {
-    name: "Tug of War Buffs",
-    hint: "Shows only a single buff/debuff field. Use +/- in the widget to affect it easily.",
-    scope: "world", // Shared by all players
-    config: true,
-    type: Boolean,
-    default: false,
-    onChange: value => {
-      game.settings.settings.get("smt-200x.tugOfWarMin").config = value;
-      game.settings.settings.get("smt-200x.tugOfWarMax").config = value;
-      game.settings.sheet.render(true); // Refresh settings UI
-    }
-  });
-
-  game.settings.register("smt-200x", "tugOfWarMin", {
-    name: "Minimum Tug of War Buff Value",
-    hint: "The lowest possible value the Tug of War Buffs can go.",
-    scope: "world",
-    config: game.settings.get("smt-200x", "tugOfWarBuffs"), // Hide if Tug of War is off
-    type: Number,
-    default: -20,
-  });
-
-  game.settings.register("smt-200x", "tugOfWarMax", {
-    name: "Maximum Tug of War Buff Value",
-    hint: "The highest possible value the Tug of War Buffs can go.",
-    scope: "world",
-    config: game.settings.get("smt-200x", "tugOfWarBuffs"), // Hide if Tug of War is off
-    type: Number,
-    default: 20,
   });
 
 
@@ -278,6 +367,10 @@ Handlebars.registerHelper("ifNumber", function (value, options) {
   return isNumber
     ? options.fn(this)
     : options.inverse(this);
+});
+
+Handlebars.registerHelper("showTC", function () {
+  return game.settings.get("smt-200x", "showTCheaders");
 });
 
 

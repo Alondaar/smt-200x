@@ -36,6 +36,11 @@ export class SMTXActor extends Actor {
 
     this._calculateBuffEffects(systemData);
     this._clampStats(systemData);
+    if (systemData.badStatus == "FLY")
+      for (let [key, stat] of Object.entries(systemData.stats)) {
+        if (key == "ag") continue;
+        systemData.stats[key].value = 1;
+      }
     this._calculateCombatStats(systemData);
     this._calculateResources(systemData);
     this._clampValues(systemData);
@@ -67,12 +72,8 @@ export class SMTXActor extends Actor {
     systemData.init = 0;
     systemData.dodgetn = 0;
     systemData.talktn = 0;
-    /*systemData.buffs = {
-      "taru": 0,
-      "maka": 0,
-      "raku": 0,
-      "suku": 0,
-    }*/
+    systemData.affinityFinal = foundry.utils.deepClone(systemData.affinity);
+    systemData.affinityBSFinal = foundry.utils.deepClone(systemData.affinityBS);
   }
 
 
@@ -104,6 +105,14 @@ export class SMTXActor extends Actor {
 
   _applyEquippedItems() {
     const systemData = this.system;
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
 
     this.items.forEach(item => {
       if (item.type === "armor" && item.system.equipped) {
@@ -117,6 +126,51 @@ export class SMTXActor extends Actor {
         systemData.rangedPower += item.system.rangedPower ?? 0;
         systemData.spellPower += item.system.spellPower ?? 0;
         systemData.init += item.system.init ?? 0;
+
+        if (!item.system.changeAffinity) return;
+
+        Object.keys(systemData.affinity).forEach(affinityType => {
+          if (item.system.affinity[affinityType] == "none") return;
+          const itemAffinity = item.system.affinity[affinityType];
+          const currentAffinity = systemData.affinityFinal[affinityType];
+          if (affinityPriority[itemAffinity] > affinityPriority[currentAffinity]) {
+            systemData.affinityFinal[affinityType] = itemAffinity;
+          }
+        });
+
+        Object.keys(systemData.affinityBS).forEach(bsType => {
+          if (item.system.affinityBS[bsType] == "none") return;
+          const itemAffinityBS = item.system.affinityBS[bsType];
+          const currentAffinityBS = systemData.affinityBSFinal[bsType];
+          if (affinityPriority[itemAffinityBS] > affinityPriority[currentAffinityBS]) {
+            systemData.affinityBSFinal[bsType] = itemAffinityBS;
+          }
+        });
+      }
+    });
+
+
+    this.items.forEach(item => {
+      if (item.type === "passive") {
+        if (!item.system.changeAffinity) return;
+
+        Object.keys(systemData.affinity).forEach(affinityType => {
+          if (item.system.affinity[affinityType] == "none") return;
+          const itemAffinity = item.system.affinity[affinityType];
+          const currentAffinity = systemData.affinityFinal[affinityType];
+          if (affinityPriority[itemAffinity] > affinityPriority[currentAffinity]) {
+            systemData.affinityFinal[affinityType] = itemAffinity;
+          }
+        });
+
+        Object.keys(systemData.affinityBS).forEach(bsType => {
+          if (item.system.affinityBS[bsType] == "none") return;
+          const itemAffinityBS = item.system.affinityBS[bsType];
+          const currentAffinityBS = systemData.affinityBSFinal[bsType];
+          if (affinityPriority[itemAffinityBS] > affinityPriority[currentAffinityBS]) {
+            systemData.affinityBSFinal[bsType] = itemAffinityBS;
+          }
+        });
       }
     });
   }
@@ -134,9 +188,13 @@ export class SMTXActor extends Actor {
 
   _calculateCombatStats(systemData) {
     // Compute final stats with buffs
-    systemData.phydef += this.parseFormula(systemData.phydefFormula) + systemData.sumRaku;
-    systemData.magdef += this.parseFormula(systemData.magdefFormula) + systemData.sumRaku;
-    systemData.init += this.parseFormula(systemData.initFormula);
+    const phyDefFormula = this.parseFormula(systemData.human ? game.settings.get("smt-200x", "phyDefHuman") : game.settings.get("smt-200x", "phyDefDemon"), systemData);
+    const magDefFormula = this.parseFormula(systemData.human ? game.settings.get("smt-200x", "magDefHuman") : game.settings.get("smt-200x", "magDefDemon"), systemData);
+    const initFormula = this.parseFormula(game.settings.get("smt-200x", "initFormula"), systemData);
+
+    systemData.phydef += phyDefFormula + systemData.sumRaku;
+    systemData.magdef += magDefFormula + systemData.sumRaku;
+    systemData.init += initFormula;
 
     // Compute Power stats
     systemData.meleePower += systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
@@ -157,9 +215,13 @@ export class SMTXActor extends Actor {
 
 
   _calculateResources(systemData) {
-    systemData.hp.max = (systemData.stats.vt.value + systemData.attributes.level) * systemData.hp.mult;
-    systemData.mp.max = (systemData.stats.mg.value + systemData.attributes.level) * systemData.mp.mult;
-    systemData.fate.max = 5 + Math.floor(systemData.stats.lk.value / 5);
+    const hpFormula = this.parseFormula(game.settings.get("smt-200x", "hpFormula"), systemData);
+    const mpFormula = this.parseFormula(game.settings.get("smt-200x", "mpFormula"), systemData);
+    const fateFormula = this.parseFormula(game.settings.get("smt-200x", "fateFormula"), systemData);
+
+    systemData.hp.max = (hpFormula) * systemData.hp.mult;
+    systemData.mp.max = (mpFormula) * systemData.mp.mult;
+    systemData.fate.max = fateFormula;
 
     if (systemData.isBoss) {
       systemData.hp.max *= 5;
@@ -206,9 +268,9 @@ export class SMTXActor extends Actor {
   }
 
 
-  parseFormula(formula) {
+  parseFormula(formula, systemData) {
     try {
-      const result = new Roll(formula, this).evaluateSync({ minimize: true }).total;
+      const result = new Roll(formula, systemData).evaluateSync({ minimize: true }).total;
       return result;
     } catch (error) {
       console.error("Error evaluating formula:", formula, error);

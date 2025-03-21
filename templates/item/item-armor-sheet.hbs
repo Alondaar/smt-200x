@@ -72,6 +72,7 @@
         <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
       </div>
 
+
       <br><br>
       <h2>Stat Bonuses (Magatama, etc)</h2>
       <div class="grid grid-6col">
@@ -100,6 +101,57 @@
           <input type="text" name="system.lk" value="{{system.lk}}" data-dtype="Number" />
         </div>
       </div>
+
+
+      <br><br>
+      <h2><input type="checkbox" name="system.changeAffinity" {{#if system.changeAffinity}}checked{{/if}} />
+        Affinity Change</h2>
+      <!-- <div class="flexcol">
+        <label for="system.setAffinity" class="resource-label">Overwrite Affinities</label>
+        <input type="checkbox" name="system.setAffinity" {{#if system.setAffinity}}checked{{/if}} />
+      </div> -->
+      {{#if system.changeAffinity}}
+      <div class="grid grid-6col">
+        {{#each system.affinity as |aff key|}}
+        <div class="flexcol">
+          {{#if (showTC)}}
+          <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
+            (lookup @root.config.affinities_TC key)}}</label>
+          <select name="system.affinity.{{key}}">
+            {{selectOptions @root.config.charAffinity_TC selected=aff localize=true}}
+          </select>
+          {{else}}
+          <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
+            (lookup @root.config.affinities key)}}</label>
+          <select name="system.affinity.{{key}}">
+            {{selectOptions @root.config.charAffinity selected=aff localize=true}}
+          </select>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      <hr>
+      <div class="grid grid-6col">
+        {{#each system.affinityBS as |aff key|}}
+        <div class="flexcol">
+          {{#if (showTC)}}
+          <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
+            (lookup @root.config.badStatusList_TC key)}}</label>
+          <select name="system.affinityBS.{{key}}">
+            {{selectOptions @root.config.charAffinity_TC selected=aff localize=true}}
+          </select>
+          {{else}}
+          <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
+            (lookup @root.config.badStatusList key)}}</label>
+          <select name="system.affinityBS.{{key}}">
+            {{selectOptions @root.config.charAffinity selected=aff localize=true}}
+          </select>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
 
       <br><br>
       <h2>Unused display/aux info</h2>
