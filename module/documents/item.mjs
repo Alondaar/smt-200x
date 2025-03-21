@@ -7,101 +7,80 @@ export class SMTXItem extends Item {
    * Augment the basic Item data model with additional dynamic data.
    */
   prepareData() {
-    // As with the actor class, items are documents that can have their data
-    // preparation methods overridden (such as prepareBaseData()).
-
     super.prepareData();
+    this.system.formula = ""
+  }
+
+  /**
+   * Augment the actor source data with additional dynamic data.
+   */
+  prepareDerivedData() {
+    if (!this.actor) return;
+
+    const rollData = this.getRollData();
+    const systemData = this.system;
+
+    switch (this.type) {
+      case "feature":
+        this._prepareFeature(rollData);
+        break;
+      case "consumable":
+        this._prepareConsumable(rollData);
+        break;
+    }
   }
 
 
   /**
- * @override
- * Augment the actor source data with additional dynamic data. Typically,
- * you'll want to handle most of your calculated/derived data in this step.
- * Data calculated in this step should generally not exist in template.json
- * (such as ability modifiers rather than ability scores) and should be
- * available both inside and outside of character sheets (such as if an actor
- * is queried and has a roll executed directly from it).
- */
-  prepareDerivedData() {
-    const itemData = this;
-    const systemData = itemData.system;
+   * Prepare feature items (weapons, spells, etc.).
+   */
+  _prepareFeature(rollData) {
+    if (!this.actor) return;
+    const systemData = this.system;
 
-    this.prepareFeature()
-    this.prepareConsumable()
-  }
-
-  prepareFeature() {
-    if (this.type !== 'feature'/* && this.type !== 'consumable'*/) return
-
-    const itemData = this;
-    const systemData = itemData.system;
-    const rollData = this.getRollData();
-
-    let weaponTN = 0;
-    let weaponPower = 0;
-
-    switch (systemData.wep) {
-      case "a":
-        weaponTN = !systemData.wepIgnoreTN ? this.actor.system.wepA.hit : 0
-        weaponPower = !systemData.wepIgnorePower ? this.actor.system.wepA.power : 0
-        break;
-      case "b":
-        weaponTN = !systemData.wepIgnoreTN ? this.actor.system.wepB.hit : 0
-        weaponPower = !systemData.wepIgnorePower ? this.actor.system.wepB.power : 0
-        break;
-      default:
-        break;
+    // Fetch weapon stats from actor
+    let weaponTN = 0, weaponPower = 0;
+    if (systemData.wep) {
+      const weaponSlot = systemData.wep === "a" ? "wepA" : systemData.wep === "b" ? "wepB" : null;
+      if (weaponSlot) {
+        weaponTN = !systemData.wepIgnoreTN ? this.actor.system[weaponSlot]?.hit ?? 0 : 0;
+        weaponPower = !systemData.wepIgnorePower ? this.actor.system[weaponSlot]?.power ?? 0 : 0;
+      }
     }
 
-    const preCalcPower = new Roll((systemData.power || "0").replace(/@/g, "@actor.") + "+(" + weaponPower + ")", rollData).evaluateSync({ minimize: true });
+    // Compute Power Formula
+    const preCalcPower = new Roll(`${systemData.power} + ${weaponPower}`, rollData.actor).evaluateSync({ minimize: true });
 
-    let totalDice = 0;
-    preCalcPower.dice.forEach(die => {
-      totalDice += die.number;
-    });
-
+    const totalDice = preCalcPower.dice.reduce((sum, die) => sum + die.number, 0);
     const staticPower = (preCalcPower.total - totalDice) > 0 ? Math.floor((preCalcPower.total - totalDice) * systemData.powerBoost) : "";
 
-    const preCalcPowerDice = new Roll((systemData.powerDice || "0").replace(/@/g, "@actor."), rollData).evaluateSync({ minimize: true });
+    // Compute Dice Roll Formula
+    const preCalcPowerDice = new Roll(systemData.powerDice || "0", rollData.actor).evaluateSync({ minimize: true });
+    let displayDice = preCalcPowerDice.dice.reduce((sum, die) => sum + die.number, 0);
+    displayDice = displayDice ? `${displayDice}D` : "";
 
-    let displayDice = preCalcPowerDice.dice.reduce((total, die) => total + die.number, 0);
-    if (displayDice == 0)
-      displayDice = "";
-    else
-      displayDice += "D"
+    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + staticPower;
 
-    systemData.calcPower = displayDice + (displayDice != "" && staticPower != "" ? "+" : "") + staticPower;
+    systemData.formula = `(${systemData.powerDice || 0}) + (${staticPower || 0})`;
 
+    // Compute TN
     try {
-      const expression = (systemData.tn || "0").replace(/@/g, "@actor.") + `+(${weaponTN})`;
-      const preCalcTN = new Roll(expression, rollData).evaluateSync();
-
-      // If the total is NaN, fallback to plain text
-      if (isNaN(preCalcTN.total)) {
-        systemData.calcTN = systemData.tn;
-      } else {
-        systemData.calcTN = preCalcTN.total;
-      }
+      const preCalcTN = new Roll(`${systemData.tn} + ${weaponTN}`, rollData.actor).evaluateSync();
+      systemData.calcTN = isNaN(preCalcTN.total) ? systemData.tn : preCalcTN.total;
     } catch (err) {
-      // If the roll or parse fails entirely, fallback to plain text
-      //console.warn(`Could not parse systemData.tn: "${systemData.tn}"`, err);
       systemData.calcTN = systemData.tn;
     }
-
-    systemData.formula = "(" + (systemData.powerDice.replace(/@/g, "@actor.") || 0) + ")+" + (staticPower || 0);
   }
 
+  /**
+   * Prepare consumables (potions, etc.).
+   */
+  _prepareConsumable(rollData) {
+    const systemData = this.system;
 
-  prepareConsumable() {
-    if (this.type !== 'consumable') return
-    const itemData = this;
-    const systemData = itemData.system;
-    const rollData = this.getRollData();
-
-    const preCalcPower = new Roll((systemData.power || "0").replace(/@/g, "@actor."), rollData).evaluateSync({ minimize: true });
-
-    systemData.formula = "(" + (systemData.powerDice.replace(/@/g, "@actor.") || 0) + ")+" + (preCalcPower || 0);
+    // Compute Power Formula
+    const preCalcPower = new Roll(systemData.power, rollData.actor).evaluateSync({ minimize: true });
+    systemData.formula = `(${systemData.powerDice || 0}) + (${preCalcPower.total})`;
   }
 
 
@@ -516,7 +495,7 @@ export class SMTXItem extends Item {
     }
 
     // Roll for regular damage
-    const regularRoll = new Roll(systemData.formula, rollData);
+    const regularRoll = new Roll(systemData.formula, rollData.actor);
     await regularRoll.evaluate();
 
     if (game.dice3d)
@@ -526,7 +505,7 @@ export class SMTXItem extends Item {
 
     // Roll for sub-formula
     const hasBuffSubRoll = systemData.subBuffRoll != "" ? true : false;
-    const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData);
+    const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData.actor);
     await subBuffRoll.evaluate();
 
     if (game.dice3d && hasBuffSubRoll)
@@ -632,7 +611,8 @@ export class SMTXItem extends Item {
         ${showBuffButtons ? `
           <hr>
           <p><strong>Buff / Debuff Results:</strong> ${nonZeroValues}</p>
-          <button class='apply-buffs'>Apply to:</strong> ${activeBuffs}</button>
+          <button class='apply-buffs-friendly'>Apply to:</strong> Friendly ${activeBuffs}</button>
+          <button class='apply-buffs-hostile'>Apply to:</strong> Hostile ${activeBuffs}</button>
         ` : ""}
         
         <hr>
@@ -649,12 +629,25 @@ export class SMTXItem extends Item {
 
     const message = await ChatMessage.create({
       speaker: speaker,
-      rolMode: rollMode,
+      rollMode: rollMode,
       flavor: label,
       content
     });
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Event listeners for buttons
 Hooks.on('renderChatMessage', (message, html, data) => {
@@ -692,6 +685,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   };
 
   // Define the function to apply buffs (selected tokens)
+  // Old individual-actor buff code
   /*const applyBuffs = function (buffsArray, applyBuffsTo) {
     const tokens = canvas.tokens.controlled;
     if (!tokens.length) {
@@ -707,10 +701,11 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   };*/
 
   // Define the function to apply buffs
-  const applyBuffs = async function (buffsArray, applyBuffsTo) {
+  const applyBuffs = async function (buffsArray, applyBuffsTo, friendly = true) {
     if (!buffsArray || !applyBuffsTo) return;
 
-    let effects = game.settings.get("smt-200x", "friendlyEffects") || {};
+    const sideAffected = friendly ? "friendlyEffects" : "hostileEffects"
+    let effects = (game.settings.get("smt-200x", sideAffected)) || {};
     const useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
     const tugOfWarMin = game.settings.get("smt-200x", "tugOfWarMin");
     const tugOfWarMax = game.settings.get("smt-200x", "tugOfWarMax");
@@ -780,11 +775,14 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       }
     }
 
-    await game.settings.set("smt-200x", "friendlyEffects", effects);
+    await game.settings.set("smt-200x", sideAffected, effects);
 
-    if (game.friendlyEffectsWidget) {
-      game.friendlyEffectsWidget.updateFriendlyTokens(effects);
+    if (game.friendlyEffectsWidget && friendly) {
+      game.friendlyEffectsWidget._updateTokens(effects);
       game.friendlyEffectsWidget.render();
+    } else if (game.hostileEffectsWidget && !friendly) {
+      game.hostileEffectsWidget._updateTokens(effects);
+      game.hostileEffectsWidget.render();
     }
   };
 
@@ -799,5 +797,6 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   html.find('.apply-double-crit-damage').click(() => applyDamage(criticalDamage, 2, true));
   html.find('.apply-full-crit-healing').click(() => applyDamage(criticalDamage, 1, false, true));
 
-  html.find('.apply-buffs').click(() => applyBuffs(buffsArray, applyBuffsTo));
+  html.find('.apply-buffs-friendly').click(() => applyBuffs(buffsArray, applyBuffsTo));
+  html.find('.apply-buffs-hostile').click(() => applyBuffs(buffsArray, applyBuffsTo, false));
 });

@@ -542,30 +542,7 @@ class BuffEffectsWidget extends Application {
     this.render();
   }
 
-  /**
-   * Example: Reset all effects
-   */
-  async _resetAllEffects() {
-    const blank = {
-      tarukaja: { amount: 0, count: 0 },
-      makakaja: { amount: 0, count: 0 },
-      rakukaja: { amount: 0, count: 0 },
-      sukukaja: { amount: 0, count: 0 },
-      tarunda: { amount: 0, count: 0 },
-      makunda: { amount: 0, count: 0 },
-      rakunda: { amount: 0, count: 0 },
-      sukunda: { amount: 0, count: 0 }
-    };
 
-    const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
-    await game.settings.set("smt-200x", settingKey, blank);
-    await this._updateTokens(blank);
-    this.render();
-  }
-
-  /**
-   * Example: Dekaja
-   */
   async _dekaja() {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
@@ -581,9 +558,7 @@ class BuffEffectsWidget extends Application {
     this.render();
   }
 
-  /**
-   * Example: Dekunda
-   */
+
   async _dekunda() {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
@@ -606,7 +581,7 @@ class BuffEffectsWidget extends Application {
     const scene = game.scenes.current;
     if (!scene) return;
 
-    // If mode is "friendly", we update disposition=1. If "hostile", disposition=-1
+    // disposition 1 = Friendly | disposition -1 = hostile
     const disposition = (this.mode === "friendly") ? 1 : -1;
     const tokens = scene.tokens.filter(t => t.disposition === disposition);
 
@@ -623,6 +598,7 @@ class BuffEffectsWidget extends Application {
       // ... if you handle tarunda differently, add them too
       // e.g. tarunda => negative taru, etc. (Tug of War, etc.)
 
+      console.log(updates);
       await token.actor.update(updates);
     }
   }

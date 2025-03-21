@@ -5,139 +5,158 @@
 export class SMTXActor extends Actor {
   /** @override */
   prepareData() {
-    // Prepare data for the actor. Calling the super version of this executes
-    // the following, in order: data reset (to clear active effects),
-    // prepareBaseData(), prepareEmbeddedDocuments() (including active effects),
-    // prepareDerivedData().
     super.prepareData();
   }
 
 
-
   /** @override */
   prepareBaseData() {
-    // Data modifications in this step occur before processing embedded documents or derived data.
-    // Make modifications to data here. For example:
-    const actorData = this;
-    const systemData = actorData.system;
-
+    const systemData = this.system;
     systemData.aux.showTCheaders = game.settings.get("smt-200x", "showTCheaders");
 
+    this._initializeBaseStats(systemData);
 
-
-    if (actorData.type === 'character') {
-      // Define multipliers for each tier
-      const tierMultipliers = {
-        tierOne: 0.8,
-        tierTwo: 1.0,
-        tierThree: 1.3
-      };
-
-      // Total EXP from all tiers
-      const totalExp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree;
-
-      let currentLevel = 1; // Track the current level
-      let nextThreshold = 0; // EXP required for the next level
-      let currentMultiplier = tierMultipliers.tierOne; // Multiplier based on the active tier
-
-      // Function to calculate the threshold for a given level and multiplier
-      const calculateThreshold = (level, multiplier) => Math.floor(Math.pow(level, 3) * multiplier);
-
-      // Determine the tier and calculate the level
-      if (systemData.attributes.exp.tierTwo > 0)
-        currentMultiplier = tierMultipliers.tierTwo;
-      if (systemData.attributes.exp.tierThree > 0)
-        currentMultiplier = tierMultipliers.tierThree;
-
-      // Calculate the level dynamically
-      while (true) {
-        const threshold = calculateThreshold(currentLevel + 1, currentMultiplier);
-        if (totalExp < threshold) {
-          nextThreshold = threshold;
-          break;
-        }
-        currentLevel++;
-      }
-
-      // Update actor's level and EXP requirement for the next level
-      systemData.attributes.level = currentLevel;
-      systemData.attributes.totalexp = totalExp;
-      systemData.attributes.expnext = nextThreshold - totalExp;
+    if (this.type === 'character') {
+      this._calculateCharacterLevel(systemData);
     }
+  }
 
 
+  /** @override */
+  prepareEmbeddedDocuments() {
+    super.prepareEmbeddedDocuments();
 
-    // Loop through stats, and reset temp to 0
-    for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].temp = 0;
-    }
+    this._applyEquippedItems();
+  }
 
-    this.items.forEach((item) => {
-      if (item.type === "armor" && item.system.equipped) {
-        systemData.stats.st.temp += item.system.st || 0;
-        systemData.stats.mg.temp += item.system.mg || 0;
-        systemData.stats.vt.temp += item.system.vt || 0;
-        systemData.stats.ag.temp += item.system.ag || 0;
-        systemData.stats.lk.temp += item.system.lk || 0;
+
+  /** @override */
+  prepareDerivedData() {
+    const systemData = this.system;
+
+    this._calculateBuffEffects(systemData);
+    this._clampStats(systemData);
+    this._calculateCombatStats(systemData);
+    this._calculateResources(systemData);
+    this._clampValues(systemData);
+
+    // Notify all items after final actor data is set
+    this.items.forEach(item => {
+      if (item.prepareDerivedData) {
+        item.prepareDerivedData();
       }
     });
+  }
 
-    // Loop through stats, and total up
+
+  // =============================
+  //  HELPER METHODS
+  // =============================
+  _initializeBaseStats(systemData) {
     for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].value = Math.min(40, stat.base + stat.temp);
+      systemData.stats[key].temp = 0;
+      systemData.stats[key].value = stat.base ?? 0;
+      systemData.stats[key].tn = 0;
     }
 
+    systemData.phydef = 0;
+    systemData.magdef = 0;
+    systemData.meleePower = 0;
+    systemData.rangedPower = 0;
+    systemData.spellPower = 0;
+    systemData.init = 0;
+    systemData.dodgetn = 0;
+    systemData.talktn = 0;
+    /*systemData.buffs = {
+      "taru": 0,
+      "maka": 0,
+      "raku": 0,
+      "suku": 0,
+    }*/
+  }
 
-    // Collect buff / debuff stacks
-    systemData.sumRaku = systemData.buffs.raku + systemData.raku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.raku.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumTaru = systemData.buffs.taru + systemData.taru.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.taru.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumSuku = systemData.buffs.suku + systemData.suku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.suku.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumMaka = systemData.buffs.maka + systemData.maka.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.maka.debuff.reduce((total, num) => total + num, 0));
 
-    // DEFENSES
-    systemData.phydef = this.parseFormula(systemData.phydefFormula) + systemData.sumRaku;
-    systemData.magdef = this.parseFormula(systemData.magdefFormula) + systemData.sumRaku;
+  _calculateCharacterLevel(systemData) {
+    const tierMultipliers = { tierOne: 0.8, tierTwo: 1.0, tierThree: 1.3 };
+    const totalExp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree;
 
-    // INITIATIVE
-    systemData.init = this.parseFormula(systemData.initFormula);
+    let currentLevel = 1;
+    let nextThreshold = 0;
+    let currentMultiplier = tierMultipliers.tierOne;
 
-    // POWERS
-    systemData.meleePower = systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
-    systemData.spellPower = systemData.stats.mg.value + systemData.attributes.level + (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
-    systemData.rangedPower = systemData.stats.ag.value + (game.settings.get("smt-200x", "addLevelToRangedPower") ? systemData.attributes.level : 0) + systemData.sumTaru;
+    if (systemData.attributes.exp.tierTwo > 0) currentMultiplier = tierMultipliers.tierTwo;
+    if (systemData.attributes.exp.tierThree > 0) currentMultiplier = tierMultipliers.tierThree;
 
-    if (actorData.type === 'character') {
-      // Start with base values
-      let physicalDefense = 0;
-      let magicalDefense = 0;
-      let meleePower = 0;
-      let rangedPower = 0;
-      let spellPower = 0;
-      let initiative = 0;
-
-      // Add defense bonuses from equipped armor
-      this.items.forEach((item) => {
-        if (item.type === "armor" && item.system.equipped) {
-          console.log(item.system);
-          physicalDefense += item.system.phydef ?? 0;
-          magicalDefense += item.system.magdef ?? 0;
-          meleePower += item.system.meleePower ?? 0;
-          rangedPower += item.system.rangedPower ?? 0;
-          spellPower += item.system.spellPower ?? 0;
-          initiative += item.system.init ?? 0;
-        }
-      });
-
-      // Update the derived defense attribute
-      systemData.phydef += physicalDefense;
-      systemData.magdef += magicalDefense;
-      systemData.meleePower += meleePower;
-      systemData.rangedPower += rangedPower;
-      systemData.spellPower += spellPower;
-      systemData.init += initiative;
+    while (true) {
+      const threshold = Math.floor(Math.pow(currentLevel + 1, 3) * currentMultiplier);
+      if (totalExp < threshold) {
+        nextThreshold = threshold;
+        break;
+      }
+      currentLevel++;
     }
 
-    // Set Max HP / MP / Fate
+    systemData.attributes.level = currentLevel;
+    systemData.attributes.totalexp = totalExp;
+    systemData.attributes.expnext = nextThreshold - totalExp;
+  }
+
+
+  _applyEquippedItems() {
+    const systemData = this.system;
+
+    this.items.forEach(item => {
+      if (item.type === "armor" && item.system.equipped) {
+        ["st", "mg", "vt", "ag", "lk"].forEach(stat => {
+          systemData.stats[stat].temp += item.system[stat] ?? 0;
+        });
+
+        systemData.phydef += item.system.phydef ?? 0;
+        systemData.magdef += item.system.magdef ?? 0;
+        systemData.meleePower += item.system.meleePower ?? 0;
+        systemData.rangedPower += item.system.rangedPower ?? 0;
+        systemData.spellPower += item.system.spellPower ?? 0;
+        systemData.init += item.system.init ?? 0;
+      }
+    });
+  }
+
+
+  _calculateBuffEffects(systemData) {
+    ["raku", "taru", "suku", "maka"].forEach(buff => {
+      systemData[`sum${buff.charAt(0).toUpperCase() + buff.slice(1)}`] =
+        systemData.buffs[buff]; /*+
+        systemData[buff].buff.reduce((total, num) => total + num, 0) -
+        Math.abs(systemData[buff].debuff.reduce((total, num) => total + num, 0));*/
+    });
+  }
+
+
+  _calculateCombatStats(systemData) {
+    // Compute final stats with buffs
+    systemData.phydef += this.parseFormula(systemData.phydefFormula) + systemData.sumRaku;
+    systemData.magdef += this.parseFormula(systemData.magdefFormula) + systemData.sumRaku;
+    systemData.init += this.parseFormula(systemData.initFormula);
+
+    // Compute Power stats
+    systemData.meleePower += systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
+    systemData.rangedPower += systemData.stats.ag.value +
+      (game.settings.get("smt-200x", "addLevelToRangedPower") ? systemData.attributes.level : 0) +
+      systemData.sumTaru;
+    systemData.spellPower += systemData.stats.mg.value + systemData.attributes.level +
+      (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
+
+    // Compute TN values
+    for (let [key, stat] of Object.entries(systemData.stats)) {
+      systemData.stats[key].tn += (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
+    }
+
+    systemData.dodgetn += 10 + systemData.stats.ag.value + systemData.sumSuku;
+    systemData.talktn += 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
+  }
+
+
+  _calculateResources(systemData) {
     systemData.hp.max = (systemData.stats.vt.value + systemData.attributes.level) * systemData.hp.mult;
     systemData.mp.max = (systemData.stats.mg.value + systemData.attributes.level) * systemData.mp.mult;
     systemData.fate.max = 5 + Math.floor(systemData.stats.lk.value / 5);
@@ -146,91 +165,30 @@ export class SMTXActor extends Actor {
       systemData.hp.max *= 5;
       systemData.mp.max *= 2;
     }
+  }
 
-    // Loop through stats, and add their TNs to sheet output
+
+  _clampStats(systemData) {
+    const STAT_CAP = 40;
     for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].tn = (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
-    }
-
-    systemData.dodgetn = 10 + systemData.stats.ag.value + systemData.sumSuku;
-    systemData.talktn = 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
-  }
-
-
-  prepareEmbeddedDocuments() {
-    // Call the parent class to ensure other embedded documents are processed
-    super.prepareEmbeddedDocuments();
-
-    // Process non-"Skill" items first
-    const nonSkills = this.items.filter(item => item.type !== "feature");
-    nonSkills.forEach(item => item.prepareData());
-
-    // Ensure the actor stats are fully prepared here
-    this.prepareDerivedData(); // Ensure derived stats are finalized
-
-    // Process "Skill" items last
-    const skills = this.items.filter(item => item.type === "feature");
-    skills.forEach(item => item.prepareData());
-  }
-
-
-
-  /**
-   * @override
-   * Augment the actor source data with additional dynamic data. Typically,
-   * you'll want to handle most of your calculated/derived data in this step.
-   * Data calculated in this step should generally not exist in template.json
-   * (such as ability modifiers rather than ability scores) and should be
-   * available both inside and outside of character sheets (such as if an actor
-   * is queried and has a roll executed directly from it).
-   */
-  prepareDerivedData() {
-    const actorData = this;
-    const systemData = actorData.system;
-    const flags = actorData.flags.smt200x || {};
-
-    // Make separate methods for each Actor type (character, npc, etc.) to keep
-    // things organized.
-    this._prepareCharacterData(actorData);
-    this._prepareNpcData(actorData);
-
-    // clamp HP
-    if (systemData.hp.value > systemData.hp.max) {
-      systemData.hp.value = systemData.hp.max;
-    } else if (systemData.hp.value < systemData.hp.min) {
-      systemData.hp.value = systemData.hp.min;
-    }
-
-    // clamp MP
-    if (systemData.mp.value > systemData.mp.max) {
-      systemData.mp.value = systemData.mp.max;
-    } else if (systemData.mp.value < systemData.mp.min) {
-      systemData.mp.value = systemData.mp.min;
-    }
-
-    // clamp Fate
-    if (systemData.fate.value > systemData.fate.max) {
-      systemData.fate.value = systemData.fate.max;
-    } else if (systemData.fate.value < systemData.fate.min) {
-      systemData.fate.value = systemData.fate.min;
+      systemData.stats[key].value = Math.min(STAT_CAP, systemData.stats[key].value);
     }
   }
 
 
+  _clampValues(systemData) {
+    systemData.hp.value = Math.min(systemData.hp.value, systemData.hp.max);
+    systemData.mp.value = Math.min(systemData.mp.value, systemData.mp.max);
+    systemData.fate.value = Math.min(systemData.fate.value, systemData.fate.max);
+  }
 
-  /**
-   * Prepare Character type specific data
-   */
+
   _prepareCharacterData(actorData) {
     if (actorData.type !== 'character') return;
     const systemData = actorData.system;
   }
 
 
-
-  /**
-   * Prepare NPC type specific data.
-   */
   _prepareNpcData(actorData) {
     if (actorData.type !== 'npc') return;
     const systemData = actorData.system;
@@ -248,37 +206,30 @@ export class SMTXActor extends Actor {
   }
 
 
-
   parseFormula(formula) {
-    // Evaluate the mathematical expression
     try {
-      // Use Function with an explicit Math object
       const result = new Roll(formula, this).evaluateSync({ minimize: true }).total;
       return result;
     } catch (error) {
       console.error("Error evaluating formula:", formula, error);
-      return null;
+      return 0;
     }
   }
 
 
-
-  /**
-   * Override getRollData() that's supplied to rolls.
-   */
   getRollData() {
     // Copy the system data (core stats) into the roll data
     const data = foundry.utils.deepClone(this.system);
 
     // Loop through stats, and add their TNs to sheet output
-    for (let [key, stat] of Object.entries(data.stats)) {
+    /*for (let [key, stat] of Object.entries(data.stats)) {
       data.stats[key].tn = (stat.value * 5) + data.attributes.level + (data.sumSuku || 0);
-    }
+    }*/
 
     // Copy stats to the top level for shorthand usage in rolls
     if (data.stats) {
-      for (let [k, v] of Object.entries(data.stats)) {
-        data[k] = v;
+      for (let [key, value] of Object.entries(data.stats)) {
+        data[key] = value;
       }
     }
 
@@ -289,7 +240,6 @@ export class SMTXActor extends Actor {
 
     return data;
   }
-
 
 
   async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
@@ -855,6 +805,21 @@ export class SMTXActor extends Actor {
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Creates a floating text that rises and fades above a token.
  *
@@ -882,7 +847,6 @@ export function createFloatingNumber(token, textValue, options = {}) {
   const floatingText = new PIXI.Text(String(textValue), style);
   floatingText.anchor.set(0.5); // Center the text
 
-  console.log(token)
   // Position at the token’s center
   const gridSize = canvas.dimensions.size;
   const tokenWidthPx = token.width * gridSize;

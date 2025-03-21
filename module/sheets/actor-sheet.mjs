@@ -292,7 +292,6 @@ export class SMTXActorSheet extends ActorSheet {
       // Modify the array
       currentArray[index] = value;
 
-      //console.log("Path exists:", foundry.utils.getProperty(this.actor, path));
       this.actor.update({ [arrayPath]: currentArray });
     });
 
@@ -403,7 +402,6 @@ export class SMTXActorSheet extends ActorSheet {
 
 
     html.on('click', '.set-tc-formulas', (ev) => {
-      console.log("hello")
       ev.preventDefault();
       this.actor.update({
         "system.phydefFormula": "floor((@system.stats.vt.value + @system.attributes.level)/2)",
@@ -448,6 +446,7 @@ export class SMTXActorSheet extends ActorSheet {
 
 
 
+    // For NPCs
     html.on('change', '.actionPattern', (ev) => {
       const li = $(ev.currentTarget).parents('.item');
       const item = this.actor.items.get(li.data('itemId'));

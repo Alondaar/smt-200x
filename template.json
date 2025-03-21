@@ -265,6 +265,37 @@
         "vtReq": 0,
         "sex": "-",
         "alignment": "-"
+      },
+      "affinityChange": {
+        "affinity": {
+          "strike": "Normal",
+          "gun": "Normal",
+          "fire": "Normal",
+          "ice": "Normal",
+          "elec": "Normal",
+          "force": "Normal",
+          "expel": "Normal",
+          "death": "Normal",
+          "mind": "Normal",
+          "nerve": "Normal",
+          "curse": "Normal",
+          "almighty": "Normal"
+        },
+        "affinityBS": {
+          "DEAD": "Normal",
+          "STONE": "Normal",
+          "FLY": "Normal",
+          "PARALYZE": "Normal",
+          "CHARM": "Normal",
+          "POISON": "Normal",
+          "CLOSE": "Normal",
+          "BIND": "Normal",
+          "FREEZE": "Normal",
+          "SLEEP": "Normal",
+          "PANIC": "Normal",
+          "SHOCK": "Normal",
+          "HAPPY": "Normal"
+        }
       }
     },
     "weapon": {
@@ -284,7 +315,8 @@
       "templates": [
         "base",
         "item",
-        "equipment"
+        "equipment",
+        "affinityChange"
       ],
       "phydef": 0,
       "magdef": 0,
@@ -396,7 +428,8 @@
     },
     "passive": {
       "templates": [
-        "base"
+        "base",
+        "affinityChange"
       ]
     }
   }
