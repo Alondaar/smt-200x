@@ -54,6 +54,18 @@ Hooks.once('init', function () {
     label: 'SMT_X.SheetLabels.Item',
   });
 
+  console.log('SMT 200X | Initializing socket listener');
+  game.socket.on("system.smt-200x", async (data) => {
+    if (!game.user.isGM) return; // Only the GM processes these requests.
+    if (data.action === "updateChatMessage") {
+      const msg = game.messages.get(data.messageId);
+      if (msg) {
+        await msg.update({ content: data.content });
+      } else {
+      }
+    }
+  });
+
 
 
 

@@ -200,10 +200,10 @@ export class SMTXActorSheet extends ActorSheet {
       const currentMP = this.actor.system.mp.value;
       const currentFate = this.actor.system.fate.value;
 
-      const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true })));
-      const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true })));
-      const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true })));
-      const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true })));
+      const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true }).total));
+      const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true }).total));
+      const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true }).total));
+      const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true }).total));
 
       if (ammoCost > 0) {
         if (item.system.wep == "x") {

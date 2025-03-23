@@ -36,11 +36,40 @@ export class SMTXActor extends Actor {
 
     this._calculateBuffEffects(systemData);
     this._clampStats(systemData);
-    if (systemData.badStatus == "FLY")
-      for (let [key, stat] of Object.entries(systemData.stats)) {
-        if (key == "ag") continue;
-        systemData.stats[key].value = 1;
-      }
+
+    switch (systemData.badStatus) {
+      case "FLY":
+        for (let [key, stat] of Object.entries(systemData.stats)) {
+          if (key == "ag") continue;
+          systemData.stats[key].value = 1;
+        }
+        break;
+      case "FREEZE":
+        systemData.affinityFinal.strike = systemData.affinityFinal.strike == "weak" ? "weak" : "normal"
+        systemData.affinityFinal.gun = systemData.affinityFinal.gun == "weak" ? "weak" : "normal"
+        break;
+      case "STONE":
+        systemData.affinityFinal = {
+          "strike": "normal",
+          "gun": "normal",
+          "fire": "resist",
+          "ice": "resist",
+          "elec": "resist",
+          "force": "resist",
+          "expel": "resist",
+          "death": "resist",
+          "mind": "resist",
+          "nerve": "resist",
+          "curse": "resist",
+          "almighty": "normal",
+          "magic": "normal"
+        };
+        break;
+      default:
+        break;
+    }
+
+    this._setDerivedBSAffinities(systemData);
     this._calculateCombatStats(systemData);
     this._calculateResources(systemData);
     this._clampValues(systemData);
@@ -176,6 +205,42 @@ export class SMTXActor extends Actor {
   }
 
 
+
+  _setDerivedBSAffinities(systemData) {
+    // Define the mapping: each BS type is associated with a primary affinity type.
+    const bsMapping = {
+      "STONE": "death",
+      "FLY": "death",
+      "PARALYZE": "nerve",
+      "BIND": "nerve",
+      "CHARM": "mind",
+      "SLEEP": "mind",
+      "PANIC": "mind",
+      "HAPPY": "mind",
+      "POISON": "curse",
+      "CLOSE": "curse",
+      "FREEZE": "ice",
+      "SHOCK": "elec"
+    };
+
+    // Loop over each BS type in the mapping.
+    for (let bsType in bsMapping) {
+      // Conditionally skip processing SHOCK if the setting is false.
+      if (bsType === "SHOCK" && !game.settings.get("smt-200x", "showTCheaders")) {
+        continue;
+      }
+
+      const primaryType = bsMapping[bsType];
+      const primaryAffinity = systemData.affinityFinal[primaryType] || "normal";
+      // If the primary affinity is null, repel, or drain, set the BS affinity to "null".
+      if (["null", "repel", "drain"].includes(primaryAffinity.toLowerCase())) {
+        systemData.affinityBSFinal[bsType] = "null";
+      }
+    }
+  }
+
+
+
   _calculateBuffEffects(systemData) {
     ["raku", "taru", "suku", "maka"].forEach(buff => {
       systemData[`sum${buff.charAt(0).toUpperCase() + buff.slice(1)}`] =
@@ -305,70 +370,167 @@ export class SMTXActor extends Actor {
 
 
   async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
+    console.warn("Attempting to apply damage...");
+
+    // Save the actor's original HP
+    const oldHP = this.system.hp.value;
+
+    // 1. Determine base defense based on the incoming affinity.
     let defense = this.system.magdef;
-    if (affinity === "strike" || affinity === "gun") defense = this.system.phydef;
-    if (ignoreDefense || crit) defense = 0;
-    if (halfDefense) defense = Math.floor(defense / 2);
-
-    let damage = amount;
-    let fateUsed = 0;
-
-    // If character, ask for Fate points and adjust damage accordingly
+    if (affinity === "strike" || affinity === "gun") {
+      defense = this.system.phydef;
+    }
+    // 2. Prompt for Fate Points, an Affinity Override, and Additional Defense Modifier.
+    let fatePoints = 0, defenseBonus = 0, affinityOverride = "";
     if (this.type === 'character' || game.settings.get("smt-200x", "fateForNPCs") || this.system.allowFate) {
-      const fatePoints = await new Promise((resolve) => {
+      const dialogData = await new Promise((resolve) => {
         new Dialog({
-          title: "Fate Points Adjustment",
+          title: "Damage Adjustment",
           content: `
-                    <p>Enter the number of Fate points to spend to reduce incoming damage:</p>
-                    <div class="form-group">
-                        <label for="fate-points">Fate Points:</label>
-                        <input type="number" id="fate-points" name="fate-points" value="0" min="0" />
-                    </div>
-                `,
+          <form>
+            <div class="form-group">
+              <label for="fate-points">Fate Points to spend:</label>
+              <input type="number" id="fate-points" name="fate-points" value="0" min="0" style="width: 100%;" />
+            </div>
+            <div class="form-group">
+              <label for="affinity-override">Affinity Override:</label>
+              <select id="affinity-override" name="affinity-override" style="width: 100%;">
+                <option value="${this.system.affinityFinal[affinity]}">-- Use Default (${this.system.affinityFinal[affinity]})--</option>
+                <option value="normal">Normal</option>
+                <option value="weak">Weak</option>
+                <option value="resist">Resist</option>
+                <option value="null">Null</option>
+                <option value="drain">Drain</option>
+                <option value="repel">Repel</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="defense-modifier">Additional Defense Modifier:</label>
+              <input type="number" id="defense-modifier" name="defense-modifier" value="0" style="width: 100%;" />
+            </div>
+          </form>
+        `,
           buttons: {
             apply: {
               icon: '<i class="fas fa-check"></i>',
               label: "Apply",
               callback: (html) => {
-                const fatePointsInput = parseInt(html.find('input[name="fate-points"]').val(), 10);
-                resolve(fatePointsInput);
+                const fp = parseInt(html.find('input[name="fate-points"]').val(), 10) || 0;
+                const defMod = parseInt(html.find('input[name="defense-modifier"]').val(), 10) || 0;
+                const affOverride = html.find('select[name="affinity-override"]').val();
+                resolve({ fp, defMod, affOverride });
               }
             },
             cancel: {
               icon: '<i class="fas fa-times"></i>',
               label: "Cancel",
-              callback: () => resolve(-1) // Default to 0 if canceled
+              callback: () => resolve(null)
             }
           },
           default: "apply"
         }).render(true);
       });
 
-      if (fatePoints == -1) return // Player clicked cancel, don't apply damage.
-
-      if (fatePoints > 0) {
-        damage = Math.floor(amount / (fatePoints * 2));
-        fateUsed = fatePoints;
-      }
+      if (!dialogData) return; // User cancelled.
+      fatePoints = dialogData.fp;
+      defenseBonus = dialogData.defMod;
+      affinityOverride = dialogData.affOverride;
     }
 
-    let finalAmount = Math.max(Math.floor(damage * mult) - defense, 0);
-    if (game.settings.get("smt-200x", "resistAfterDefense") && mult < 1) {
-      finalAmount = Math.max(Math.floor((damage - defense) * mult), 0);
+    // 3. Apply additional defense bonus.
+    defense += defenseBonus;
+    if (ignoreDefense || crit) {
+      defense = 0;
+    }
+    if (halfDefense) {
+      defense = Math.floor(defense / 2);
     }
 
+    // 4. Fate Adjustment: reduce incoming damage if fatePoints > 0.
+    let damage = amount;
+    let fateUsed = 0;
+    if (fatePoints > 0) {
+      damage = Math.floor(amount / (fatePoints * 2));
+      fateUsed = fatePoints;
+    }
+
+    // 6. Determine effective affinity rating.
+    // Use the override if provided; otherwise, use the actor's affinity rating from affinityFinal.
+    const effectiveAffinity = affinityOverride !== "" ? affinityOverride : (this.system.affinityFinal[affinity] || "normal");
+    const targetAffinity = effectiveAffinity.toLowerCase();
+
+    // 7. Adjust damage based on the affinity modifier.
+    let affinityMod = 1;
+    let affinityNote = "Normal (x1)";
+    switch (targetAffinity) {
+      case "weak":
+        affinityMod = 2;
+        affinityNote = "Weak (x2)";
+        break;
+      case "resist":
+        affinityMod = 0.5;
+        affinityNote = "Resist (x0.5)";
+        break;
+      case "null":
+        affinityMod = 0;
+        affinityNote = "Null (0 damage)";
+        break;
+      case "drain":
+        affinityMod = -1;
+        affinityNote = "Drain (heals target)";
+        break;
+      case "repel":
+        affinityMod = 0;
+        affinityNote = "Repel (damage returned)";
+        break;
+      default:
+        affinityMod = 1;
+        affinityNote = "Normal (x1)";
+        break;
+    }
+
+    let finalAmount = Math.max(Math.floor(damage * affinityMod) - defense, 0);
+    if (game.settings.get("smt-200x", "resistAfterDefense") && affinityMod < 1) {
+      finalAmount = Math.max(Math.floor((damage - defense) * affinityMod), 0);
+    }
+
+    if (affinityMod < 0) {
+      // For drain, call applyHeal instead and exit.
+      this.applyHeal(amount, affectsMP);
+      return;
+    }
+
+    // 8. Update the actor's HP or MP.
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value;
-
+    const newHP = affectsMP ? currentMP - finalAmount : Math.max(currentHP - finalAmount, 0);
     if (affectsMP) {
       this.update({ "system.mp.value": Math.max(currentMP - finalAmount, 0) });
     } else {
-      this.update({ "system.hp.value": Math.max(currentHP - finalAmount, 0) });
+      this.update({ "system.hp.value": newHP });
     }
 
-    let chatContent = `<span style="font-size: var(--font-size-16);">Received <strong>${finalAmount}</strong> <span title="Affinity Multiplier x${mult}">${game.i18n.localize("SMT_X.Affinity." + affinity)} damage.</span></span>`;
+    // 9. Calculate damage applied and note if damage exceeded available HP.
+    const damageApplied = currentHP - newHP;
+    let extraNote = "";
+    if (damageApplied < finalAmount) {
+      extraNote = ` (${finalAmount - damageApplied} Overkill)`;
+    }
+
+    // 10. Build chat feedback content and include an "Undo" button.
+    let chatContent = `<span style="font-size: var(--font-size-16);">Received <strong>${damageApplied}</strong> `;
+    chatContent += `<span title="Base Multiplier x${mult}. ${game.i18n.localize("SMT_X.Affinity." + affinity)} overridden to ${effectiveAffinity} (${affinityNote}).">`;
+    chatContent += `${game.i18n.localize("SMT_X.Affinity." + affinity)}</span> damage${extraNote}.</span>`;
     if (fateUsed > 0) {
-      chatContent += `<br><em>(spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>`;
+      chatContent += `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>`;
+    }
+    if (defenseBonus !== 0) {
+      chatContent += `<br><em>Additional Defense Bonus: ${defenseBonus}</em>`;
+    }
+    console.log(this);
+    // Include an Undo button if any damage was applied.
+    if (damageApplied > 0) {
+      chatContent += `<br><button class="undo-damage" data-actor-id="${this.id}" data-token-id="${this.token.id}" data-damage="${damageApplied}" data-old-hp="${currentHP}" style="margin-top:5px;">Undo</button>`;
     }
 
     ChatMessage.create({
@@ -376,9 +538,11 @@ export class SMTXActor extends Actor {
       content: chatContent
     });
 
+    // 11. Show floating numbers if enabled.
     if (game.settings.get("smt-200x", "showFloatingDamage")) {
       for (let t of this.getActiveTokens()) {
-        createFloatingNumber(t.document, `-${finalAmount}`, { fillColor: "#FF0000", crit: crit, mult: mult });
+        const floatText = (damageApplied >= 0) ? `-${damageApplied}` : `+${-damageApplied}`;
+        createFloatingNumber(t.document, floatText, { fillColor: (damageApplied >= 0) ? "#FF0000" : "#00FF00", crit: crit, mult: mult });
       }
     }
   }
@@ -388,9 +552,9 @@ export class SMTXActor extends Actor {
     const currentMP = this.system.mp.value
 
     if (affectsMP)
-      this.update({ "system.mp.value": currentMP + amount });
+      this.update({ "system.mp.value": currentMP + Math.abs(amount) });
     else
-      this.update({ "system.hp.value": currentHP + amount });
+      this.update({ "system.hp.value": currentHP + Math.abs(amount) });
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
@@ -866,6 +1030,46 @@ export class SMTXActor extends Actor {
     });
   }
 }
+
+
+
+
+
+
+
+
+
+
+Hooks.on("renderChatMessage", (message, html, data) => {
+  html.find(".undo-damage").on("click", async (event) => {
+    event.preventDefault();
+    const button = $(event.currentTarget);
+    const actorId = button.data("actor-id");
+    const actor = game.actors.get(actorId);
+    const tokenId = button.data("token-id");
+    const token = canvas.tokens.get(tokenId);
+    const damageApplied = parseInt(button.data("damage"));
+    const oldHP = parseInt(button.data("old-hp"));
+
+    if (token) {
+      await token.actor.update({ "system.hp.value": oldHP });
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: token.actor }),
+        content: `<span style="font-size: var(--font-size-16);">Undid ${damageApplied} damage.</span>`
+      });
+
+      return
+    }
+
+    if (!actor) return;
+    // Restore HP to its old value.
+    await actor.update({ "system.hp.value": oldHP });
+    ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: actor }),
+      content: `<span style="font-size: var(--font-size-16);">Undid ${damageApplied} damage.</span>`
+    });
+  });
+});
 
 
 

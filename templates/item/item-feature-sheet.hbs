@@ -32,7 +32,7 @@
         </div>
 
         <div class="flexcol">
-          <label for="system.cost" class="resource-label">Cost</label>
+          <label for="system.cost" class="resource-label">Display Cost</label>
           <input type="text" name="system.cost" value="{{system.cost}}" />
         </div>
 
@@ -47,9 +47,7 @@
             {{selectOptions @root.config.affinities selected=system.affinity localize=true}}
           </select>
         </div>
-      </div>
 
-      <div class="flexrow">
         <div class="flexcol">
           <label for="system.uses.value" class="resource-label">Uses</label>
           <input type="text" name="system.uses.value" value="{{system.uses.value}}" data-dtype="Number" />
@@ -62,27 +60,61 @@
       </div>
 
       <div class="flexcol">
-        <label for="system.shortEffect" class="resource-label">Short Effect</label>
+        <label for="system.shortEffect" class="resource-label">Short Description</label>
         <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
       </div>
 
       <br><br>
 
       <h2>ROLL and CHECK DATA</h2>
-      <div class="flexcol">
-        <label for="system.tn" class="resource-label">TN</label>
-        <input type="text" name="system.tn" value="{{system.tn}}" />
+      <div class="flexrow">
+        <div class="flexcol">
+          <label for="system.tn" class="resource-label">TN</label>
+          <input type="text" name="system.tn" value="{{system.tn}}" />
+        </div>
+
+        <div class="flexcol">
+          <label class="resource-label" title="Clicking an option overwrites the TN field with a @data-path">Quick Set
+            TN</label>
+          <select class="quick-set-tn">
+            <option value="default">Default</option>
+            {{selectOptions @root.config.stats localize=true}}
+            <option value="dodge">Dodge</option>
+            <option value="talk">Talk</option>
+          </select>
+        </div>
+
+        <div class="flexcol">
+          <label class="resource-label" title="This affects some niche rules cases and Bad Status interactions.">Attack
+            Type</label>
+          <select name="system.attackType">
+            {{selectOptions @root.config.attackTypes selected=system.attackType}}
+          </select>
+        </div>
       </div>
 
       <div class="flexrow">
         <div class="flexcol">
-          <label for="system.powerDice" class="resource-label">Power Dice</label>
+          <label for="system.powerDice" class="resource-label"
+            title="The dice used for an attack. 1d10x for exploding dice.">Power Dice</label>
           <input type="text" name="system.powerDice" value="{{system.powerDice}}" />
         </div>
 
         <div class="flexcol flex2">
           <label for="system.power" class="resource-label">Power</label>
           <input type="text" name="system.power" value="{{system.power}}" />
+        </div>
+
+        <div class="flexcol">
+          <label class="resource-label"
+            title="Clicking an option overwrites the Power & Power Dice fields with a @data-path">Quick
+            Set Power</label>
+          <select class="quick-set-pow">
+            <option value="default">Default</option>
+            <option value="melee">Melee</option>
+            <option value="ranged">Ranged</option>
+            <option value="spell">Spell</option>
+          </select>
         </div>
       </div>
 
@@ -113,6 +145,29 @@
 
       <br><br>
 
+      <h2>BAD STATUS CONFIGURATION</h2>
+      <div class="grid grid-4col">
+        <div class="flexcol">
+          <label for="system.badStatusChance" class="resource-label">BS%</label>
+          <input type="number" name="system.badStatusChance" value="{{system.badStatusChance}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.appliesBadStatus" class="resource-label">Inflicted Status</label>
+          {{#if (showTC)}}
+          <select name="system.appliesBadStatus">
+            {{selectOptions @root.config.badStatusList_TC selected=system.appliesBadStatus localize=true}}
+          </select>
+          {{else}}
+          <select name="system.appliesBadStatus">
+            {{selectOptions @root.config.badStatusList selected=system.appliesBadStatus localize=true}}
+          </select>
+          {{/if}}
+        </div>
+      </div>
+
+      <br><br>
+
       <h2>WEAPON CONFIGURATION</h2>
       <div class="grid grid-3col">
         <div class="flexcol">
@@ -138,13 +193,23 @@
       <h2>CRIT CONFIGURATION</h2>
       <div class="grid grid-4col">
         <div class="flexcol">
-          <label for="system.critMult" class="resource-label">critMult</label>
+          <label for="system.critMult" class="resource-label">Crit Dmg Multiplier</label>
           <input type="text" name="system.critMult" value="{{system.critMult}}" data-dtype="Number" />
         </div>
 
         <div class="flexcol">
-          <label for="system.critRange" class="resource-label">critRange</label>
+          <label for="system.critRange" class="resource-label">Crit Rate</label>
           <input type="text" name="system.critRange" value="{{system.critRange}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.flatCritChance" class="resource-label">Flat Crit Chance</label>
+          <input type="text" name="system.flatCritChance" value="{{system.flatCritChance}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.flatCritDamage" class="resource-label">Flat Crit Dmg</label>
+          <input type="text" name="system.flatCritDamage" value="{{system.flatCritDamage}}" />
         </div>
 
         <div class="flexcol">

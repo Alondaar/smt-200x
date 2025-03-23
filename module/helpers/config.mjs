@@ -26,6 +26,13 @@ SMT_X.weaponChoices = {
   b: 'SMT_X.WeaponChoices.b'
 }
 
+SMT_X.attackTypes = {
+  none: 'None',
+  melee: 'Melee Attack',
+  ranged: 'Ranged Attack',
+  magic: 'Magic Attack'
+}
+
 SMT_X.affinities = {
   strike: 'SMT_X.Affinity.strike',
   gun: 'SMT_X.Affinity.gun',
@@ -40,7 +47,8 @@ SMT_X.affinities = {
   curse: 'SMT_X.Affinity.curse',
   almighty: 'SMT_X.Affinity.almighty',
   recovery: 'SMT_X.Affinity.recovery',
-  none: 'SMT_X.Affinity.none'
+  none: 'SMT_X.Affinity.none',
+  magic: 'SMT_X.Affinity.magic'
 }
 
 SMT_X.charAffinity = {
@@ -67,7 +75,8 @@ SMT_X.badStatusList = {
   PANIC: "SMT_X.AffinityBS.PANIC",
   SHOCK: "SMT_X.AffinityBS.SHOCK",
   HAPPY: "SMT_X.AffinityBS.HAPPY",
-  NONE: "SMT_X.AffinityBS.NONE"
+  NONE: "SMT_X.AffinityBS.NONE",
+  BS: "SMT_X.AffinityBS.BS"
 }
 
 
@@ -88,7 +97,8 @@ SMT_X.affinities_TC = {
   curse: 'SMT_X.Affinity_TC.curse',
   almighty: 'SMT_X.Affinity.almighty',
   recovery: 'SMT_X.Affinity.recovery',
-  none: 'SMT_X.Affinity.none'
+  none: 'SMT_X.Affinity.none',
+  magic: 'SMT_X.Affinity.magic'
 }
 
 SMT_X.charAffinity_TC = {
@@ -115,5 +125,6 @@ SMT_X.badStatusList_TC = {
   PANIC: "SMT_X.AffinityBS_TC.PANIC",
   SHOCK: "SMT_X.AffinityBS_TC.SHOCK",
   HAPPY: "SMT_X.AffinityBS_TC.HAPPY",
-  NONE: "SMT_X.AffinityBS_TC.NONE"
+  NONE: "SMT_X.AffinityBS_TC.NONE",
+  BS: "SMT_X.AffinityBS_TC.BS"
 }

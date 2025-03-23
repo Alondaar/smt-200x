@@ -48,7 +48,7 @@
     }
   ],
   "packFolders": [],
-  "socket": false,
+  "socket": true,
   "manifest": "https://github.com/Alondaar/smt-200x/raw/main/system.json",
   "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-023.zip",
   "background": "systems/smt-200x/assets/anvil-impact.png",

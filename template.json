@@ -136,34 +136,37 @@
         "chaos": 0,
         "neutral": 0,
         "heeho": 0,
+        "human": false,
         "affinity": {
-          "strike": "Normal",
-          "gun": "Normal",
-          "fire": "Normal",
-          "ice": "Normal",
-          "elec": "Normal",
-          "force": "Normal",
-          "expel": "Normal",
-          "death": "Normal",
-          "mind": "Normal",
-          "nerve": "Normal",
-          "curse": "Normal",
-          "almighty": "Normal"
+          "strike": "normal",
+          "gun": "normal",
+          "fire": "normal",
+          "ice": "normal",
+          "elec": "normal",
+          "force": "normal",
+          "expel": "normal",
+          "death": "normal",
+          "mind": "normal",
+          "nerve": "normal",
+          "curse": "normal",
+          "almighty": "normal",
+          "magic": "normal"
         },
         "affinityBS": {
-          "DEAD": "Normal",
-          "STONE": "Normal",
-          "FLY": "Normal",
-          "PARALYZE": "Normal",
-          "CHARM": "Normal",
-          "POISON": "Normal",
-          "CLOSE": "Normal",
-          "BIND": "Normal",
-          "FREEZE": "Normal",
-          "SLEEP": "Normal",
-          "PANIC": "Normal",
-          "SHOCK": "Normal",
-          "HAPPY": "Normal"
+          "BS": "normal",
+          "DEAD": "normal",
+          "STONE": "normal",
+          "FLY": "normal",
+          "PARALYZE": "normal",
+          "CHARM": "normal",
+          "POISON": "normal",
+          "CLOSE": "normal",
+          "BIND": "normal",
+          "FREEZE": "normal",
+          "SLEEP": "normal",
+          "PANIC": "normal",
+          "SHOCK": "normal",
+          "HAPPY": "normal"
         },
         "wepA": {
           "name": "",
@@ -186,7 +189,7 @@
           "hit": 0
         },
         "isCursed": false,
-        "badStatus": "none",
+        "badStatus": "NONE",
         "affinityField": "",
         "aux": {
           "useTCDef": false,
@@ -281,7 +284,8 @@
           "mind": "none",
           "nerve": "none",
           "curse": "none",
-          "almighty": "none"
+          "almighty": "none",
+          "magic": "none"
         },
         "affinityBS": {
           "DEAD": "none",
@@ -296,7 +300,8 @@
           "SLEEP": "none",
           "PANIC": "none",
           "SHOCK": "none",
-          "HAPPY": "none"
+          "HAPPY": "none",
+          "BS": "none"
         }
       }
     },
@@ -366,6 +371,8 @@
       "hasAffinity": false,
       "hasTarget": false,
       "hasType": false,
+      "lifeDrain": 0,
+      "manaDrain": 0,
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -412,6 +419,9 @@
       "hideCritDamage": false,
       "affectsMP": false,
       "actionPattern": "-",
+      "appliesBadStatus": "NONE",
+      "badStatusChance": "0",
+      "attackType": "none",
       "buffs": {
         "sukukaja": false,
         "sukunda": false,

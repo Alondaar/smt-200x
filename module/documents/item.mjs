@@ -59,14 +59,18 @@ export class SMTXItem extends Item {
     let displayDice = preCalcPowerDice.dice.reduce((sum, die) => sum + die.number, 0);
     displayDice = displayDice ? `${displayDice}D` : "";
 
-    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + staticPower;
+    const isPoisoned = (this.actor.system.badStatus == "POISON" && systemData.attackType != "none");
 
+    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + (isPoisoned ? Math.floor(staticPower / 2) : staticPower);
     systemData.formula = `(${systemData.powerDice || 0}) + (${staticPower || 0})`;
+
 
     // Compute TN
     try {
       const preCalcTN = new Roll(`${systemData.tn} + ${weaponTN}`, rollData.actor).evaluateSync();
       systemData.calcTN = isNaN(preCalcTN.total) ? systemData.tn : preCalcTN.total;
+      if (this.actor.system.badStatus == "PARALYZE" && systemData.attackType != "none")
+        systemData.calcTN = Math.min(systemData.calcTN, 25)
     } catch (err) {
       systemData.calcTN = systemData.tn;
     }
@@ -191,7 +195,7 @@ export class SMTXItem extends Item {
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
     const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
-    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name} Check</h2>`;
+    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
 
     const cost = item.system.cost ?? 'N/A';
     const target = item.system.target ?? 'N/A';
@@ -208,7 +212,7 @@ export class SMTXItem extends Item {
             <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
           </div>
         `;
-    const descriptionContent = `${item.system.shortEffect}<hr>${item.system.description}`;
+    const descriptionContent = `${item.system.shortEffect}`;
 
     if (isNaN(systemData.calcTN)) {
       ChatMessage.create({
@@ -216,8 +220,7 @@ export class SMTXItem extends Item {
         rolMode: rollMode,
         flavor: label,
         content: `
-      <h3>${this.name} Check</h3>
-      Automatically Successful.
+      ${featureInfoContent}
     `,
       });
 
@@ -295,7 +298,7 @@ export class SMTXItem extends Item {
         } else if (roll.total === 100) {
           result = "Fumble"; // Natural 100 is always a fumble
         } else if (roll.total >= (this.actor.system.isCursed ? 86 : 96) && roll.total <= 99) {
-          result = "Automatic Failure"; // Rolls 96+ (Cursed 86+) are automatic failures
+          result = "Auto Fail"; // Rolls 96+ (Cursed 86+) are automatic failures
         } else if (roll.total <= (tn * critRate) + systemData.flatCritChance) {
           result = "Critical"; // Within the crit rate range
         } else if (roll.total <= tn) {
@@ -309,7 +312,7 @@ export class SMTXItem extends Item {
     const tnInfoContent = `
     <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
         <span><strong>Base TN</strong></span>
-        <span><strong>Modifier</strong></span>
+        <span><strong>Mod Base</strong></span>
         <span><strong>Splits</strong></span>
     </div>
     <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
@@ -321,35 +324,100 @@ export class SMTXItem extends Item {
 
     // Step 4: Send results to chat
     const rollResults = `
-      <div class="flexrow flex-group-center flex-between" style="font-size: 32px; font-weight: bold;">
-        ${rolls.map(({ roll }) => `<span>${roll.total}</span>`).join("")}
-      </div>
-      <div class="flexrow flex-group-center flex-between">
-        ${rolls.map(({ result }) => `<span style="font-size: 12px;"><em>(${result})</em></span>`).join("")}
-      </div>
-    `;
+  <div class="roll-results-container" 
+       data-tnparts='${JSON.stringify(tnParts)}'
+       data-crit-rate='${critRate}'
+       data-flat-crit-chance='${systemData.flatCritChance}'
+       data-is-cursed='${this.actor.system.isCursed}'>
+    <div class="flexrow flex-group-center flex-between" style="font-size: 14px; font-weight: bold;">
+      ${tnParts.map((tn, i) => `<span class="tn-display" data-split-index="${i}">TN ${tn}%</span>`).join("")}
+    </div>
+    <div class="flexrow flex-group-center flex-between" style="font-size: 32px;">
+      ${rolls.map(({ roll }, i) => `
+        <span class="roll-result" data-split-index="${i}" data-tn="${tnParts[i]}"
+              style="border: 2px solid #ccc; border-radius: 4px; padding: 4px; margin: 2px; cursor: pointer;"
+              title="Click to re-roll; Shift-click to modify TN">
+          ${roll.total}
+        </span>`).join("")}
+    </div>
+    <div class="flexrow flex-group-center flex-between" style="font-size: 12px;">
+      ${rolls.map(({ result }, i) => `
+        <span class="roll-result-desc" data-split-index="${i}">
+          <em>(${result})</em>
+        </span>`).join("")}
+    </div>
+  </div>
+`;
+
+
+    // Retrieve the currently targeted tokens.
+    const targets = Array.from(game.user.targets);
+    let targetHtml = "";
+    if (targets.length && tnParts.length) {
+      targetHtml += `<hr>`;
+      targetHtml += `<button class="roll-all-dodges smtx-roll-button">Roll Pending Dodges</button>`;
+      targets.forEach(target => {
+        const tokenName = target.document.name;
+        targetHtml += `
+      <div class="target-row" style="margin-bottom: 10px;">
+        <div class="flexrow" style="justify-content: space-between; align-items: center;">
+          <span class="target-name" data-token-id="${target.id}" style="font-weight: bold; cursor: pointer;">${tokenName}'s Dodge</span>
+          <span class="target-bs" style="text-align: right;">
+            ${target.actor.system.badStatus !== "NONE"
+            ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+              ? "SMT_X.AffinityBS_TC."
+              : "SMT_X.AffinityBS.") + target.actor.system.badStatus)
+            : ""}
+          </span>
+        </div>
+        <div class="flexrow dodge-buttons">
+          ${tnParts.map((tn, i) => {
+              if (["STONE", "BIND", "FREEZE", "SLEEP", "SHOCK", "DEAD"].includes(target.actor.system.badStatus)) {
+                return `<button class="chat-dodge-split smtx-roll-button smtx-roll-button-disabled" data-target-id="${target.id}" data-split-index="${i}" disabled>Can't</button>`;
+              } else if (["Fail", "Auto Fail", "Fumble"].includes(rolls[i].result)) {
+                return `<button class="chat-dodge-split smtx-roll-button smtx-roll-button-disabled" data-target-id="${target.id}" data-split-index="${i}" disabled>Miss</button>`;
+              } else {
+                return `<button class="chat-dodge-split smtx-roll-button" data-target-id="${target.id}" data-split-index="${i}">Click</button>`;
+              }
+            }).join('')}
+        </div>
+      </div>`;
+      });
+      targetHtml += `<hr>`;
+      if (tnParts.length > 0) {
+        let effectButtonsHtml = `<div class="flexrow effect-buttons">` +
+          tnParts.map((tn, i) => {
+            const isDisabled = (rolls[i] && ["Fail", "Auto Fail", "Fumble"].includes(rolls[i].result));
+            return `<button class="apply-effect smtx-roll-button ${isDisabled ? "smtx-roll-button-disabled" : ""}" 
+                      data-split-index="${i}" 
+                      data-item-id="${this.id}" 
+                      data-actor-id="${this.actor.id}">
+                Effect ${i + 1}
+              </button>`;
+          }).join('') +
+          `</div>`;
+        targetHtml += effectButtonsHtml;
+      }
+    }
 
     ChatMessage.create({
       speaker: speaker,
-      rolMode: rollMode,
+      rollMode: rollMode,
       flavor: label,
       content: `
-      <div class="flexrow flex-group-center flex-between" style="font-weight: bold;">
-        <span>TN ${tnParts[0]}%</span>
-      </div>
-      ${rollResults}
+      <div>${featureInfoContent}</div>
       <hr>
-      <details>
-        <summary style="cursor: pointer; font-weight: bold;">Details</summary>
-        <div>
-          ${tnInfoContent}
-          <hr>
-          ${featureInfoContent}
-          <hr>
-          ${descriptionContent}
-        </div>
-      </details>
-    `,
+    ${rollResults}
+    <hr>
+    ${descriptionContent}
+    <hr>
+    <details>
+      <summary style="cursor: pointer; font-weight: bold;">Details</summary>
+      <div>
+        ${tnInfoContent}
+      </div>
+    </details>
+    ${targetHtml}`,
     });
   }
 
@@ -620,12 +688,6 @@ export class SMTXItem extends Item {
       </div>
     `;
 
-    /*<details>
-      <summary style="cursor: pointer; font-weight: bold;">Details</summary>
-        ${featureInfoContent}
-        <hr>
-        ${descriptionContent}
-    </details>*/
 
     const message = await ChatMessage.create({
       speaker: speaker,
@@ -633,6 +695,224 @@ export class SMTXItem extends Item {
       flavor: label,
       content
     });
+  }
+
+
+
+
+  async rollEffect(event) {
+    event.preventDefault();
+    const splitIndex = $(event.currentTarget).data("split-index");
+
+    // --- 1. Determine Outcome for This Split ---
+    const rollDescElem = document.querySelector(`.roll-results-container .roll-result-desc[data-split-index="${splitIndex}"]`);
+    let outcome = "Success";
+    if (rollDescElem) {
+      const text = rollDescElem.textContent.toLowerCase();
+      if (text.includes("critical")) outcome = "Critical";
+    }
+    const baseEffect = (outcome === "Critical") ? 2 : 1;
+    console.warn(`Split ${splitIndex} outcome: ${outcome} => baseEffect = ${baseEffect}`);
+
+    // --- 2. Gather Dodge Data for This Split ---
+    let targetData = [];
+    $(".target-row").each(function () {
+      const tokenId = $(this).find(".target-name").data("token-id");
+      const dodgeElem = $(this).find(`.chat-dodge-split[data-split-index="${splitIndex}"]`);
+      const dodgeText = dodgeElem.length ? dodgeElem.text().trim() : "";
+      targetData.push({ tokenId, dodgeText });
+    });
+    console.warn("Collected target data for split", splitIndex, ":", targetData);
+
+    // --- 3. Compute Dodge-Based Multiplier for This Split ---
+    const finalEffects = targetData.map(target => {
+      let finalEffect = baseEffect;
+      const txt = target.dodgeText;
+      if (txt.startsWith("Crit")) {
+        finalEffect = 0;
+      } else if (txt.startsWith("Pass") || txt.startsWith("Miss")) {
+        finalEffect = (baseEffect === 2) ? 1 : 0;
+      } else if (txt.startsWith("Fumble")) {
+        finalEffect = baseEffect * 2;
+      } else if (txt.startsWith("Fail") || txt.startsWith("Can't")) {
+        finalEffect = baseEffect;
+      }
+      return { tokenId: target.tokenId, finalEffect };
+    });
+
+    // --- 4. Roll Damage Once ---
+    const item = this;
+    const systemData = item.system;
+    const rollData = item.getRollData();
+
+    const isPoisoned = (this.actor.system.badStatus == "POISON" && systemData.attackType != "none");
+    const damageRoll = new Roll(isPoisoned ? "(" + systemData.formula + ") * " + 0.5 : systemData.formula, rollData.actor);
+    await damageRoll.evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
+    const baseDamage = Math.floor(damageRoll.total);
+    const diceHtml = await damageRoll.render();
+
+    // --- 5. Compute Damage per Target (Dodge Only) ---
+    // Filter out targets with a multiplier of 0 and those already dead.
+    const damageResults = finalEffects
+      .filter(target => target.finalEffect !== 0)
+      .map(target => {
+        const token = canvas.tokens.get(target.tokenId);
+        const tokenName = token ? token.document.name : target.tokenId;
+        // Calculate damage based solely on the dodge multiplier.
+        const effectiveDamage = baseDamage * target.finalEffect;
+        // Retrieve the target's overall affinity toward the incoming attack.
+        const affinityStrength = token && token.actor && token.actor.system.affinityFinal
+          ? token.actor.system.affinityFinal[systemData.affinity]
+          : "normal";
+        const badStatus = token && token.actor ? token.actor.system.badStatus : "NONE";
+
+        // Determine the basic affinity multiplier from the target's overall affinity.
+        let affinityMultiplier = 1;
+        switch (affinityStrength.toLowerCase()) {
+          case "weak":
+            affinityMultiplier = 2;
+            break;
+          case "resist":
+            affinityMultiplier = 0.5;
+            break;
+          case "null":
+          case "repel":
+            affinityMultiplier = 0;
+            break;
+          case "drain":
+            affinityMultiplier = -1;
+            break;
+          default:
+            affinityMultiplier = 1;
+        }
+
+        // --- Compute Magic Multiplier ---
+        let magicMultiplier = 1;
+        const magicX = !["strike", "gun", "almighty"].includes(systemData.affinity.toLowerCase());
+        const magicTC = ["fire", "ice", "elec", "force"].includes(systemData.affinity.toLowerCase())
+        if (game.settings.get("smt-200x", "showTCheaders") ? magicTC : magicX) {
+          const magicAffinity = token && token.actor && token.actor.system.affinityFinal && token.actor.system.affinityFinal.magic
+            ? token.actor.system.affinityFinal.magic
+            : "normal";
+          switch (magicAffinity) {
+            case "weak":
+              magicMultiplier = 2;
+              break;
+            case "resist":
+              magicMultiplier = 0.5;
+              break;
+            case "null":
+            case "repel":
+              magicMultiplier = 0;
+              break;
+            case "drain":
+              magicMultiplier = -1;
+              break;
+            default:
+              magicMultiplier = 1;
+          }
+        }
+
+        // --- Compute Bad Status (BS) Affinity Multiplier ---
+        let bsAffinityMultiplier = 1;
+        let bsAffinityStr = "normal";
+        if (token && token.actor && token.actor.system.affinityBSFinal) {
+          if (token.actor.system.affinityBSFinal[systemData.appliesBadStatus]) {
+            bsAffinityStr = token.actor.system.affinityBSFinal[systemData.appliesBadStatus];
+          }
+          switch (bsAffinityStr) {
+            case "weak":
+              bsAffinityMultiplier = 2;
+              break;
+            case "resist":
+              bsAffinityMultiplier = 0.5;
+              break;
+            case "null":
+            case "repel":
+              bsAffinityMultiplier = 0;
+              break;
+            case "drain":
+              bsAffinityMultiplier = -1;
+              break;
+            default:
+              bsAffinityMultiplier = 1;
+          }
+        }
+
+        // Compute the final damage.
+        const finalDamage = effectiveDamage * affinityMultiplier * magicMultiplier;
+
+        // --- Compute Ailment Chance ---
+        // Only compute if the item applies a bad status.
+        let ailmentChance = 0;
+        if (systemData.appliesBadStatus && systemData.badStatusChance) {
+          // Incorporate both the basic affinity and the BS affinity multipliers.
+          let rawChance = systemData.badStatusChance * affinityMultiplier * bsAffinityMultiplier * magicMultiplier;
+          if (rawChance < 0) rawChance = 0;
+          if (rawChance < 5) rawChance = 5;
+          if (rawChance > 95) rawChance = 95;
+          ailmentChance = rawChance;
+        }
+
+        return {
+          tokenId: target.tokenId,
+          tokenName,
+          effectiveDamage,
+          multiplier: target.finalEffect,
+          affinityStrength,
+          badStatus,
+          affinityMultiplier,
+          magicMultiplier,
+          bsAffinityMultiplier,
+          finalDamage,
+          ailmentChance,
+          bsAffinity: bsAffinityStr
+        };
+      })
+      .filter(result => result.badStatus.toUpperCase() !== "DEAD");
+
+    // --- 6. Log the Damage Roll Results ---
+    let logMessage = `${diceHtml}`;
+    damageResults.forEach(result => {
+      logMessage += `<div class="flewrow" style="margin: 10px 0px">
+      <strong>${result.tokenName}:</strong>
+      <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+        ? "SMT_X.CharAffinity_TC."
+        : "SMT_X.CharAffinity.") + result.affinityStrength)})</span>
+      <span>${result.badStatus !== "NONE"
+          ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+            ? "SMT_X.AffinityBS_TC."
+            : "SMT_X.AffinityBS.") + result.badStatus)
+          : ""}</span>
+      <br><strong>Inc. Dmg:</strong> ${result.finalDamage}<br>
+      ${systemData.appliesBadStatus !== "NONE"
+          ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity})</span>`
+          : ""}
+    </div><hr>`;
+    });
+
+    const speaker = ChatMessage.getSpeaker({ actor: item.actor });
+    await ChatMessage.create({
+      speaker: speaker,
+      flavor: `${item.name} Effect (${splitIndex + 1})`,
+      content: logMessage
+    });
+
+    // --- 7. Apply the Damage (or Healing) to Each Target ---
+    for (let result of damageResults) {
+      const token = canvas.tokens.get(result.tokenId);
+      if (!token || !token.actor) continue;
+      await token.actor.applyDamage(
+        result.effectiveDamage,
+        1,
+        systemData.affinity,
+        systemData.ingoreDefense,
+        systemData.halfDefense,
+        baseEffect === 2,
+        systemData.affectsMP
+      );
+    }
   }
 }
 
@@ -648,9 +928,339 @@ export class SMTXItem extends Item {
 
 
 
-
 // Event listeners for buttons
 Hooks.on('renderChatMessage', (message, html, data) => {
+  html.find('.target-name').on('click', (event) => {
+    const tokenId = $(event.currentTarget).data('token-id');
+    const token = canvas.tokens.get(tokenId);
+    if (token && token.actor) {
+      token.actor.sheet.render(true);
+    }
+  });
+
+
+
+  html.find('.apply-effect').on('click', async (event) => {
+    event.preventDefault();
+    const itemId = $(event.currentTarget).data('item-id');
+    const actorId = $(event.currentTarget).data('actor-id');
+    const actor = game.actors.get(actorId);
+    const item = actor ? actor.items.get(itemId) : null;
+
+    await item.rollEffect(event);
+  });
+
+
+
+  html.find('.chat-dodge-split').on('click', async (event) => {
+    event.preventDefault();
+    const $button = $(event.currentTarget);
+    const targetId = $button.data('target-id');
+    const splitIndex = $button.data('split-index');
+    const token = canvas.tokens.get(targetId);
+
+    if (!game.user.isGM && !(message.author.id === game.user.id || (token && token.actor.isOwner))) {
+      ui.notifications.warn("You do not have permission to click this button.");
+      return;
+    }
+
+    // If ALT+click, cycle through choices without a roll.
+    if (event.altKey) {
+      if (!game.user.isGM) return;
+
+      const cycleOrder = ["Crit", "Pass", "Fail", "Fumble"];
+      let currentText = $button.text().trim();
+      // Attempt to detect the current state from the button text.
+      let currentResult = cycleOrder.find(choice => currentText.startsWith(choice)) || "Fail";
+      let currentIndex = cycleOrder.indexOf(currentResult);
+      let newIndex = (currentIndex + 1) % cycleOrder.length;
+      let newResult = cycleOrder[newIndex];
+
+      const newButtonHtml = `<button class="chat-dodge-split smtx-roll-button" data-target-id="${targetId}" data-split-index="${splitIndex}">
+      ${newResult}
+    </button>`;
+
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = message.content;
+      const btnInContent = tempDiv.querySelector(`button.chat-dodge-split[data-target-id="${targetId}"][data-split-index="${splitIndex}"]`);
+      btnInContent.outerHTML = newButtonHtml;
+
+      await updateChatMessage(message, tempDiv.innerHTML);
+      return;
+    }
+
+    // Normal dice roll logic for non-ALT clicks.
+    const dodgeRoll = new Roll("1d100");
+    await dodgeRoll.evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(dodgeRoll, game.user, true);
+
+    let result = "Fail";
+    if (dodgeRoll.total === 1) result = "Crit";
+    else if (dodgeRoll.total === 100) result = "Fumble";
+    else if (dodgeRoll.total >= (token.actor.system.isCursed ? 86 : 96) && dodgeRoll.total <= 99) result = "Fail";
+    else if (dodgeRoll.total <= Math.floor(token.actor.system.dodgetn / 10)) result = "Crit";
+    else if (dodgeRoll.total <= token.actor.system.dodgetn) result = "Pass";
+
+    const newButtonHtml = `<button class="chat-dodge-split smtx-roll-button" data-target-id="${targetId}" data-split-index="${splitIndex}">
+    ${result} (${dodgeRoll.total})
+  </button>`;
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = message.content;
+    const btnInContent = tempDiv.querySelector(`button.chat-dodge-split[data-target-id="${targetId}"][data-split-index="${splitIndex}"]`);
+    btnInContent.outerHTML = newButtonHtml;
+
+    await updateChatMessage(message, tempDiv.innerHTML);
+  });
+
+
+
+  // ----- "Roll All Dodges" Button Handler -----
+  html.find('.roll-all-dodges').on('click', async (event) => {
+    event.preventDefault();
+    const $pendingButtons = html.find('button.chat-dodge-split').filter(function () {
+      return $(this).text().trim().startsWith("Click");
+    });
+
+    for (let i = 0; i < $pendingButtons.length; i++) {
+      const $btn = $($pendingButtons[i]);
+      const targetId = $btn.data('target-id');
+      const splitIndex = $btn.data('split-index');
+      const token = canvas.tokens.get(targetId);
+      if (!token) continue;
+
+      const dodgeRoll = new Roll("1d100");
+      await dodgeRoll.evaluate();
+      if (game.dice3d) await game.dice3d.showForRoll(dodgeRoll, game.user, true);
+
+      let result = "Fail";
+      if (dodgeRoll.total === 1) {
+        result = "Crit";
+      } else if (dodgeRoll.total === 100) {
+        result = "Fumble";
+      } else if (dodgeRoll.total >= (token.actor.system.isCursed ? 86 : 96) && dodgeRoll.total <= 99) {
+        result = "Fail";
+      } else if (dodgeRoll.total <= Math.floor(token.actor.system.dodgetn / 10)) {
+        result = "Crit";
+      } else if (dodgeRoll.total <= token.actor.system.dodgetn) {
+        result = "Pass";
+      }
+
+      const newButtonHtml = `<button class="chat-dodge-split smtx-roll-button" data-target-id="${targetId}" data-split-index="${splitIndex}">
+      ${result} (${dodgeRoll.total})
+    </button>`;
+
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = message.content;
+      const btnInContent = tempDiv.querySelector(`button.chat-dodge-split[data-target-id="${targetId}"][data-split-index="${splitIndex}"]`);
+      if (btnInContent) {
+        btnInContent.outerHTML = newButtonHtml;
+        await updateChatMessage(message, tempDiv.innerHTML);
+      }
+    }
+  });
+
+
+
+  html.find('.roll-results-container').on('click', '.roll-result', async (event) => {
+    event.preventDefault();
+    if (!game.user.isGM && message.author.id !== game.user.id) return;
+
+    const $el = $(event.currentTarget);
+    const splitIndex = parseInt($el.data('split-index'), 10);
+
+    // ALT+Click: Cycle through outcomes instead of rolling.
+    if (event.altKey) {
+      if (!game.user.isGM) return;
+      // Define the cycle order.
+      const cycleOrder = ["Success", "Critical", "Failure", "Fumble"];
+      // Locate the current outcome from the roll result description.
+      const currentDescHtml = $el.closest('.roll-results-container')
+        .find(`span.roll-result-desc[data-split-index="${splitIndex}"]`).html() || "";
+      // Remove any HTML tags and surrounding parentheses.
+      const currentText = currentDescHtml.replace(/<[^>]+>/g, "").replace(/[()]/g, "").trim();
+      // Find the current outcome (default to "Success" if no match).
+      let currentOutcome = cycleOrder.find(choice => choice.toLowerCase() === currentText.toLowerCase()) || "Success";
+      let currentIndex = cycleOrder.indexOf(currentOutcome);
+      let newIndex = (currentIndex + 1) % cycleOrder.length;
+      let newOutcome = cycleOrder[newIndex];
+
+      // Create a temporary container from the current message content.
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = message.content;
+
+      // Update the roll-result description with the new outcome.
+      const rollResultDescEl = tempDiv.querySelector(`.roll-results-container span.roll-result-desc[data-split-index="${splitIndex}"]`);
+      if (rollResultDescEl) {
+        rollResultDescEl.innerHTML = `<em>(${newOutcome})</em>`;
+      }
+
+      // Determine appropriate dodge button label/state based on the new outcome.
+      let dodgeLabel, disableDodge;
+      if (newOutcome === "Failure" || newOutcome === "Fumble") {
+        dodgeLabel = "Miss";
+        disableDodge = true;
+      } else {
+        dodgeLabel = "Click";
+        disableDodge = false;
+      }
+      // Update all corresponding dodge buttons in the tempDiv.
+      tempDiv.querySelectorAll(`button.chat-dodge-split[data-split-index="${splitIndex}"]`).forEach(btn => {
+        const tokenId = btn.getAttribute("data-target-id");
+        const token = canvas.tokens.get(tokenId);
+        const affectedStatuses = ["STONE", "BIND", "FREEZE", "SLEEP", "SHOCK", "DEAD"];
+        if (token && affectedStatuses.includes(token.actor.system.badStatus)) {
+          btn.disabled = true;
+          btn.style.opacity = "0.5";
+          btn.style.cursor = "not-allowed";
+          btn.textContent = "Can't";
+        } else {
+          btn.disabled = disableDodge;
+          btn.style.opacity = disableDodge ? "0.5" : "1";
+          btn.style.cursor = disableDodge ? "not-allowed" : "pointer";
+          btn.textContent = dodgeLabel;
+        }
+      });
+
+      // Update the corresponding Effect button for this split.
+      const effectButton = tempDiv.querySelector(`button.apply-effect[data-split-index="${splitIndex}"]`);
+      if (effectButton) {
+        if (["Failure", "Fumble"].includes(newOutcome)) {
+          effectButton.classList.add("smtx-roll-button-disabled");
+          effectButton.disabled = true;
+        } else {
+          effectButton.classList.remove("smtx-roll-button-disabled");
+          effectButton.disabled = false;
+        }
+      }
+
+      // Update the chat message with the modified HTML.
+      await updateChatMessage(message, tempDiv.innerHTML);
+      return;
+    }
+
+    // Otherwise, proceed with standard re-roll logic.
+
+    // Retrieve stored values from the container.
+    const $container = $el.closest('.roll-results-container');
+    let tnParts = JSON.parse($container.attr('data-tnparts'));
+    const critRate = parseFloat($container.attr('data-crit-rate'));
+    const flatCritChance = parseFloat($container.attr('data-flat-crit-chance'));
+    const isCursed = $container.attr('data-is-cursed') === "true";
+
+    // Get the current TN value for this split.
+    let currentTN = tnParts[splitIndex];
+    let tnForRoll = currentTN;
+
+    // If the user SHIFT-clicks, prompt for a TN modifier.
+    if (event.shiftKey) {
+      const tnModifier = await new Promise(resolve => {
+        new Dialog({
+          title: "TN Modifier",
+          content: `<p>Enter a TN modifier:</p>
+                  <input type="number" id="tn-modifier" name="tn-modifier" value="0"/>`,
+          buttons: {
+            ok: {
+              label: "OK",
+              callback: (dialogHtml) => resolve(parseInt(dialogHtml.find('#tn-modifier').val(), 10) || 0)
+            },
+            cancel: {
+              label: "Cancel",
+              callback: () => resolve(0)
+            }
+          },
+          default: "ok"
+        }).render(true);
+      });
+      tnForRoll = currentTN + tnModifier;
+      // Update the stored TN for this split for future re-rolls.
+      tnParts[splitIndex] = tnForRoll;
+      $container.attr('data-tnparts', JSON.stringify(tnParts));
+    }
+
+    // Re-roll 1d100 for this split.
+    const newRoll = new Roll("1d100");
+    await newRoll.evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(newRoll, game.user, true);
+
+    // Calculate the new result using tnForRoll.
+    let newResult = "Fail";
+    if (newRoll.total === 1) {
+      newResult = "Critical";
+    } else if (newRoll.total === 100) {
+      newResult = "Fumble";
+    } else if (newRoll.total >= (isCursed ? 86 : 96) && newRoll.total <= 99) {
+      newResult = "Auto Fail";
+    } else if (newRoll.total <= (tnForRoll * critRate) + flatCritChance) {
+      newResult = "Critical";
+    } else if (newRoll.total <= tnForRoll) {
+      newResult = "Success";
+    }
+
+    // Create a temporary container (copy) of the original message content.
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = message.content;
+
+    // *** Update the tnparts attribute in tempDiv so that the new data persists ***
+    const tempContainer = tempDiv.querySelector('.roll-results-container');
+    if (tempContainer) {
+      tempContainer.setAttribute('data-tnparts', JSON.stringify(tnParts));
+    }
+
+    // Update roll result, description, and TN display within the tempDiv.
+    const rollResultEl = tempDiv.querySelector(`.roll-results-container span.roll-result[data-split-index="${splitIndex}"]`);
+    if (rollResultEl) rollResultEl.textContent = newRoll.total;
+    const rollResultDescEl = tempDiv.querySelector(`.roll-results-container span.roll-result-desc[data-split-index="${splitIndex}"]`);
+    if (rollResultDescEl) rollResultDescEl.innerHTML = `<em>(${newResult})</em>`;
+    const tnDisplayEl = tempDiv.querySelector(`.roll-results-container span.tn-display[data-split-index="${splitIndex}"]`);
+    if (tnDisplayEl) tnDisplayEl.textContent = `TN ${tnForRoll}%`;
+
+    // Determine the default dodge button label and state based on the re-roll result.
+    let dodgeLabel, disableDodge;
+    if (newResult === "Fail" || newResult === "Fumble" || newResult === "Auto Fail") {
+      dodgeLabel = "Miss";
+      disableDodge = true;
+    } else {
+      dodgeLabel = "Click";
+      disableDodge = false;
+    }
+
+    // Update all corresponding dodge buttons using standard DOM methods on tempDiv.
+    tempDiv.querySelectorAll(`button.chat-dodge-split[data-split-index="${splitIndex}"]`).forEach(btn => {
+      const tokenId = btn.getAttribute("data-target-id");
+      const token = canvas.tokens.get(tokenId);
+      const affectedStatuses = ["STONE", "BIND", "FREEZE", "SLEEP", "SHOCK", "DEAD"];
+      if (token && affectedStatuses.includes(token.actor.system.badStatus)) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+        btn.textContent = "Can't";
+      } else {
+        btn.disabled = disableDodge;
+        btn.style.opacity = disableDodge ? "0.5" : "1";
+        btn.style.cursor = disableDodge ? "not-allowed" : "pointer";
+        btn.textContent = dodgeLabel;
+      }
+    });
+
+    // Update the corresponding Effect button for this split.
+    const effectButton = tempDiv.querySelector(`button.apply-effect[data-split-index="${splitIndex}"]`);
+    if (effectButton) {
+      if (["Fail", "Auto Fail", "Fumble"].includes(newResult)) {
+        effectButton.classList.add("smtx-roll-button-disabled");
+        effectButton.disabled = true;
+      } else {
+        effectButton.classList.remove("smtx-roll-button-disabled");
+        effectButton.disabled = false;
+      }
+    }
+
+    // Update the chat message with the modified HTML from tempDiv.
+    await updateChatMessage(message, tempDiv.innerHTML);
+  });
+
+
+
   // Find the power-roll-card element
   const powerRollCard = html.find('.power-roll-card');
   if (!powerRollCard.length) return; // Exit if no power-roll-card is found
@@ -692,7 +1302,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       ui.notifications.warn("No tokens selected.");
       return;
     }
-
+  
     tokens.forEach(token => {
       const actor = token.actor;
       if (!actor) return;
@@ -799,4 +1409,27 @@ Hooks.on('renderChatMessage', (message, html, data) => {
 
   html.find('.apply-buffs-friendly').click(() => applyBuffs(buffsArray, applyBuffsTo));
   html.find('.apply-buffs-hostile').click(() => applyBuffs(buffsArray, applyBuffsTo, false));
+});
+
+
+
+async function updateChatMessage(message, updatedContent) {
+  if (game.user.isGM) {
+    return await message.update({ _id: message.id, content: updatedContent });
+  } else {
+    game.socket.emit("system.smt-200x", {
+      action: "updateChatMessage",
+      messageId: message.id,
+      content: updatedContent
+    });
+  }
+}
+
+
+
+Hooks.on("renderChatMessage", (message, html, data) => {
+  // Hide the "Roll Pending Dodges" button for non-GM users.
+  if (!game.user.isGM) {
+    html.find(".roll-all-dodges").hide();
+  }
 });
