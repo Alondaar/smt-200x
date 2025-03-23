@@ -251,6 +251,7 @@ export class SMTXActor extends Actor {
   }
 
 
+
   _calculateCombatStats(systemData) {
     // Compute final stats with buffs
     const phyDefFormula = this.parseFormula(systemData.human ? game.settings.get("smt-200x", "phyDefHuman") : game.settings.get("smt-200x", "phyDefDemon"), systemData);
@@ -279,6 +280,7 @@ export class SMTXActor extends Actor {
   }
 
 
+
   _calculateResources(systemData) {
     const hpFormula = this.parseFormula(game.settings.get("smt-200x", "hpFormula"), systemData);
     const mpFormula = this.parseFormula(game.settings.get("smt-200x", "mpFormula"), systemData);
@@ -295,12 +297,14 @@ export class SMTXActor extends Actor {
   }
 
 
+
   _clampStats(systemData) {
     const STAT_CAP = 40;
     for (let [key, stat] of Object.entries(systemData.stats)) {
       systemData.stats[key].value = Math.min(STAT_CAP, systemData.stats[key].value);
     }
   }
+
 
 
   _clampValues(systemData) {
@@ -310,10 +314,12 @@ export class SMTXActor extends Actor {
   }
 
 
+
   _prepareCharacterData(actorData) {
     if (actorData.type !== 'character') return;
     const systemData = actorData.system;
   }
+
 
 
   _prepareNpcData(actorData) {
@@ -333,6 +339,7 @@ export class SMTXActor extends Actor {
   }
 
 
+
   parseFormula(formula, systemData) {
     try {
       const result = new Roll(formula, systemData).evaluateSync({ minimize: true }).total;
@@ -342,6 +349,7 @@ export class SMTXActor extends Actor {
       return 0;
     }
   }
+
 
 
   getRollData() {
@@ -367,6 +375,7 @@ export class SMTXActor extends Actor {
 
     return data;
   }
+
 
 
   async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
@@ -547,6 +556,8 @@ export class SMTXActor extends Actor {
     }
   }
 
+
+
   applyHeal(amount, affectsMP = false) {
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value
@@ -568,113 +579,36 @@ export class SMTXActor extends Actor {
     }
   }
 
-  dekaja() {
-    this.update({
-      "system.suku.buff": [0, 0, 0, 0],
-      "system.taru.buff": [0, 0, 0, 0],
-      "system.raku.buff": [0, 0, 0, 0],
-      "system.maka.buff": [0, 0, 0, 0],
-    });
-  }
 
-  dekunda() {
-    this.update({
-      "system.suku.debuff": [0, 0, 0, 0],
-      "system.taru.debuff": [0, 0, 0, 0],
-      "system.raku.debuff": [0, 0, 0, 0],
-      "system.maka.debuff": [0, 0, 0, 0],
-    });
-  }
 
-  clearAllBuffs() {
-    this.dekaja();
-    this.dekunda();
-  }
-
-  applyBuffs(buffsArray, applyTo) {
-    const updateBuffs = (type, field) => {
-      let currentValues = this.system[type][field];
-      const buffsArrayCopy = [...buffsArray];
-      for (let i = 0; i < 4; i++) {
-        if (currentValues[i] === 0) {
-          currentValues[i] = buffsArrayCopy.shift();
-        } else {
-          continue;
-        }
-      }
-      this.update({
-        [`system.${type}.${field}`]: currentValues,
-      });
+  applyBS(status) {
+    priority = {
+      "DEAD": 0,
+      "STONE": 1,
+      "FLY": 2,
+      "PARALYZE": 3,
+      "CHARM": 4,
+      "POISON": 5,
+      "CLOSE": 6,
+      "BIND": 7,
+      "FREEZE": 8,
+      "SLEEP": 9,
+      "PANIC": 10,
+      "SHOCK": 11,
+      "HAPPY": 12,
+      "NONE": 999
     };
 
-    let taruPowerContent = "Melee & Ranged";
-    if (game.settings.get("smt-200x", "taruOnly")) taruPowerContent = "All"
+    const currentPriorityBS = priority[this.system.badSttus];
+    const incomingPriorityBS = priority[status];
 
-    if (applyTo.sukukaja) {
-      updateBuffs("suku", "buff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">All TN Accuracy Up.</span>`
+    if (incomingPriorityBS < currentPriorityBS)
+      this.update({
+        "system.badStatus": status
       });
-    }
-    if (applyTo.tarukaja) {
-      updateBuffs("taru", "buff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Power Up.</span>`
-      });
-    }
-    if (applyTo.rakukaja) {
-      updateBuffs("raku", "buff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Defense Up.</span>`
-      });
-    }
-    if (applyTo.makakaja) {
-      updateBuffs("maka", "buff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Spell Power Up.</span>`
-      });
-    }
-    if (applyTo.sukunda) {
-      updateBuffs("suku", "debuff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">All TN Accuracy Down.</span>`
-      });
-    }
-    if (applyTo.tarunda) {
-      updateBuffs("taru", "debuff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Power Down.</span>`
-      });
-    }
-    if (applyTo.rakunda) {
-      updateBuffs("raku", "debuff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Defense Down.</span>`
-      });
-    }
-    if (applyTo.makunda) {
-      updateBuffs("maka", "debuff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Spell Power Down.</span>`
-      });
-    }
   }
+
+
 
   applyEXP(amount) {
     if (this.system.attributes.exp.tierThree > 0) {
@@ -694,11 +628,15 @@ export class SMTXActor extends Actor {
     }
   }
 
+
+
   applyMacca(amount) {
     this.update({
       "system.macca": this.system.macca + amount
     });
   }
+
+
 
   /**
 * Handle clickable rolls.

@@ -830,13 +830,32 @@ export class SMTXItem extends Item {
               break;
             case "null":
             case "repel":
-              bsAffinityMultiplier = 0;
-              break;
             case "drain":
-              bsAffinityMultiplier = -1;
+              bsAffinityMultiplier = 0;
               break;
             default:
               bsAffinityMultiplier = 1;
+          }
+        }
+
+        if (token && token.actor && token.actor.system.affinityBSFinal) {
+          if (token.actor.system.affinityBSFinal.BS) {
+            bsAffinityStr = token.actor.system.affinityBSFinal.BS;
+          }
+          switch (bsAffinityStr) {
+            case "weak":
+              bsAffinityMultiplier *= 2;
+              break;
+            case "resist":
+              bsAffinityMultiplier *= 0.5;
+              break;
+            case "null":
+            case "repel":
+            case "drain":
+              bsAffinityMultiplier *= 0;
+              break;
+            default:
+              bsAffinityMultiplier *= 1;
           }
         }
 
@@ -848,7 +867,7 @@ export class SMTXItem extends Item {
         let ailmentChance = 0;
         if (systemData.appliesBadStatus && systemData.badStatusChance) {
           // Incorporate both the basic affinity and the BS affinity multipliers.
-          let rawChance = systemData.badStatusChance * affinityMultiplier * bsAffinityMultiplier * magicMultiplier;
+          let rawChance = systemData.badStatusChance * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect;
           if (rawChance < 0) rawChance = 0;
           if (rawChance < 5) rawChance = 5;
           if (rawChance > 95) rawChance = 95;

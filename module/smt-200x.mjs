@@ -523,7 +523,7 @@ class BuffEffectsWidget extends Application {
   async render(force = false, options = {}) {
     // Update ID & Title based on mode
     this.options.id = `buff-effects-widget-${this.mode}`;
-    this.options.title = this.mode === "friendly" ? "Friendly Effects" : "Hostile Effects";
+    this.options.title = this.mode === "friendly" ? "PC-side Effects" : "Hostile-side Effects";
     this.options.width = game.settings.get("smt-200x", "tugOfWarBuffs") ? 300 : 200;
 
     await super.render(force, options);
@@ -652,7 +652,6 @@ class BuffEffectsWidget extends Application {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
 
-    // Example: Zero out positive buffs
     if (effects.tarukaja.amount > 0) effects.tarukaja.amount = 0;
     if (effects.makakaja.amount > 0) effects.makakaja.amount = 0;
     if (effects.rakukaja.amount > 0) effects.rakukaja.amount = 0;
@@ -668,7 +667,6 @@ class BuffEffectsWidget extends Application {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
 
-    // Example: Zero out negative buffs
     if (effects.tarukaja.amount < 0) effects.tarukaja.amount = 0;
     if (effects.makakaja.amount < 0) effects.makakaja.amount = 0;
     if (effects.rakukaja.amount < 0) effects.rakukaja.amount = 0;
