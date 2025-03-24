@@ -706,6 +706,9 @@ export class SMTXItem extends Item {
     event.preventDefault();
     const splitIndex = $(event.currentTarget).data("split-index");
 
+    // Instead of scanning the entire DOM, narrow your search to the chat message container.
+    const messageContainer = $(event.currentTarget).closest(".message-content");
+
     // --- 1. Determine Outcome for This Split ---
     const rollDescElem = document.querySelector(`.roll-results-container .roll-result-desc[data-split-index="${splitIndex}"]`);
     let outcome = "Success";
@@ -717,7 +720,7 @@ export class SMTXItem extends Item {
 
     // --- 2. Gather Dodge Data for This Split ---
     let targetData = [];
-    $(".target-row").each(function () {
+    messageContainer.find(".target-row").each(function () {
       const tokenId = $(this).find(".target-name").data("token-id");
       const dodgeElem = $(this).find(`.chat-dodge-split[data-split-index="${splitIndex}"]`);
       const dodgeText = dodgeElem.length ? dodgeElem.text().trim() : "";
