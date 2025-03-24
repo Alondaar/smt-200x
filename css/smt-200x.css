@@ -535,6 +535,15 @@
   justify-content: center;
 }
 
+.smtx-buff-button {
+  height: 24px;
+  font-size: 14px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .smtx-roll-button-disabled {
   opacity: 0.5;
   cursor: not-allowed;

@@ -66,6 +66,7 @@
         <input class="buff-input" type="number" data-category="sukunda" data-field="count"
             value="{{effects.sukunda.count}}" />
     </div>
+    <hr>
     <div class="flexrow flex-group-center">
         <button class="flex dekaja-button">Clear Buffs</button>
         <button class="flex dekunda-button">Clear Debuffs</button>
@@ -74,27 +75,32 @@
 
     {{#if useTugOfWar}}
     <div class="flexrow flex-group-center">
-        <span>Phy Pow</span>
-        <input type="text" data-category="tarukaja" data-field="amount" value="{{effects.tarukaja.amount}}" />
+        <span class="buff-label">Phy Pow</span>
+        <input class="buff-input" type="text" data-category="tarukaja" data-field="amount"
+            value="{{effects.tarukaja.amount}}" />
     </div>
 
     <div class="flexrow flex-group-center">
-        <span>Mag Pow</span>
-        <input type="text" data-category="makakaja" data-field="amount" value="{{effects.makakaja.amount}}" />
+        <span class="buff-label">Mag Pow</span>
+        <input class="buff-input" type="text" data-category="makakaja" data-field="amount"
+            value="{{effects.makakaja.amount}}" />
     </div>
 
     <div class="flexrow flex-group-center">
-        <span>Def</span>
-        <input type="text" data-category="rakukaja" data-field="amount" value="{{effects.rakukaja.amount}}" />
+        <span class="buff-label">Def</span>
+        <input class="buff-input" type="text" data-category="rakukaja" data-field="amount"
+            value="{{effects.rakukaja.amount}}" />
     </div>
 
     <div class="flexrow flex-group-center">
-        <span>Acc</span>
-        <input type="text" data-category="sukukaja" data-field="amount" value="{{effects.sukukaja.amount}}" />
+        <span class="buff-label">Acc</span>
+        <input class="buff-input" type="text" data-category="sukukaja" data-field="amount"
+            value="{{effects.sukukaja.amount}}" />
     </div>
+    <hr>
     <div class="flexrow flex-group-center">
-        <button class="flex dekaja-button">Clear Buffs</button>
-        <button class="flex dekunda-button">Clear Debuffs</button>
+        <button class="flex dekaja-button smtx-buff-button">Clear Buffs</button>
+        <button class="flex dekunda-button smtx-buff-button" style="width: 120px;">Clear Debuffs</button>
     </div>
     {{/if}}
 </section>
