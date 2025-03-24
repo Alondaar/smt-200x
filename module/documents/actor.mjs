@@ -538,19 +538,23 @@ export class SMTXActor extends Actor {
     }
 
     // 10. Build chat feedback content and include an "Undo" button.
-    let chatContent = `<span style="font-size: var(--font-size-16);">Received <strong>${damageApplied}</strong> `;
-    chatContent += `<span title="Base Multiplier x${mult}. ${game.i18n.localize("SMT_X.Affinity." + affinity)} overridden to ${effectiveAffinity} (${affinityNote}).">`;
-    chatContent += `${game.i18n.localize("SMT_X.Affinity." + affinity)}</span> damage${extraNote}.</span>`;
-    if (fateUsed > 0) {
-      chatContent += `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>`;
-    }
-    if (defenseBonus !== 0) {
-      chatContent += `<br><em>Additional Defense Bonus: ${defenseBonus}</em>`;
-    }
-    // Include an Undo button if any damage was applied.
-    if (damageApplied > 0) {
-      chatContent += `<br><button class="undo-damage" data-actor-id="${this.id}" data-token-id="${this.token.id}" data-damage="${damageApplied}" data-old-hp="${currentHP}" style="margin-top:5px;">Undo</button>`;
-    }
+    let chatContent = `
+    <div class="flexrow damage-line">
+      <span class="damage-text">
+        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} damage${extraNote}.
+        ${fateUsed > 0 ? `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>` : ''}
+        ${defenseBonus !== 0 ? `<br><em>Defense Bonus: ${defenseBonus}</em>` : ''}
+      </span>
+      <button class="flex0 undo-damage height: 32px; width: 32px;" 
+              data-actor-id="${this.id}" 
+              data-token-id="${this.token ? this.token.id : ''}" 
+              data-damage="${damageApplied}" 
+              data-old-hp="${currentHP}"
+              style="margin-left: auto;">
+        <i class="fas fa-undo"></i>
+      </button>
+    </div>
+    `;
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
@@ -577,9 +581,23 @@ export class SMTXActor extends Actor {
     else
       this.update({ "system.hp.value": currentHP + Math.abs(amount) });
 
+    let chatContent = `
+    <div class="flexrow damage-line">
+      <span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>
+      <button class="flex0 undo-damage height: 32px; width: 32px;" 
+              data-actor-id="${this.id}" 
+              data-token-id="${this.token ? this.token.id : ''}" 
+              data-damage="${amount}" 
+              data-old-hp="${currentHP}"
+              style="margin-left: auto;">
+        <i class="fas fa-undo"></i>
+      </button>
+    </div>
+    `;
+
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
-      content: `<span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>`
+      content: chatContent
     });
 
     if (game.settings.get("smt-200x", "showFloatingDamage")) {
@@ -999,23 +1017,27 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     const damageApplied = parseInt(button.data("damage"));
     const oldHP = parseInt(button.data("old-hp"));
 
+    // Restore HP on the actor (or token's actor)
     if (token) {
       await token.actor.update({ "system.hp.value": oldHP });
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: token.actor }),
-        content: `<span style="font-size: var(--font-size-16);">Undid ${damageApplied} damage.</span>`
-      });
-
-      return
+    } else if (actor) {
+      await actor.update({ "system.hp.value": oldHP });
     }
 
-    if (!actor) return;
-    // Restore HP to its old value.
-    await actor.update({ "system.hp.value": oldHP });
-    ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: actor }),
-      content: `<span style="font-size: var(--font-size-16);">Undid ${damageApplied} damage.</span>`
-    });
+    // Find the parent container for the damage line.
+    const damageLine = button.closest(".damage-line");
+
+    // Option 1: Add a class that applies strike-through styling.
+    damageLine.css("text-decoration", "line-through");
+
+    // Option 2: Or update inline styles directly:
+    // damageLine.find(".damage-text").css("text-decoration", "line-through");
+
+    // Disable or replace the undo button.
+    button.replaceWith(`<button class="flex0 undo-damage" disabled style="margin-left: auto; opacity: 0.5;"><i class="fas fa-undo"></i></button>`);
+
+    // Get the updated HTML from the rendered message and update the chat message.
+    await updateChatMessage(message, message.content);
   });
 });
 
@@ -1108,3 +1130,20 @@ export function createFloatingNumber(token, textValue, options = {}) {
   requestAnimationFrame(animate);
 }
 
+
+
+
+
+
+
+async function updateChatMessage(message, updatedContent) {
+  if (game.user.isGM) {
+    return await message.update({ _id: message.id, content: updatedContent });
+  } else {
+    game.socket.emit("system.smt-200x", {
+      action: "updateChatMessage",
+      messageId: message.id,
+      content: updatedContent
+    });
+  }
+}
