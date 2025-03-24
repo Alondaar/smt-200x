@@ -687,9 +687,7 @@ class BuffEffectsWidget extends Application {
   }
 
 
-  /**
-   * Prepare data for the template.
-   */
+
   getData() {
     const data = super.getData();
 
@@ -712,6 +710,7 @@ class BuffEffectsWidget extends Application {
   }
 
 
+
   async _onInputChange(event) {
     const input = event.currentTarget;
     const category = input.dataset.category;
@@ -724,7 +723,9 @@ class BuffEffectsWidget extends Application {
     if (!effects[category]) return;
 
     // Basic assignment
-    effects[category][field] = newValue;
+    effects[category][field] = Math.abs(newValue);
+    if (newValue == 0)
+      effects[category].count = 0;
 
     // Save & update
     await game.settings.set("smt-200x", settingKey, effects);
@@ -733,38 +734,63 @@ class BuffEffectsWidget extends Application {
   }
 
 
+
   async _dekaja() {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
 
-    if (effects.tarukaja.amount > 0) effects.tarukaja.amount = 0;
-    if (effects.makakaja.amount > 0) effects.makakaja.amount = 0;
-    if (effects.rakukaja.amount > 0) effects.rakukaja.amount = 0;
-    if (effects.sukukaja.amount > 0) effects.sukukaja.amount = 0;
+    if (effects.tarukaja.amount > 0) {
+      effects.tarukaja.amount = 0;
+      effects.tarukaja.count = 0;
+    }
+    if (effects.makakaja.amount > 0) {
+      effects.makakaja.amount = 0;
+      effects.makakaja.count = 0;
+    }
+    if (effects.rakukaja.amount > 0) {
+      effects.rakukaja.amount = 0;
+      effects.rakukaja.count = 0;
+    }
+    if (effects.sukukaja.amount > 0) {
+      effects.sukukaja.amount = 0;
+      effects.sukukaja.count = 0;
+    }
 
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
     this.render();
   }
+
 
 
   async _dekunda() {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
 
-    if (effects.tarukaja.amount < 0) effects.tarukaja.amount = 0;
-    if (effects.makakaja.amount < 0) effects.makakaja.amount = 0;
-    if (effects.rakukaja.amount < 0) effects.rakukaja.amount = 0;
-    if (effects.sukukaja.amount < 0) effects.sukukaja.amount = 0;
+    if (effects.tarunda.amount > 0) {
+      effects.tarunda.amount = 0;
+      effects.tarunda.count = 0;
+    }
+    if (effects.makunda.amount > 0) {
+      effects.makunda.amount = 0;
+      effects.makunda.count = 0;
+    }
+    if (effects.rakunda.amount > 0) {
+      effects.rakunda.amount = 0;
+      effects.rakunda.count = 0;
+    }
+    if (effects.sukunda.amount > 0) {
+      effects.sukunda.amount = 0;
+      effects.sukunda.count = 0;
+    }
 
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
     this.render();
   }
 
-  /**
-   * Update tokens in the scene, based on the mode.
-   */
+
+
   async _updateTokens(effects) {
     const scene = game.scenes.current;
     if (!scene) return;
@@ -783,17 +809,17 @@ class BuffEffectsWidget extends Application {
       updates["system.buffs.raku"] = effects.rakukaja.amount;
       updates["system.buffs.suku"] = effects.sukukaja.amount;
 
-      // ... if you handle tarunda differently, add them too
-      // e.g. tarunda => negative taru, etc. (Tug of War, etc.)
+      updates["system.debuffs.taru"] = effects.tarunda.amount;
+      updates["system.debuffs.maka"] = effects.makunda.amount;
+      updates["system.debuffs.raku"] = effects.rakunda.amount;
+      updates["system.debuffs.suku"] = effects.sukunda.amount;
 
-      console.log(updates);
       await token.actor.update(updates);
     }
   }
 
-  /**
-   * (Optional) Static method to apply effects automatically on token creation/update
-   */
+
+
   static async applyEffectsToToken(tokenId, mode = "friendly") {
     const scene = game.scenes.current;
     if (!scene) return;
@@ -811,7 +837,11 @@ class BuffEffectsWidget extends Application {
     updates["system.buffs.maka"] = effects.makakaja.amount;
     updates["system.buffs.raku"] = effects.rakukaja.amount;
     updates["system.buffs.suku"] = effects.sukukaja.amount;
-    // etc.
+
+    updates["system.debuffs.taru"] = effects.tarunda.amount;
+    updates["system.debuffs.maka"] = effects.makunda.amount;
+    updates["system.debuffs.raku"] = effects.rakunda.amount;
+    updates["system.debuffs.suku"] = effects.sukunda.amount;
 
     await token.actor.update(updates);
   }

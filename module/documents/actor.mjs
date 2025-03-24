@@ -259,9 +259,7 @@ export class SMTXActor extends Actor {
   _calculateBuffEffects(systemData) {
     ["raku", "taru", "suku", "maka"].forEach(buff => {
       systemData[`sum${buff.charAt(0).toUpperCase() + buff.slice(1)}`] =
-        systemData.buffs[buff]; /*+
-        systemData[buff].buff.reduce((total, num) => total + num, 0) -
-        Math.abs(systemData[buff].debuff.reduce((total, num) => total + num, 0));*/
+        systemData.buffs[buff] - Math.abs(systemData.debuffs[buff]);
     });
   }
 

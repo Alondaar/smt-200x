@@ -301,7 +301,7 @@ export class SMTXItem extends Item {
           result = "Fumble"; // Natural 100 is always a fumble
         } else if (roll.total >= (this.actor.system.isCursed ? 86 : 96) && roll.total <= 99) {
           result = "Auto Fail"; // Rolls 96+ (Cursed 86+) are automatic failures
-        } else if (roll.total <= (tn * critRate) + systemData.flatCritChance) {
+        } else if (roll.total <= (tn * critRate) + Number(systemData.flatCritChance)) {
           result = "Critical"; // Within the crit rate range
         } else if (roll.total <= tn) {
           result = "Success"; // Successful roll
@@ -458,11 +458,11 @@ export class SMTXItem extends Item {
     const descriptionContent = `${item.system.shortEffect}<hr>${item.system.description}`;
 
     let overrides = {
-      affinity: systemData.affinity || "strike",
+      affinity: systemData.affinity,
       ignoreDefense: systemData.ingoreDefense,
       halfDefense: systemData.halfDefense,
       pierce: systemData.pierce,
-      critMult: systemData.critMult || 2,
+      critMult: systemData.critMult,
       extraModifier: "0",
       baseMult: 1
     };
@@ -613,7 +613,7 @@ export class SMTXItem extends Item {
       .join(", "); // Join the values into a string
 
     // Calculate critical damage
-    const critDamage = Math.floor((finalBaseDmg) * overrides.critMult) + systemData.flatCritDamage;
+    const critDamage = Math.floor(finalBaseDmg * overrides.critMult) + Number(systemData.flatCritDamage);
 
     // Determine button visibility based on affinity
     const hideDamage = (hasBuffs && !hasBuffSubRoll);
@@ -914,8 +914,9 @@ export class SMTXItem extends Item {
         // --- Compute Ailment Chance ---
         let ailmentChance = 0;
         let ailmentRollResult = null;
-        if (systemData.appliesBadStatus && systemData.badStatusChance) {
-          let rawChance = systemData.badStatusChance * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect;
+        let rawChance = 0;
+        if (systemData.appliesBadStatus && systemData.badStatusChance && ((1 * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect) > 0)) {
+          rawChance = systemData.badStatusChance * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect;
           if (rawChance < 0) rawChance = 0;
           if (rawChance < 5) rawChance = 5;
           if (rawChance > 95) rawChance = 95;
@@ -940,7 +941,8 @@ export class SMTXItem extends Item {
           finalDamage,
           ailmentChance,
           ailmentRoll: ailmentRollResult,
-          bsAffinity: bsAffinityStr
+          bsAffinity: bsAffinityStr,
+          rawBSchance: rawChance
         };
       }))).filter(result => result.badStatus.toUpperCase() !== "DEAD");
 
@@ -958,7 +960,7 @@ export class SMTXItem extends Item {
             : "SMT_X.AffinityBS.") + result.badStatus)
           : ""}</span>
     <br><strong>Inc. Dmg:</strong> ${result.finalDamage} (Base: ${result.effectiveDamage})<br>
-    ${systemData.appliesBadStatus !== "NONE"
+    ${(systemData.appliesBadStatus !== "NONE" && result.rawBSchance > 0)
           ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity}) - d100: ${result.ailmentRoll}</span>
         <button class="apply-ailment-btn" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
           : ""}
@@ -1348,8 +1350,6 @@ Hooks.on('renderChatMessage', (message, html, data) => {
 
   // Define the function to apply buffs
   const applyBuffs = async function (buffsArray, applyBuffsTo, friendly = true) {
-    console.log(buffsArray)
-    console.log(applyBuffsTo)
     if (!buffsArray || !applyBuffsTo) return;
 
     const sideAffected = friendly ? "friendlyEffects" : "hostileEffects"
@@ -1438,17 +1438,19 @@ Hooks.on('renderChatMessage', (message, html, data) => {
 
 
   html.find('.apply-buffs-friendly').click(function () {
+    const powerRollCard = html.find('.power-roll-card');
     const container = $(this).closest(".buff-button-container");
     const buffs = container.data("buffs");
     const applyBuffsTo = container.data("apply-buffs-to");
-    applyBuffs(buffs, applyBuffsTo);
+    applyBuffs(buffs || powerRollCard.data('buffs'), applyBuffsTo || powerRollCard.data('apply-buffs-to'));
   });
 
   html.find('.apply-buffs-hostile').click(function () {
+    const powerRollCard = html.find('.power-roll-card');
     const container = $(this).closest(".buff-button-container");
     const buffs = container.data("buffs");
     const applyBuffsTo = container.data("apply-buffs-to");
-    applyBuffs(buffs, applyBuffsTo, false);
+    applyBuffs(buffs || powerRollCard.data('buffs'), applyBuffsTo || powerRollCard.data('apply-buffs-to'), false);
   });
 
 

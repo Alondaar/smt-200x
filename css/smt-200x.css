@@ -539,3 +539,12 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.buff-input {
+  width: 32px !important;
+  /*flex: 0 0 auto;*/
+}
+
+.buff-label {
+  font-weight: bold !important;
+}
