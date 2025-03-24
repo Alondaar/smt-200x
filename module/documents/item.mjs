@@ -802,8 +802,8 @@ export class SMTXItem extends Item {
     // Then in your chat message, include the results and buttons:
     const buffContent = `<p>Applies to: ${activeBuffs}</p> ${subRollDisplay} ${showBuffButtons ? `
       <div class="flexrow buff-button-container" data-apply-buffs-to='${JSON.stringify(systemData.buffs)}' data-buffs='${JSON.stringify(buffArray)}'>
-        <button class='apply-buffs-friendly'>Apply to PCs</button>
-        <button class='apply-buffs-hostile'>Apply to Hostiles</button>
+        <button class='apply-buffs-friendly smtx-roll-button'>Apply to PCs</button>
+        <button class='apply-buffs-hostile smtx-roll-button'>Apply to Hostiles</button>
       </div>` : ""}`;
 
 
@@ -965,7 +965,7 @@ export class SMTXItem extends Item {
     <br><strong>Inc. Dmg:</strong> ${result.finalDamage} (Base: ${result.effectiveDamage})<br>
     ${(systemData.appliesBadStatus !== "NONE" && result.rawBSchance > 0)
           ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity}) - d100: ${result.ailmentRoll}</span>
-        <button class="apply-ailment-btn" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
+        <button class="apply-ailment-btn smtx-roll-button" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
           : ""}
   </div><hr>`;
     });
