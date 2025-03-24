@@ -128,6 +128,8 @@ export class SMTXItem extends Item {
     }
   }
 
+
+
   /**
    * Handle clickable rolls.
    * @param {Event} event   The originating click event
@@ -712,7 +714,6 @@ export class SMTXItem extends Item {
       if (text.includes("critical")) outcome = "Critical";
     }
     const baseEffect = (outcome === "Critical") ? 2 : 1;
-    console.warn(`Split ${splitIndex} outcome: ${outcome} => baseEffect = ${baseEffect}`);
 
     // --- 2. Gather Dodge Data for This Split ---
     let targetData = [];
@@ -722,7 +723,6 @@ export class SMTXItem extends Item {
       const dodgeText = dodgeElem.length ? dodgeElem.text().trim() : "";
       targetData.push({ tokenId, dodgeText });
     });
-    console.warn("Collected target data for split", splitIndex, ":", targetData);
 
     // --- 3. Compute Dodge-Based Multiplier for This Split ---
     const finalEffects = targetData.map(target => {
@@ -745,6 +745,18 @@ export class SMTXItem extends Item {
     const systemData = item.system;
     const rollData = item.getRollData();
 
+    // Determine if any buff categories are active
+    const hasBuffs = Object.values(systemData.buffs).some(value => value === true);
+
+    // Check if a subBuffRoll is provided
+    const hasBuffSubRoll = systemData.subBuffRoll && systemData.subBuffRoll.trim() !== "";
+    let subBuffRoll;
+    if (hasBuffSubRoll) {
+      subBuffRoll = new Roll(systemData.subBuffRoll, rollData.actor);
+      await subBuffRoll.evaluate();
+      if (game.dice3d) await game.dice3d.showForRoll(subBuffRoll, game.user, true);
+    }
+
     const isPoisoned = (this.actor.system.badStatus == "POISON" && systemData.attackType != "none");
     const damageRoll = new Roll(isPoisoned ? "(" + systemData.formula + ") * " + 0.5 : systemData.formula, rollData.actor);
     await damageRoll.evaluate();
@@ -752,11 +764,51 @@ export class SMTXItem extends Item {
     const baseDamage = Math.floor(damageRoll.total);
     const diceHtml = await damageRoll.render();
 
+
+    // Function to process the roll and populate buffArray
+    function processRoll(roll) {
+      const buffArray = [0, 0, 0, 0];
+
+      // Extract all dice results from roll.dice
+      const rolledDice = roll.dice.flatMap(die => die.results.map(result => result.result));
+
+      // Populate buffArray with up to 4 dice results
+      rolledDice.slice(0, 4).forEach((value, index) => {
+        buffArray[index] = value;
+      });
+
+      // Add static modifier to the first index
+      buffArray[0] += roll.total - buffArray.reduce((total, num) => total + num, 0);
+
+      return buffArray;
+    }
+
+    const buffArray = processRoll(hasBuffSubRoll ? subBuffRoll : damageRoll);
+
+    // For display, you might want to show the subBuffRoll result
+    const subRollDisplay = hasBuffSubRoll ? await subBuffRoll.render() : "";
+
+    // Decide whether to show buff buttons based on buffs flags or the presence of a sub roll.
+    const showBuffButtons = hasBuffs || hasBuffSubRoll;
+
+    const activeBuffs = Object.entries(systemData.buffs)
+      .filter(([key, value]) => value === true) // Filter for `true` values
+      .map(([key]) => key) // Extract the keys
+      .join(", "); // Join keys with a comma and space
+
+    // Then in your chat message, include the results and buttons:
+    const buffContent = `<p>Applies to: ${activeBuffs}</p> ${subRollDisplay} ${showBuffButtons ? `
+      <div class="flexrow buff-button-container" data-apply-buffs-to='${JSON.stringify(systemData.buffs)}' data-buffs='${JSON.stringify(buffArray)}'>
+        <button class='apply-buffs-friendly'>Apply to PCs</button>
+        <button class='apply-buffs-hostile'>Apply to Hostiles</button>
+      </div>` : ""}`;
+
+
+
     // --- 5. Compute Damage per Target (Dodge Only) ---
-    // Filter out targets with a multiplier of 0 and those already dead.
-    const damageResults = finalEffects
+    const damageResults = (await Promise.all(finalEffects
       .filter(target => target.finalEffect !== 0)
-      .map(target => {
+      .map(async target => {
         const token = canvas.tokens.get(target.tokenId);
         const tokenName = token ? token.document.name : target.tokenId;
         // Calculate damage based solely on the dodge multiplier.
@@ -767,7 +819,7 @@ export class SMTXItem extends Item {
           : "normal";
         const badStatus = token && token.actor ? token.actor.system.badStatus : "NONE";
 
-        // Determine the basic affinity multiplier from the target's overall affinity.
+        // Determine the basic affinity multiplier.
         let affinityMultiplier = 1;
         switch (affinityStrength.toLowerCase()) {
           case "weak":
@@ -790,12 +842,12 @@ export class SMTXItem extends Item {
         // --- Compute Magic Multiplier ---
         let magicMultiplier = 1;
         const magicX = !["strike", "gun", "almighty"].includes(systemData.affinity.toLowerCase());
-        const magicTC = ["fire", "ice", "elec", "force"].includes(systemData.affinity.toLowerCase())
+        const magicTC = ["fire", "ice", "elec", "force"].includes(systemData.affinity.toLowerCase());
         if (game.settings.get("smt-200x", "showTCheaders") ? magicTC : magicX) {
           const magicAffinity = token && token.actor && token.actor.system.affinityFinal && token.actor.system.affinityFinal.magic
             ? token.actor.system.affinityFinal.magic
             : "normal";
-          switch (magicAffinity) {
+          switch (magicAffinity.toLowerCase()) {
             case "weak":
               magicMultiplier = 2;
               break;
@@ -821,7 +873,7 @@ export class SMTXItem extends Item {
           if (token.actor.system.affinityBSFinal[systemData.appliesBadStatus]) {
             bsAffinityStr = token.actor.system.affinityBSFinal[systemData.appliesBadStatus];
           }
-          switch (bsAffinityStr) {
+          switch (bsAffinityStr.toLowerCase()) {
             case "weak":
               bsAffinityMultiplier = 2;
               break;
@@ -836,26 +888,23 @@ export class SMTXItem extends Item {
             default:
               bsAffinityMultiplier = 1;
           }
-        }
-
-        if (token && token.actor && token.actor.system.affinityBSFinal) {
           if (token.actor.system.affinityBSFinal.BS) {
             bsAffinityStr = token.actor.system.affinityBSFinal.BS;
-          }
-          switch (bsAffinityStr) {
-            case "weak":
-              bsAffinityMultiplier *= 2;
-              break;
-            case "resist":
-              bsAffinityMultiplier *= 0.5;
-              break;
-            case "null":
-            case "repel":
-            case "drain":
-              bsAffinityMultiplier *= 0;
-              break;
-            default:
-              bsAffinityMultiplier *= 1;
+            switch (bsAffinityStr.toLowerCase()) {
+              case "weak":
+                bsAffinityMultiplier *= 2;
+                break;
+              case "resist":
+                bsAffinityMultiplier *= 0.5;
+                break;
+              case "null":
+              case "repel":
+              case "drain":
+                bsAffinityMultiplier *= 0;
+                break;
+              default:
+                bsAffinityMultiplier *= 1;
+            }
           }
         }
 
@@ -863,15 +912,19 @@ export class SMTXItem extends Item {
         const finalDamage = effectiveDamage * affinityMultiplier * magicMultiplier;
 
         // --- Compute Ailment Chance ---
-        // Only compute if the item applies a bad status.
         let ailmentChance = 0;
+        let ailmentRollResult = null;
         if (systemData.appliesBadStatus && systemData.badStatusChance) {
-          // Incorporate both the basic affinity and the BS affinity multipliers.
           let rawChance = systemData.badStatusChance * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect;
           if (rawChance < 0) rawChance = 0;
           if (rawChance < 5) rawChance = 5;
           if (rawChance > 95) rawChance = 95;
           ailmentChance = rawChance;
+
+          // Roll a d100 asynchronously.
+          let rollForAilment = new Roll("1d100");
+          await rollForAilment.evaluate({ async: true });
+          ailmentRollResult = rollForAilment.total;
         }
 
         return {
@@ -886,29 +939,30 @@ export class SMTXItem extends Item {
           bsAffinityMultiplier,
           finalDamage,
           ailmentChance,
+          ailmentRoll: ailmentRollResult,
           bsAffinity: bsAffinityStr
         };
-      })
-      .filter(result => result.badStatus.toUpperCase() !== "DEAD");
+      }))).filter(result => result.badStatus.toUpperCase() !== "DEAD");
 
     // --- 6. Log the Damage Roll Results ---
-    let logMessage = `${diceHtml}`;
+    let logMessage = `${diceHtml} ${buffContent}`;
     damageResults.forEach(result => {
-      logMessage += `<div class="flewrow" style="margin: 10px 0px">
-      <strong>${result.tokenName}:</strong>
-      <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+      logMessage += `<div class="flewrow target-row" data-token-id="${result.tokenId}" style="margin: 10px 0px">
+    <strong>${result.tokenName}:</strong>
+    <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
         ? "SMT_X.CharAffinity_TC."
         : "SMT_X.CharAffinity.") + result.affinityStrength)})</span>
-      <span>${result.badStatus !== "NONE"
+    <span>${result.badStatus !== "NONE"
           ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
             ? "SMT_X.AffinityBS_TC."
             : "SMT_X.AffinityBS.") + result.badStatus)
           : ""}</span>
-      <br><strong>Inc. Dmg:</strong> ${result.finalDamage}<br>
-      ${systemData.appliesBadStatus !== "NONE"
-          ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity})</span>`
+    <br><strong>Inc. Dmg:</strong> ${result.finalDamage} (Base: ${result.effectiveDamage})<br>
+    ${systemData.appliesBadStatus !== "NONE"
+          ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity}) - d100: ${result.ailmentRoll}</span>
+        <button class="apply-ailment-btn" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
           : ""}
-    </div><hr>`;
+  </div><hr>`;
     });
 
     const speaker = ChatMessage.getSpeaker({ actor: item.actor });
@@ -1280,57 +1334,22 @@ Hooks.on('renderChatMessage', (message, html, data) => {
 
 
 
-  // Find the power-roll-card element
-  const powerRollCard = html.find('.power-roll-card');
-  if (!powerRollCard.length) return; // Exit if no power-roll-card is found
+  html.find('.apply-ailment-btn').on('click', function (event) {
+    event.preventDefault();
+    const status = $(this).data("status");
+    const tokenId = $(this).closest(".target-row").data("token-id");
+    const token = canvas.tokens.get(tokenId);
 
-  // Extract data from the power-roll-card's attributes
-  const regularDamage = parseFloat(powerRollCard.data('regular-damage'));
-  const criticalDamage = parseFloat(powerRollCard.data('critical-damage'));
-  const affinity = powerRollCard.data('affinity');
-  const ignoreDefense = powerRollCard.data('ignore-defense');
-  const halfDefense = powerRollCard.data('half-defense');
-  const pierce = powerRollCard.data('pierce');
-  const affectsMP = powerRollCard.data('affects-mp');
-  const buffsArray = powerRollCard.data('buffs');
-  const applyBuffsTo = powerRollCard.data('apply-buffs-to');
+    if (token && token.actor)
+      token.actor.applyBS(status);
+  });
 
-  // Define the function to apply damage
-  const applyDamage = function (amount, mult = 1, crit = false, heals = false) {
-    const tokens = canvas.tokens.controlled;
-    if (!tokens.length) {
-      ui.notifications.warn("No tokens selected.");
-      return;
-    }
 
-    tokens.forEach(token => {
-      const actor = token.actor;
-      if (!actor) return;
-      if (heals)
-        actor.applyHeal(amount, affectsMP);
-      else
-        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsMP);
-    });
-  };
-
-  // Define the function to apply buffs (selected tokens)
-  // Old individual-actor buff code
-  /*const applyBuffs = function (buffsArray, applyBuffsTo) {
-    const tokens = canvas.tokens.controlled;
-    if (!tokens.length) {
-      ui.notifications.warn("No tokens selected.");
-      return;
-    }
-  
-    tokens.forEach(token => {
-      const actor = token.actor;
-      if (!actor) return;
-      actor.applyBuffs(buffsArray, applyBuffsTo);
-    });
-  };*/
 
   // Define the function to apply buffs
   const applyBuffs = async function (buffsArray, applyBuffsTo, friendly = true) {
+    console.log(buffsArray)
+    console.log(applyBuffsTo)
     if (!buffsArray || !applyBuffsTo) return;
 
     const sideAffected = friendly ? "friendlyEffects" : "hostileEffects"
@@ -1415,6 +1434,56 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     }
   };
 
+
+
+
+  html.find('.apply-buffs-friendly').click(function () {
+    const container = $(this).closest(".buff-button-container");
+    const buffs = container.data("buffs");
+    const applyBuffsTo = container.data("apply-buffs-to");
+    applyBuffs(buffs, applyBuffsTo);
+  });
+
+  html.find('.apply-buffs-hostile').click(function () {
+    const container = $(this).closest(".buff-button-container");
+    const buffs = container.data("buffs");
+    const applyBuffsTo = container.data("apply-buffs-to");
+    applyBuffs(buffs, applyBuffsTo, false);
+  });
+
+
+
+  // Find the power-roll-card element
+  const powerRollCard = html.find('.power-roll-card');
+  if (!powerRollCard.length) return; // Exit if no power-roll-card is found
+
+  // Extract data from the power-roll-card's attributes
+  const regularDamage = parseFloat(powerRollCard.data('regular-damage'));
+  const criticalDamage = parseFloat(powerRollCard.data('critical-damage'));
+  const affinity = powerRollCard.data('affinity');
+  const ignoreDefense = powerRollCard.data('ignore-defense');
+  const halfDefense = powerRollCard.data('half-defense');
+  const pierce = powerRollCard.data('pierce');
+  const affectsMP = powerRollCard.data('affects-mp');
+
+  // Define the function to apply damage
+  const applyDamage = function (amount, mult = 1, crit = false, heals = false) {
+    const tokens = canvas.tokens.controlled;
+    if (!tokens.length) {
+      ui.notifications.warn("No tokens selected.");
+      return;
+    }
+
+    tokens.forEach(token => {
+      const actor = token.actor;
+      if (!actor) return;
+      if (heals)
+        actor.applyHeal(amount, affectsMP);
+      else
+        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsMP);
+    });
+  };
+
   // Set up button click handlers
   html.find('.apply-full-damage').click(() => applyDamage(regularDamage));
   html.find('.apply-half-damage').click(() => applyDamage(regularDamage, 0.5));
@@ -1425,9 +1494,6 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   html.find('.apply-half-crit-damage').click(() => applyDamage(criticalDamage, 0.5, true));
   html.find('.apply-double-crit-damage').click(() => applyDamage(criticalDamage, 2, true));
   html.find('.apply-full-crit-healing').click(() => applyDamage(criticalDamage, 1, false, true));
-
-  html.find('.apply-buffs-friendly').click(() => applyBuffs(buffsArray, applyBuffsTo));
-  html.find('.apply-buffs-hostile').click(() => applyBuffs(buffsArray, applyBuffsTo, false));
 });
 
 

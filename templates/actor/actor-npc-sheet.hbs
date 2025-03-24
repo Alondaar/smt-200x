@@ -243,39 +243,9 @@
 
     {{!-- Active Effects Tab --}}
     <div class="tab effects flexcol" data-group="primary" data-tab="effects">
-      {{> "systems/smt-200x/templates/actor/parts/actor-buffs.hbs"}}
-
-      <hr>
-
       <section class="main">
         {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
       </section>
-      <hr>
-      <section class="main">
-        <div class="flexcol">
-          <label for="system.phydefFormula" class="resource-label">Physical Defense Formula</label>
-          <input style="font-size: 10pt; font-style: italic;"
-            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.vt.value + @system.attributes.level)/2)"
-            disabled />
-          <input type="text" name="system.phydefFormula" value="{{system.phydefFormula}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.magdefFormula" class="resource-label">Magical Defense Formula</label>
-          <input style="font-size: 10pt; font-style: italic;"
-            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.mg.value + @system.attributes.level)/2)"
-            disabled />
-          <input type="text" name="system.magdefFormula" value="{{system.magdefFormula}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.initFormula" class="resource-label">Initiative Formula</label>
-          <input style="font-size: 10pt; font-style: italic;" value="Tokyo Conception: @system.stats.ag.value"
-            disabled />
-          <input type="text" name="system.initFormula" value="{{system.initFormula}}" />
-        </div>
-      </section>
-
       <hr>
 
       <section>
@@ -345,20 +315,6 @@
           </div>
 
           <div class="flexcol">
-            <label class="resource-label">Set TC Formulas</label>
-            <button class="set-tc-formulas" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              TC Formulas</button>
-          </div>
-
-          <div class="flexcol">
-            <label class="resource-label">Set X Demon Formulas</label>
-            <button class="set-x-demon" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              X Demon Formulas</button>
-          </div>
-
-          <div class="flexcol">
             <label for="system.allowFate" class="resource-label">Show Spend Fate Prompt</label>
             <input type="checkbox" name="system.allowFate" {{#if system.allowFate}}checked{{/if}} />
           </div>
@@ -375,31 +331,10 @@
         </div>
       </section>
 
-      <hr>
 
+      <br><br>
       <section class="main">
-        <div class="flexrow">
-          {{#each system.affinity as |aff key|}}
-          <div class="flexcol">
-            <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.affinities key)}}</label>
-            <select name="system.affinity.{{key}}">
-              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
-            </select>
-          </div>
-          {{/each}}
-        </div>
-        <div class="flexrow">
-          {{#each system.affinityBS as |aff key|}}
-          <div class="flexcol">
-            <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.badStatusList key)}}</label>
-            <select name="system.affinityBS.{{key}}">
-              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
-            </select>
-          </div>
-          {{/each}}
-        </div>
+        {{> "systems/smt-200x/templates/part-affinity-bs-selectors.hbs"}}
       </section>
     </div>
   </section>

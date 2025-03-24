@@ -68,6 +68,21 @@ Hooks.once('init', function () {
 
 
 
+  // Extend the built-in status effects with your custom conditions.
+  /*CONFIG.statusEffects = CONFIG.statusEffects.concat([
+    {
+      id: "DEAD",
+      img: "icons/svg/skull.svg",
+      label: "Dead"
+    },
+    {
+      id: "POISON",
+      img: "icons/svg/acid.svg",
+      label: "Poisoned"
+    },
+  ]);*/
+
+
 
   game.settings.register("smt-200x", "showTCheaders", {
     name: "Use Tokyo Conception Stuff",
@@ -190,6 +205,76 @@ Hooks.once('init', function () {
     config: true,
     type: Boolean,
     default: false
+  });
+
+  game.settings.register("smt-200x", "pierceResist", {
+    name: "Pierce treats Resist/Strong as:",
+    hint: "Tells the game how an attack with Pierce enabled treats certain Affinities.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      normal: "Normal",
+      weak: "Weak",
+      resist: "Resist",
+      null: "Null",
+      drain: "Drain",
+      repel: "Repel"
+    },
+    default: "normal"
+  });
+
+  game.settings.register("smt-200x", "pierceNull", {
+    name: "Pierce treats Null as:",
+    hint: "Tells the game how an attack with Pierce enabled treats certain Affinities.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      normal: "Normal",
+      weak: "Weak",
+      resist: "Resist",
+      null: "Null",
+      drain: "Drain",
+      repel: "Repel"
+    },
+    default: "resist"
+  });
+
+  game.settings.register("smt-200x", "pierceDrain", {
+    name: "Pierce treats Drain as:",
+    hint: "Tells the game how an attack with Pierce enabled treats certain Affinities.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      none: "None",
+      normal: "Normal",
+      weak: "Weak",
+      resist: "Resist",
+      null: "Null",
+      drain: "Drain",
+      repel: "Repel"
+    },
+    default: "drain"
+  });
+
+  game.settings.register("smt-200x", "pierceRepel", {
+    name: "Pierce treats Repel as:",
+    hint: "Tells the game how an attack with Pierce enabled treats certain Affinities.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      none: "None",
+      normal: "Normal",
+      weak: "Weak",
+      resist: "Resist",
+      null: "Null",
+      drain: "Drain",
+      repel: "Repel"
+    },
+    default: "repel"
   });
 
   game.settings.register("smt-200x", "showFloatingDamage", {

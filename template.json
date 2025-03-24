@@ -29,7 +29,10 @@
           "exp": {
             "tierOne": 0,
             "tierTwo": 0,
-            "tierThree": 0
+            "tierThree": 0,
+            "activeOne": true,
+            "activeTwo": false,
+            "activeThree": false
           }
         },
         "stats": {

@@ -74,6 +74,21 @@ export class SMTXActor extends Actor {
     this._calculateResources(systemData);
     this._clampValues(systemData);
 
+    this.toggleStatusEffect("curse", { "active": systemData.isCursed });
+    this.toggleStatusEffect("dead", { "active": systemData.badStatus == "DEAD", "overlay": systemData.badStatus == "DEAD" });
+    this.toggleStatusEffect("paralysis", { "active": systemData.badStatus == "STONE" });
+    this.toggleStatusEffect("fly", { "active": systemData.badStatus == "FLY" });
+    this.toggleStatusEffect("stun", { "active": systemData.badStatus == "PARALYZE" });
+    this.toggleStatusEffect("blind", { "active": systemData.badStatus == "CHARM" });
+    this.toggleStatusEffect("poison", { "active": systemData.badStatus == "POISON" });
+    this.toggleStatusEffect("silence", { "active": systemData.badStatus == "CLOSE" });
+    this.toggleStatusEffect("restrain", { "active": systemData.badStatus == "BIND" });
+    this.toggleStatusEffect("frozen", { "active": systemData.badStatus == "FREEZE" });
+    this.toggleStatusEffect("sleep", { "active": systemData.badStatus == "SLEEP" });
+    this.toggleStatusEffect("fear", { "active": systemData.badStatus == "PANIC" });
+    this.toggleStatusEffect("shock", { "active": systemData.badStatus == "SHOCK" });
+    this.toggleStatusEffect("deaf", { "active": systemData.badStatus == "HAPPY" });
+
     // Notify all items after final actor data is set
     this.items.forEach(item => {
       if (item.prepareDerivedData) {
@@ -379,8 +394,6 @@ export class SMTXActor extends Actor {
 
 
   async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
-    console.warn("Attempting to apply damage...");
-
     // Save the actor's original HP
     const oldHP = this.system.hp.value;
 
@@ -536,7 +549,6 @@ export class SMTXActor extends Actor {
     if (defenseBonus !== 0) {
       chatContent += `<br><em>Additional Defense Bonus: ${defenseBonus}</em>`;
     }
-    console.log(this);
     // Include an Undo button if any damage was applied.
     if (damageApplied > 0) {
       chatContent += `<br><button class="undo-damage" data-actor-id="${this.id}" data-token-id="${this.token.id}" data-damage="${damageApplied}" data-old-hp="${currentHP}" style="margin-top:5px;">Undo</button>`;
@@ -582,7 +594,7 @@ export class SMTXActor extends Actor {
 
 
   applyBS(status) {
-    priority = {
+    const priority = {
       "DEAD": 0,
       "STONE": 1,
       "FLY": 2,
@@ -599,7 +611,7 @@ export class SMTXActor extends Actor {
       "NONE": 999
     };
 
-    const currentPriorityBS = priority[this.system.badSttus];
+    const currentPriorityBS = priority[this.system.badStatus];
     const incomingPriorityBS = priority[status];
 
     if (incomingPriorityBS < currentPriorityBS)

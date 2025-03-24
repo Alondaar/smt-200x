@@ -1,0 +1,41 @@
+<h3>Affinity Selectors</h3>
+<div class="grid grid-8col">
+  {{#each system.affinity as |aff key|}}
+  <div class="flexcol">
+    {{#if (showTC)}}
+    <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
+      (lookup @root.config.affinities_TC key)}}</label>
+    <select name="system.affinity.{{key}}">
+      {{selectOptions @root.config.charAffinity_TC selected=aff localize=true}}
+    </select>
+    {{else}}
+    <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
+      (lookup @root.config.affinities key)}}</label>
+    <select name="system.affinity.{{key}}">
+      {{selectOptions @root.config.charAffinity selected=aff localize=true}}
+    </select>
+    {{/if}}
+  </div>
+  {{/each}}
+</div>
+
+<h3>Ailment Selectors</h3>
+<div class="grid grid-8col">
+  {{#each system.affinityBS as |aff key|}}
+  <div class="flexcol">
+    {{#if (showTC)}}
+    <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
+      (lookup @root.config.badStatusList_TC key)}}</label>
+    <select name="system.affinityBS.{{key}}">
+      {{selectOptions @root.config.charAffinity_TC selected=aff localize=true}}
+    </select>
+    {{else}}
+    <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
+      (lookup @root.config.badStatusList key)}}</label>
+    <select name="system.affinityBS.{{key}}">
+      {{selectOptions @root.config.charAffinity selected=aff localize=true}}
+    </select>
+    {{/if}}
+  </div>
+  {{/each}}
+</div>

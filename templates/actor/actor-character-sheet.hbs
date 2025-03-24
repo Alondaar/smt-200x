@@ -331,36 +331,9 @@
 
     {{!-- Active Effects Tab --}}
     <div class="tab effects flexcol" data-group="primary" data-tab="effects">
-      <!-- {{> "systems/smt-200x/templates/actor/parts/actor-buffs.hbs"}} <hr> -->
-
       <section class="main">
         {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
       </section>
-      <hr>
-      <!-- <section class="main">
-        <div class="flexcol">
-          <label for="system.phydefFormula" class="resource-label">Physical Defense Formula</label>
-          <input style="font-size: 10pt; font-style: italic;"
-            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.vt.value + @system.attributes.level)/2)"
-            disabled />
-          <input type="text" name="system.phydefFormula" value="{{system.phydefFormula}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.magdefFormula" class="resource-label">Magical Defense Formula</label>
-          <input style="font-size: 10pt; font-style: italic;"
-            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.mg.value + @system.attributes.level)/2)"
-            disabled />
-          <input type="text" name="system.magdefFormula" value="{{system.magdefFormula}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.initFormula" class="resource-label">Initiative Formula</label>
-          <input style="font-size: 10pt; font-style: italic;" value="Tokyo Conception: @system.stats.ag.value"
-            disabled />
-          <input type="text" name="system.initFormula" value="{{system.initFormula}}" />
-        </div>
-      </section> -->
 
       <hr>
 
@@ -398,72 +371,12 @@
             <label for="system.powerDice.item" class="resource-label">Item Power Dice</label>
             <input type="text" name="system.powerDice.item" value="{{system.powerDice.item}}" data-dtype="Number" />
           </div>
-
-          <!-- <div class="flexcol">
-            <label class="resource-label">Set TC formulas</label>
-            <button class="set-tc-formulas" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              TC Formulas</button>
-          </div>
-
-          <div class="flexcol">
-            <label class="resource-label">Set Base X Human</label>
-            <button class="set-x-human" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              X Human</button>
-          </div>
-
-          <div class="flexcol">
-            <label class="resource-label">Set Base X Demon</label>
-            <button class="set-x-demon" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              X Demon</button>
-          </div> -->
       </section>
 
 
       <br><br>
       <section class="main">
-        <h2>Base Affinity Settings</h2>
-        <div class="grid grid-8col">
-          {{#each system.affinity as |aff key|}}
-          <div class="flexcol">
-            {{#if (showTC)}}
-            <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.affinities_TC key)}}</label>
-            <select name="system.affinity.{{key}}">
-              {{selectOptions @root.config.charAffinity_TC selected=aff localize=true}}
-            </select>
-            {{else}}
-            <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.affinities key)}}</label>
-            <select name="system.affinity.{{key}}">
-              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
-            </select>
-            {{/if}}
-          </div>
-          {{/each}}
-        </div>
-        <h2>Base Ailment Settings</h2>
-        <div class="grid grid-8col">
-          {{#each system.affinityBS as |aff key|}}
-          <div class="flexcol">
-            {{#if (showTC)}}
-            <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.badStatusList_TC key)}}</label>
-            <select name="system.affinityBS.{{key}}">
-              {{selectOptions @root.config.charAffinity_TC selected=aff localize=true}}
-            </select>
-            {{else}}
-            <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.badStatusList key)}}</label>
-            <select name="system.affinityBS.{{key}}">
-              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
-            </select>
-            {{/if}}
-          </div>
-          {{/each}}
-        </div>
+        {{> "systems/smt-200x/templates/part-affinity-bs-selectors.hbs"}}
       </section>
     </div>
   </section>
