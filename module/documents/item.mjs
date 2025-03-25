@@ -394,7 +394,7 @@ export class SMTXItem extends Item {
                       data-split-index="${i}" 
                       data-item-id="${this.id}" 
                       data-actor-id="${this.actor.id}"
-                      data-token-id="${this.actor.token.id}">
+                      data-token-id="${this.actor.token ? this.actor.token.id : null}">
                 Effect ${i + 1}
               </button>`;
           }).join('') +
@@ -1452,9 +1452,6 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     }
 
     await game.settings.set("smt-200x", sideAffected, effects);
-
-    // Emit a socket event so other clients update their widget
-    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
 
     if (game.friendlyEffectsWidget && friendly) {
       game.friendlyEffectsWidget._updateTokens(effects);

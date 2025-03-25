@@ -139,7 +139,7 @@ Hooks.once('init', function () {
   });
 
   game.settings.register("smt-200x", "magDefDemon", {
-    name: "Physical Defense Formula (Demon)",
+    name: "Magical Defense Formula (Demon)",
     hint: "The default magical defense formula for actors.",
     scope: "world",
     config: true,
@@ -148,7 +148,7 @@ Hooks.once('init', function () {
   });
 
   game.settings.register("smt-200x", "magDefHuman", {
-    name: "Physical Defense Formula (Human)",
+    name: "Magical Defense Formula (Human)",
     hint: "The default physical defense formula for humans.",
     scope: "world",
     config: true,
@@ -745,9 +745,6 @@ class BuffEffectsWidget extends Application {
 
     // Re-render locally
     this.render();
-
-    // Emit a socket event so other clients update their widget
-    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
   }
 
 
@@ -776,9 +773,6 @@ class BuffEffectsWidget extends Application {
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
     this.render();
-
-    // Emit a socket event so other clients update their widget
-    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
   }
 
 
@@ -807,9 +801,6 @@ class BuffEffectsWidget extends Application {
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
     this.render();
-
-    // Emit a socket event so other clients update their widget
-    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
   }
 
 
@@ -836,6 +827,9 @@ class BuffEffectsWidget extends Application {
       updates["system.debuffs.maka"] = effects.makunda.amount;
       updates["system.debuffs.raku"] = effects.rakunda.amount;
       updates["system.debuffs.suku"] = effects.sukunda.amount;
+
+      // Emit a socket event so other clients update their widget
+      game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
 
       await token.actor.update(updates);
     }
@@ -865,6 +859,9 @@ class BuffEffectsWidget extends Application {
     updates["system.debuffs.maka"] = effects.makunda.amount;
     updates["system.debuffs.raku"] = effects.rakunda.amount;
     updates["system.debuffs.suku"] = effects.sukunda.amount;
+
+    // Emit a socket event so other clients update their widget
+    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
 
     await token.actor.update(updates);
   }

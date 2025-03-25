@@ -78,20 +78,26 @@ export class SMTXActor extends Actor {
     this._calculateResources(systemData);
     this._clampValues(systemData);
 
-    this.toggleStatusEffect("curse", { "active": systemData.isCursed });
-    this.toggleStatusEffect("dead", { "active": systemData.badStatus == "DEAD", "overlay": systemData.badStatus == "DEAD" });
-    this.toggleStatusEffect("paralysis", { "active": systemData.badStatus == "STONE" });
-    this.toggleStatusEffect("fly", { "active": systemData.badStatus == "FLY" });
-    this.toggleStatusEffect("stun", { "active": systemData.badStatus == "PARALYZE" });
-    this.toggleStatusEffect("blind", { "active": systemData.badStatus == "CHARM" });
-    this.toggleStatusEffect("poison", { "active": systemData.badStatus == "POISON" });
-    this.toggleStatusEffect("silence", { "active": systemData.badStatus == "CLOSE" });
-    this.toggleStatusEffect("restrain", { "active": systemData.badStatus == "BIND" });
-    this.toggleStatusEffect("frozen", { "active": systemData.badStatus == "FREEZE" });
-    this.toggleStatusEffect("sleep", { "active": systemData.badStatus == "SLEEP" });
-    this.toggleStatusEffect("fear", { "active": systemData.badStatus == "PANIC" });
-    this.toggleStatusEffect("shock", { "active": systemData.badStatus == "SHOCK" });
-    this.toggleStatusEffect("deaf", { "active": systemData.badStatus == "HAPPY" });
+
+    if (game.user.isGM || (game.user.id === this.isOwner)) {
+      const statusMapping = {
+        "DEAD": "dead",
+        "STONE": "paralysis",
+        "FLY": "fly",
+        "PARALYZE": "stun",
+        "CHARM": "blind",
+        "POISON": "poison",
+        "CLOSE": "silence",
+        "BIND": "restrain",
+        "FREEZE": "frozen",
+        "SLEEP": "sleep",
+        "PANIC": "fear",
+        "SHOCK": "shock",
+        "HAPPY": "deaf"
+      };
+
+      this.toggleStatusEffect("curse", { active: this.system.isCursed });
+    }
 
 
     // Notify all items after final actor data is set
