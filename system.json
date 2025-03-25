@@ -20,7 +20,7 @@
       "thumbnail": "systems/smt-200x/assets/anvil-impact.png"
     }
   ],
-  "version": "0.855",
+  "version": "0.870",
   "compatibility": {
     "minimum": 12,
     "verified": "12.331"
