@@ -393,7 +393,8 @@ export class SMTXItem extends Item {
             return `<button class="apply-effect smtx-roll-button ${isDisabled ? "smtx-roll-button-disabled" : ""}" 
                       data-split-index="${i}" 
                       data-item-id="${this.id}" 
-                      data-actor-id="${this.actor.id}">
+                      data-actor-id="${this.actor.id}"
+                      data-token-id="${this.actor.token.id}">
                 Effect ${i + 1}
               </button>`;
           }).join('') +
@@ -401,6 +402,8 @@ export class SMTXItem extends Item {
         targetHtml += effectButtonsHtml;
       }
     }
+
+    console.log(this);
 
     ChatMessage.create({
       speaker: speaker,
@@ -760,29 +763,24 @@ export class SMTXItem extends Item {
       if (game.dice3d) await game.dice3d.showForRoll(subBuffRoll, game.user, true);
     }
 
-    const isPoisoned = (this.actor.system.badStatus == "POISON" && systemData.attackType != "none");
+    const isPoisoned = (this.actor.system.badStatus === "POISON" && systemData.attackType !== "none");
     const damageRoll = new Roll(isPoisoned ? "(" + systemData.formula + ") * " + 0.5 : systemData.formula, rollData.actor);
     await damageRoll.evaluate();
     if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
     const baseDamage = Math.floor(damageRoll.total);
     const diceHtml = await damageRoll.render();
 
-
     // Function to process the roll and populate buffArray
     function processRoll(roll) {
       const buffArray = [0, 0, 0, 0];
-
       // Extract all dice results from roll.dice
       const rolledDice = roll.dice.flatMap(die => die.results.map(result => result.result));
-
       // Populate buffArray with up to 4 dice results
       rolledDice.slice(0, 4).forEach((value, index) => {
         buffArray[index] = value;
       });
-
       // Add static modifier to the first index
       buffArray[0] += roll.total - buffArray.reduce((total, num) => total + num, 0);
-
       return buffArray;
     }
 
@@ -790,23 +788,19 @@ export class SMTXItem extends Item {
 
     // For display, you might want to show the subBuffRoll result
     const subRollDisplay = hasBuffSubRoll ? await subBuffRoll.render() : "";
-
     // Decide whether to show buff buttons based on buffs flags or the presence of a sub roll.
     const showBuffButtons = hasBuffs || hasBuffSubRoll;
 
     const activeBuffs = Object.entries(systemData.buffs)
-      .filter(([key, value]) => value === true) // Filter for `true` values
-      .map(([key]) => key) // Extract the keys
-      .join(", "); // Join keys with a comma and space
+      .filter(([key, value]) => value === true)
+      .map(([key]) => key)
+      .join(", ");
 
-    // Then in your chat message, include the results and buttons:
-    const buffContent = `<p>Applies to: ${activeBuffs}</p> ${subRollDisplay} ${showBuffButtons ? `
-      <div class="flexrow buff-button-container" data-apply-buffs-to='${JSON.stringify(systemData.buffs)}' data-buffs='${JSON.stringify(buffArray)}'>
-        <button class='apply-buffs-friendly smtx-roll-button'>Apply to PCs</button>
-        <button class='apply-buffs-hostile smtx-roll-button'>Apply to Hostiles</button>
-      </div>` : ""}`;
-
-
+    const buffContent = `<p>Applies to: ${activeBuffs}</p> ${subRollDisplay} ${showBuffButtons ?
+      `<div class="flexrow buff-button-container" data-apply-buffs-to='${JSON.stringify(systemData.buffs)}' data-buffs='${JSON.stringify(buffArray)}'>
+      <button class="apply-buffs-friendly smtx-roll-button">Apply to PCs</button>
+      <button class="apply-buffs-hostile smtx-roll-button">Apply to Hostiles</button>
+    </div>` : ""}`;
 
     // --- 5. Compute Damage per Target (Dodge Only) ---
     const damageResults = (await Promise.all(finalEffects
@@ -924,13 +918,10 @@ export class SMTXItem extends Item {
           if (rawChance < 5) rawChance = 5;
           if (rawChance > 95) rawChance = 95;
           ailmentChance = rawChance;
-
-          // Roll a d100 asynchronously.
           let rollForAilment = new Roll("1d100");
-          await rollForAilment.evaluate({ async: true });
+          await rollForAilment.evaluate();
           ailmentRollResult = rollForAilment.total;
         }
-
         return {
           tokenId: target.tokenId,
           tokenName,
@@ -952,22 +943,34 @@ export class SMTXItem extends Item {
     // --- 6. Log the Damage Roll Results ---
     let logMessage = `${diceHtml} ${buffContent}`;
     damageResults.forEach(result => {
-      logMessage += `<div class="flewrow target-row" data-token-id="${result.tokenId}" style="margin: 10px 0px">
-    <strong>${result.tokenName}:</strong>
-    <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+      logMessage += `<div class="flexcol target-row" data-token-id="${result.tokenId}" style="margin: 10px 0px">
+        <div class="flexrow">
+          <strong>${result.tokenName}:</strong>
+          <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
         ? "SMT_X.CharAffinity_TC."
         : "SMT_X.CharAffinity.") + result.affinityStrength)})</span>
-    <span>${result.badStatus !== "NONE"
+          <span>${result.badStatus !== "NONE"
           ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
             ? "SMT_X.AffinityBS_TC."
             : "SMT_X.AffinityBS.") + result.badStatus)
           : ""}</span>
-    <br><strong>Inc. Dmg:</strong> ${result.finalDamage} (Base: ${result.effectiveDamage})<br>
-    ${(systemData.appliesBadStatus !== "NONE" && result.rawBSchance > 0)
+         </div>
+  <div class="flexrow"><span class="flex3"><strong>Inc. Dmg:</strong> ${result.finalDamage}</span>
+    <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
+      data-token-id="${result.tokenId}"
+      data-effective-damage="${result.effectiveDamage}"
+      data-affinity="${systemData.affinity}"
+      data-ignore-defense="${systemData.ingoreDefense}"
+      data-half-defense="${systemData.halfDefense}"
+      data-critical="${baseEffect === 2}"
+      data-affects-mp="${systemData.affectsMP}"
+    >DMG</button>
+    </div>
+  ${(systemData.appliesBadStatus !== "NONE" && result.rawBSchance > 0)
           ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity}) - d100: ${result.ailmentRoll}</span>
-        <button class="apply-ailment-btn smtx-roll-button" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
-          : ""}
-  </div><hr>`;
+      <button class="apply-ailment-btn smtx-roll-button" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
+          : ""}  
+</div><hr>`;
     });
 
     const speaker = ChatMessage.getSpeaker({ actor: item.actor });
@@ -977,20 +980,8 @@ export class SMTXItem extends Item {
       content: logMessage
     });
 
-    // --- 7. Apply the Damage (or Healing) to Each Target ---
-    for (let result of damageResults) {
-      const token = canvas.tokens.get(result.tokenId);
-      if (!token || !token.actor) continue;
-      await token.actor.applyDamage(
-        result.effectiveDamage,
-        1,
-        systemData.affinity,
-        systemData.ingoreDefense,
-        systemData.halfDefense,
-        baseEffect === 2,
-        systemData.affectsMP
-      );
-    }
+    // --- 7. Remove automatic damage application ---
+    // Damage will now be applied when the user clicks the "Apply Damage" button.
   }
 }
 
@@ -1022,10 +1013,16 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     event.preventDefault();
     const itemId = $(event.currentTarget).data('item-id');
     const actorId = $(event.currentTarget).data('actor-id');
+    const tokenId = $(event.currentTarget).data('token-id');
     const actor = game.actors.get(actorId);
+    const token = canvas.tokens.get(tokenId);
     const item = actor ? actor.items.get(itemId) : null;
+    const itemToken = token ? token.actor.items.get(itemId) : null;
 
-    await item.rollEffect(event);
+    if (item)
+      await item.rollEffect(event);
+    else if (itemToken)
+      await itemToken.rollEffect(event);
   });
 
 
@@ -1339,6 +1336,34 @@ Hooks.on('renderChatMessage', (message, html, data) => {
 
 
 
+  $(document).off("click", ".apply-damage-btn").on("click", ".apply-damage-btn", async function (event) {
+    event.preventDefault();
+    const button = $(this);
+    const tokenId = button.data("token-id");
+    const effectiveDamage = Number(button.data("effective-damage"));
+    const affinity = button.data("affinity");
+    const ignoreDefense = button.data("ignore-defense");
+    const halfDefense = button.data("half-defense");
+    const critical = button.data("critical") === "true" || button.data("critical") === true;
+    const affectsMP = button.data("affects-mp");
+
+    const token = canvas.tokens.get(tokenId);
+    if (!token || !token.actor) return;
+    await token.actor.applyDamage(
+      effectiveDamage,
+      1,
+      affinity,
+      ignoreDefense,
+      halfDefense,
+      critical,
+      affectsMP
+    );
+    // Disable the button after applying damage
+    //button.prop("disabled", true).text("Damage Applied");
+  });
+
+
+
   html.find('.apply-ailment-btn').on('click', function (event) {
     event.preventDefault();
     const status = $(this).data("status");
@@ -1427,6 +1452,9 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     }
 
     await game.settings.set("smt-200x", sideAffected, effects);
+
+    // Emit a socket event so other clients update their widget
+    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
 
     if (game.friendlyEffectsWidget && friendly) {
       game.friendlyEffectsWidget._updateTokens(effects);

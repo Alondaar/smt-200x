@@ -34,6 +34,10 @@ export class SMTXActor extends Actor {
   prepareDerivedData() {
     const systemData = this.system;
 
+    ["st", "mg", "vt", "ag", "lk"].forEach(stat => {
+      systemData.stats[stat].value += systemData.stats[stat].temp ?? 0;
+    });
+
     this._calculateBuffEffects(systemData);
     this._clampStats(systemData);
 
@@ -88,6 +92,7 @@ export class SMTXActor extends Actor {
     this.toggleStatusEffect("fear", { "active": systemData.badStatus == "PANIC" });
     this.toggleStatusEffect("shock", { "active": systemData.badStatus == "SHOCK" });
     this.toggleStatusEffect("deaf", { "active": systemData.badStatus == "HAPPY" });
+
 
     // Notify all items after final actor data is set
     this.items.forEach(item => {
@@ -160,6 +165,7 @@ export class SMTXActor extends Actor {
 
     this.items.forEach(item => {
       if (item.type === "armor" && item.system.equipped) {
+
         ["st", "mg", "vt", "ag", "lk"].forEach(stat => {
           systemData.stats[stat].temp += item.system[stat] ?? 0;
         });

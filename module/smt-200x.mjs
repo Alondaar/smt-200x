@@ -66,6 +66,18 @@ Hooks.once('init', function () {
     }
   });
 
+  console.log('SMT 200X | Initializing socket listener for buff widget updates');
+  game.socket.on("system.smt-200x", async (data) => {
+    if (data.action === "updateBuffWidgets") {
+      // Optionally, you could check data.effects if you want to update game settings directly.
+      if (data.mode === "friendly" && game.friendlyEffectsWidget) {
+        game.friendlyEffectsWidget.render();
+      } else if (data.mode === "hostile" && game.hostileEffectsWidget) {
+        game.hostileEffectsWidget.render();
+      }
+    }
+  });
+
 
 
   // Extend the built-in status effects with your custom conditions.
@@ -727,10 +739,15 @@ class BuffEffectsWidget extends Application {
     if (newValue == 0)
       effects[category].count = 0;
 
-    // Save & update
+    // Save & update tokens
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
+
+    // Re-render locally
     this.render();
+
+    // Emit a socket event so other clients update their widget
+    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
   }
 
 
@@ -759,6 +776,9 @@ class BuffEffectsWidget extends Application {
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
     this.render();
+
+    // Emit a socket event so other clients update their widget
+    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
   }
 
 
@@ -787,6 +807,9 @@ class BuffEffectsWidget extends Application {
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
     this.render();
+
+    // Emit a socket event so other clients update their widget
+    game.socket.emit("system.smt-200x", { action: "updateBuffWidgets", mode: this.mode });
   }
 
 

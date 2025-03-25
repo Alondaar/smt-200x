@@ -62,6 +62,7 @@ SMT_X.charAffinity = {
 }
 
 SMT_X.badStatusList = {
+  NONE: "SMT_X.AffinityBS.NONE",
   DEAD: "SMT_X.AffinityBS.DEAD",
   STONE: "SMT_X.AffinityBS.STONE",
   FLY: "SMT_X.AffinityBS.FLY",
@@ -75,7 +76,6 @@ SMT_X.badStatusList = {
   PANIC: "SMT_X.AffinityBS.PANIC",
   SHOCK: "SMT_X.AffinityBS.SHOCK",
   HAPPY: "SMT_X.AffinityBS.HAPPY",
-  NONE: "SMT_X.AffinityBS.NONE",
   BS: "SMT_X.AffinityBS.BS"
 }
 
@@ -112,6 +112,7 @@ SMT_X.charAffinity_TC = {
 }
 
 SMT_X.badStatusList_TC = {
+  NONE: "SMT_X.AffinityBS_TC.NONE",
   DEAD: "SMT_X.AffinityBS_TC.DEAD",
   STONE: "SMT_X.AffinityBS_TC.STONE",
   FLY: "SMT_X.AffinityBS_TC.FLY",
@@ -125,6 +126,5 @@ SMT_X.badStatusList_TC = {
   PANIC: "SMT_X.AffinityBS_TC.PANIC",
   SHOCK: "SMT_X.AffinityBS_TC.SHOCK",
   HAPPY: "SMT_X.AffinityBS_TC.HAPPY",
-  NONE: "SMT_X.AffinityBS_TC.NONE",
   BS: "SMT_X.AffinityBS_TC.BS"
 }
