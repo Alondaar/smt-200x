@@ -165,5 +165,56 @@ export class SMTXItemSheet extends ItemSheet {
           break;
       }
     });
+
+
+
+
+    // Setup the drop zone for effects
+    const dropZone = html.find(".effect-drop-zone");
+    dropZone.on("dragover", (event) => {
+      event.preventDefault();
+      // Set the drop effect to copy so the user knows it’s a valid drop target
+      event.originalEvent.dataTransfer.dropEffect = "copy";
+      dropZone.addClass("dragover");
+    });
+    dropZone.on("dragleave", (event) => {
+      event.preventDefault();
+      dropZone.removeClass("dragover");
+    });
+    dropZone.on("drop", async (event) => {
+      event.preventDefault();
+      dropZone.removeClass("dragover");
+
+      // Get the raw data from the event
+      let rawData = event.originalEvent.dataTransfer.getData("text/plain").trim();
+      let data;
+      try {
+        data = JSON.parse(rawData);
+      } catch (e) {
+        // If parsing fails, assume it's already a plain string.
+        data = rawData;
+      }
+
+      // If the data is an object with a uuid property, extract it.
+      const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
+
+      // Validate the UUID format (should have at least 3 dot-separated parts)
+      if (!uuid || uuid.split(".").length < 3) {
+        ui.notifications.warn("Dropped item does not have a valid UUID.");
+        return;
+      }
+
+      // Load the effect document using Foundry's fromUuid helper.
+      const effectDoc = await fromUuid(uuid);
+      if (!effectDoc) {
+        ui.notifications.warn("Failed to load the effect document.");
+        return;
+      }
+
+      // Update the item with the linked effect UUID.
+      await this.item.update({ "system.inflictedEffect": uuid });
+      ui.notifications.info("Effect linked to this skill.");
+      this.render();
+    });
   }
 }

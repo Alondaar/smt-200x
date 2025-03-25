@@ -138,42 +138,56 @@ export class SMTXItem extends Item {
   async roll() {
     const item = this;
 
+    // Retrieve the linked effect, if any.
+    let effectDisplay = "";
+    if (item.system.inflictedEffect) {
+      // Retrieve the document using the stored UUID.
+      const effectDoc = await fromUuid(item.system.inflictedEffect);
+      if (effectDoc) {
+        // Create a draggable HTML snippet that shows the effect's name.
+        effectDisplay = `<div class="draggable-effect" draggable="true" data-uuid="${item.system.inflictedEffect}" style="border: 1px dashed #888; padding: 5px; margin-bottom: 5px; display:inline-block; cursor:move;">
+        ${effectDoc.name}
+      </div>`;
+      }
+    }
+
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
     const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
-    const label = `
-    <h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
-    let content = (item.system.shortEffect + `<hr>` + item.system.description) ?? ''
+    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
 
+    let content = (item.system.shortEffect + `<hr>` + item.system.description) ?? '';
+
+    // Optionally add extra info based on item type.
     switch (item.type) {
       case 'feature':
         const cost = item.system.cost ?? 'N/A';
         const target = item.system.target ?? 'N/A';
-        const tn = item.system.calcTN ?? 'N/A';
-        const power = item.system.calcPower ?? 'N/A';
         const affinity = item.system.affinity ?? 'N/A';
 
         const featureInfo = `
-          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
-            <span><strong>Cost</strong></span>
-            <span><strong>Target</strong></span>
-            <span><strong>Affinity</strong></span>
-          </div>
-          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
-            <span>${cost}</span>
-            <span>${target}</span>
-            <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
-          </div>
-          <hr>
-        `;
+        <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+          <span><strong>Cost</strong></span>
+          <span><strong>Target</strong></span>
+          <span><strong>Affinity</strong></span>
+        </div>
+        <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+          <span>${cost}</span>
+          <span>${target}</span>
+          <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
+        </div>
+        <hr>
+      `;
 
         content = featureInfo + content;
         break;
-
       default:
         break;
     }
+
+    // Prepend the draggable effect display if present.
+    if (effectDisplay) content = effectDisplay + "<br>" + content;
 
     ChatMessage.create({
       speaker: speaker,

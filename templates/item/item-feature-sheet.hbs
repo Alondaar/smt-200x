@@ -164,6 +164,17 @@
           </select>
           {{/if}}
         </div>
+
+        <div class="flexcol">
+          <label>Inflicted Effect</label>
+          <div class="effect-drop-zone" style="border: 2px dashed #888; padding: 10px; text-align: center;">
+            {{#if system.inflictedEffect}}
+            <p>Linked Effect: {{system.inflictedEffect}}</p>
+            {{else}}
+            <p>Drag an effect here</p>
+            {{/if}}
+          </div>
+        </div>
       </div>
 
       <br><br>

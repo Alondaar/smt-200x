@@ -575,6 +575,55 @@ export class SMTXActorSheet extends ActorSheet {
 
 
 
+
+
+    // Listen for a drop event anywhere on the actor sheet.
+    html.on("drop", async (event) => {
+      event.preventDefault();
+      // Get the raw data from the event.
+      const rawData = event.originalEvent.dataTransfer.getData("text/plain").trim();
+      if (!rawData) return ui.notifications.warn("No effect data found on drop.");
+
+      let data;
+      try {
+        data = JSON.parse(rawData);
+      } catch (err) {
+        data = rawData;
+      }
+      const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
+      if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
+        return ui.notifications.warn("Dropped item is not a valid effect.");
+      }
+
+      // Load the effect document.
+      const effectDoc = await fromUuid(uuid);
+      if (!effectDoc) return ui.notifications.warn("Failed to load the effect document.");
+
+      console.log(effectDoc)
+      // Make sure there's at least one active effect embedded on the item document.
+      if (effectDoc.effects.size < 1) {
+        return ui.notifications.warn("No active effects found on this effect document.");
+      }
+      // Grab the first active effect document.
+      const activeEffect = effectDoc.effects.contents[0];
+      // Duplicate its data (and remove the _id so that a new one is generated).
+      let effectData = foundry.utils.duplicate(activeEffect.toObject());
+      delete effectData._id;
+
+      console.log(effectData);
+
+      await this.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      ui.notifications.info(`Applied effect: ${effectDoc.name}`);
+    });
+
+
+
+
+
+
+
+
+
     // Left-click: Roll initiative
     html.on('click', '.initiative-roll', async (event) => {
       event.preventDefault();

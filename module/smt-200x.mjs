@@ -866,3 +866,52 @@ class BuffEffectsWidget extends Application {
     await token.actor.update(updates);
   }
 }
+
+
+
+
+Hooks.on("dropCanvasToken", async (tokenDocument, event) => {
+  console.log("dropCanvasToken");
+  // Extract the raw data from the drop event.
+  const rawData = event.dataTransfer.getData("text/plain").trim();
+  if (!rawData) return ui.notifications.warn("No effect data found on drop.");
+
+  // Attempt to parse the data as JSON. If it fails, assume it's a plain string.
+  let data;
+  try {
+    data = JSON.parse(rawData);
+  } catch (err) {
+    data = rawData;
+  }
+  // If the data is an object with a uuid property, extract it.
+  const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
+  if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
+    return ui.notifications.warn("Dropped item is not a valid effect.");
+  }
+
+  // Retrieve the effect document using Foundry's fromUuid helper.
+  const effectDoc = await fromUuid(uuid);
+  if (!effectDoc) return ui.notifications.warn("Failed to load the effect document.");
+
+  // Duplicate the active effect data from the effect item.
+  const effectData = duplicate(effectDoc.system.activeEffectData || effectDoc.data.system.activeEffectData);
+  if (!effectData) return ui.notifications.warn("This effect does not contain Active Effect data.");
+
+  // Apply the effect to the token's actor.
+  await tokenDocument.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+  ui.notifications.info(`Applied effect: ${effectDoc.name} to ${tokenDocument.name}`);
+});
+
+
+
+Hooks.on("renderChatMessage", (message, html, data) => {
+  html.find(".draggable-effect").each((i, el) => {
+    el.addEventListener("dragstart", (ev) => {
+      const uuid = ev.currentTarget.dataset.uuid;
+      if (uuid) {
+        // Set the dataTransfer payload as JSON with the uuid.
+        ev.dataTransfer.setData("text/plain", JSON.stringify({ uuid: uuid }));
+      }
+    });
+  });
+});
