@@ -81,7 +81,8 @@
 
       <div class="flexrow grid-span-2">
         <div class="align-center" style="border: 2px groove #eeede0;">
-          <label for="system.meleePower" class="resource-label">Melee</label>
+          <label for="system.meleePower" class="resource-label">
+            {{#if (showTC)}}Physical{{else}}Melee{{/if}}</label>
           <div>
             <h1 class="melee-power-roll clickable">{{system.meleePower}}</h1>
           </div>
@@ -99,7 +100,8 @@
         </div>
 
         <div class="align-center" style="border: 2px groove #eeede0;">
-          <label for="system.spellPower" class="resource-label">Spell</label>
+          <label for="system.spellPower" class="resource-label">
+            {{#if (showTC)}} Magical{{else}}Spell{{/if}}</label>
           <div>
             <h1 class="spell-power-roll clickable">{{system.spellPower}}</h1>
           </div>
@@ -117,42 +119,50 @@
         </div>
 
 
+
         <div class="flexrow" style="flex-basis: 100%;">
           <div class="align-center" style="border: 2px groove #eeede0;">
             <label for="system.init" class="resource-label">Dodge TN</label>
             <div>
-              <h1 class="dodge-roll clickable">{{system.dodgetn}}%</h1>
+              <h1>{{system.dodgetn}}%</h1>
             </div>
           </div>
 
           <div class="align-center" style="border: 2px groove #eeede0;">
             <label for="system.init" class="resource-label">Talk TN</label>
             <div>
-              <h1 class="talk-roll clickable">{{system.talktn}}%</h1>
+              <h1>{{system.talktn}}%</h1>
             </div>
           </div>
 
           <div class="align-center" style="border: 2px groove #eeede0;">
-            <label for="system.init" class="resource-label">Phy Def</label>
+            <label for="system.init" class="resource-label">
+              {{#if (showTC)}}Phy Res{{else}}Phy Def{{/if}}</label>
             <div>
               <h1>{{system.phydef}}</h1>
             </div>
           </div>
 
           <div class="align-center" style="border: 2px groove #eeede0;">
-            <label for="system.init" class="resource-label">Mag Def</label>
+            <label for="system.init" class="resource-label">
+              {{#if (showTC)}}Mag Res{{else}}Mag Def{{/if}}</label>
             <div>
               <h1>{{system.magdef}}</h1>
             </div>
           </div>
         </div>
       </div>
+
       <div class="flexcol grid-span-2">
         <div class='flexrow' style="justify-content: center; align-items: center;">
           <label class="resource-label flex0">Affinity&nbsp;</label>
-          <label for="system.badStatus" class="resource-label align-right">Current BS:&nbsp;</label>
+          <label for="system.badStatus" class="resource-label align-right">Status:&nbsp;</label>
           <select name="system.badStatus">
+            {{#if (showTC)}}
+            {{selectOptions @root.config.badStatusList_TC selected=system.badStatus localize=true}}
+            {{else}}
             {{selectOptions @root.config.badStatusList selected=system.badStatus localize=true}}
+            {{/if}}
           </select>
           <label for="system.isCursed" class="resource-label align-right">!CURSED!&nbsp;</label>
           <input type="checkbox" name="system.isCursed" {{#if system.isCursed}}checked{{/if}} />
@@ -327,37 +337,8 @@
 
     {{!-- Active Effects Tab --}}
     <div class="tab effects flexcol" data-group="primary" data-tab="effects">
-      {{> "systems/smt-200x/templates/actor/parts/actor-buffs.hbs"}}
-
-      <hr>
-
       <section class="main">
         {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
-      </section>
-      <hr>
-      <section class="main">
-        <div class="flexcol">
-          <label for="system.phydefFormula" class="resource-label">Physical Defense Formula</label>
-          <input style="font-size: 10pt; font-style: italic;"
-            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.vt.value + @system.attributes.level)/2)"
-            disabled />
-          <input type="text" name="system.phydefFormula" value="{{system.phydefFormula}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.magdefFormula" class="resource-label">Magical Defense Formula</label>
-          <input style="font-size: 10pt; font-style: italic;"
-            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.mg.value + @system.attributes.level)/2)"
-            disabled />
-          <input type="text" name="system.magdefFormula" value="{{system.magdefFormula}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.initFormula" class="resource-label">Initiative Formula</label>
-          <input style="font-size: 10pt; font-style: italic;" value="Tokyo Conception: @system.stats.ag.value"
-            disabled />
-          <input type="text" name="system.initFormula" value="{{system.initFormula}}" />
-        </div>
       </section>
 
       <hr>
@@ -375,7 +356,15 @@
           </div>
 
           <div class="flexcol">
-            <label class="resource-label">TC Demon Favored Stat</label>
+            <label for="system.human" class="resource-label"
+              title="Uses the 'Human' Phy/Mag Defense Formulas from the settings menu.">Human</label>
+            <input type="checkbox" name="system.human" {{#if system.human}}checked{{/if}} />
+          </div>
+
+          <div class="flexcol">
+            <label class="resource-label"
+              title="Tokyo Conception Demon Favored Stat (marks an asterisk by a stat for randomized level-up stats)">Favored
+              Stat</label>
             <select name="system.favoredStat">
               <option value="none">None</option>
               {{selectOptions @root.config.stats selected=system.favoredStat localize=true}}
@@ -396,54 +385,12 @@
             <label for="system.powerDice.item" class="resource-label">Item Power Dice</label>
             <input type="text" name="system.powerDice.item" value="{{system.powerDice.item}}" data-dtype="Number" />
           </div>
-
-          <div class="flexcol">
-            <label class="resource-label">Set TC formulas</label>
-            <button class="set-tc-formulas" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              TC Formulas</button>
-          </div>
-
-          <div class="flexcol">
-            <label class="resource-label">Set Base X Human</label>
-            <button class="set-x-human" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              X Human</button>
-          </div>
-
-          <div class="flexcol">
-            <label class="resource-label">Set Base X Demon</label>
-            <button class="set-x-demon" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              X Demon</button>
-          </div>
       </section>
 
-      <hr>
 
+      <br><br>
       <section class="main">
-        <div class="flexrow">
-          {{#each system.affinity as |aff key|}}
-          <div class="flexcol">
-            <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.affinities key)}}</label>
-            <select name="system.affinity.{{key}}">
-              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
-            </select>
-          </div>
-          {{/each}}
-        </div>
-        <div class="flexrow">
-          {{#each system.affinityBS as |aff key|}}
-          <div class="flexcol">
-            <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.badStatusList key)}}</label>
-            <select name="system.affinityBS.{{key}}">
-              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
-            </select>
-          </div>
-          {{/each}}
-        </div>
+        {{> "systems/smt-200x/templates/part-affinity-bs-selectors.hbs"}}
       </section>
     </div>
   </section>

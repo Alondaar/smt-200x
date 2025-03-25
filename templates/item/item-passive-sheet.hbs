@@ -26,6 +26,13 @@
     <div class="tab attributes" data-group="primary" data-tab="attributes">
       <label for="system.shortEffect" class="resource-label">Short Effect</label>
       <input type="text" name="system.shortEffect" value="{{system.shortEffect}}" />
+
+      <br><br>
+      <h2><input type="checkbox" name="system.changeAffinity" {{#if system.changeAffinity}}checked{{/if}} />
+        Affinity Change</h2>
+      {{#if system.changeAffinity}}
+      {{> "systems/smt-200x/templates/part-affinity-bs-selectors.hbs"}}
+      {{/if}}
     </div>
 
     {{!-- Effects Tab --}}

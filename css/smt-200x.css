@@ -523,3 +523,36 @@
   background-color: #0056b3;
   /* Darker blue on hover */
 }
+
+.smtx-roll-button {
+  height: 24px;
+  padding: 2px 4px;
+  font-size: 14px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.smtx-buff-button {
+  height: 24px;
+  font-size: 14px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.smtx-roll-button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buff-input {
+  width: 32px !important;
+  /*flex: 0 0 auto;*/
+}
+
+.buff-label {
+  font-weight: bold !important;
+}

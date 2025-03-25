@@ -200,10 +200,10 @@ export class SMTXActorSheet extends ActorSheet {
       const currentMP = this.actor.system.mp.value;
       const currentFate = this.actor.system.fate.value;
 
-      const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true })));
-      const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true })));
-      const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true })));
-      const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true })));
+      const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true }).total));
+      const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true }).total));
+      const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true }).total));
+      const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true }).total));
 
       if (ammoCost > 0) {
         if (item.system.wep == "x") {
@@ -292,7 +292,6 @@ export class SMTXActorSheet extends ActorSheet {
       // Modify the array
       currentArray[index] = value;
 
-      //console.log("Path exists:", foundry.utils.getProperty(this.actor, path));
       this.actor.update({ [arrayPath]: currentArray });
     });
 
@@ -403,7 +402,6 @@ export class SMTXActorSheet extends ActorSheet {
 
 
     html.on('click', '.set-tc-formulas', (ev) => {
-      console.log("hello")
       ev.preventDefault();
       this.actor.update({
         "system.phydefFormula": "floor((@system.stats.vt.value + @system.attributes.level)/2)",
@@ -448,6 +446,7 @@ export class SMTXActorSheet extends ActorSheet {
 
 
 
+    // For NPCs
     html.on('change', '.actionPattern', (ev) => {
       const li = $(ev.currentTarget).parents('.item');
       const item = this.actor.items.get(li.data('itemId'));

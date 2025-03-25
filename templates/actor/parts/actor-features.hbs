@@ -1,13 +1,19 @@
 <ol class='items-list'>
   <li class='item flexrow items-header'>
-    <div class='item-name'>Actions / Skills</div>
+    <div class='item-name flex3'>Actions / Skills</div>
     <div class='item-prop'>Type</div>
     <div class='item-prop'>Cost</div>
     <div class='item-prop'>Target</div>
+    {{#if system.aux.showTCheaders}}
+    <div class='item-prop'>TN</div>
+    <div class='item-prop'>Power</div>
+    <div class='item-prop'>Element</div>
+    {{else}}
     <div class='item-prop'>Wep</div>
     <div class='item-prop'>TN</div>
     <div class='item-prop'>Power</div>
     <div class='item-prop'>Affinity</div>
+    {{/if}}
     <div class='item-controls'>
       <a class='item-control item-create' title='Create item' data-type='feature'>
         <i class='fas fa-plus'></i>
@@ -32,8 +38,10 @@
     <div class='item-prop'>{{item.system.type}}</div>
     <div class='item-control item-prop clickable pay-cost'>{{item.system.cost}}</div>
     <div class='item-prop'>{{item.system.target}}</div>
+    {{#ifEq system.aux.showTCheaders false}}
     <div class='item-prop clickable weapon-rotate'>{{localize (lookup @root.config.weaponChoices item.system.wep)}}
     </div>
+    {{/ifEq}}
     <div class="item-prop clickable roll-tn">
       {{#ifNumber item.system.calcTN}}
       {{item.system.calcTN}}%

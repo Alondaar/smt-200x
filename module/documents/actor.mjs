@@ -5,220 +5,341 @@
 export class SMTXActor extends Actor {
   /** @override */
   prepareData() {
-    // Prepare data for the actor. Calling the super version of this executes
-    // the following, in order: data reset (to clear active effects),
-    // prepareBaseData(), prepareEmbeddedDocuments() (including active effects),
-    // prepareDerivedData().
     super.prepareData();
   }
 
 
-
   /** @override */
   prepareBaseData() {
-    // Data modifications in this step occur before processing embedded documents or derived data.
-    // Make modifications to data here. For example:
-    const actorData = this;
-    const systemData = actorData.system;
-
+    const systemData = this.system;
     systemData.aux.showTCheaders = game.settings.get("smt-200x", "showTCheaders");
 
-    if (actorData.type === 'character') {
-      // Define multipliers for each tier
-      const tierMultipliers = {
-        tierOne: 0.8,
-        tierTwo: 1.0,
-        tierThree: 1.3
+    this._initializeBaseStats(systemData);
+
+    if (this.type === 'character') {
+      this._calculateCharacterLevel(systemData);
+    }
+  }
+
+
+  /** @override */
+  prepareEmbeddedDocuments() {
+    super.prepareEmbeddedDocuments();
+
+    this._applyEquippedItems();
+  }
+
+
+  /** @override */
+  prepareDerivedData() {
+    const systemData = this.system;
+
+    ["st", "mg", "vt", "ag", "lk"].forEach(stat => {
+      systemData.stats[stat].value += systemData.stats[stat].temp ?? 0;
+    });
+
+    this._calculateBuffEffects(systemData);
+    this._clampStats(systemData);
+
+    switch (systemData.badStatus) {
+      case "FLY":
+        for (let [key, stat] of Object.entries(systemData.stats)) {
+          if (key == "ag") continue;
+          systemData.stats[key].value = 1;
+        }
+        break;
+      case "FREEZE":
+        systemData.affinityFinal.strike = systemData.affinityFinal.strike == "weak" ? "weak" : "normal"
+        systemData.affinityFinal.gun = systemData.affinityFinal.gun == "weak" ? "weak" : "normal"
+        break;
+      case "STONE":
+        systemData.affinityFinal = {
+          "strike": "normal",
+          "gun": "normal",
+          "fire": "resist",
+          "ice": "resist",
+          "elec": "resist",
+          "force": "resist",
+          "expel": "resist",
+          "death": "resist",
+          "mind": "resist",
+          "nerve": "resist",
+          "curse": "resist",
+          "almighty": "normal",
+          "magic": "normal"
+        };
+        break;
+      default:
+        break;
+    }
+
+    this._setDerivedBSAffinities(systemData);
+    this._calculateCombatStats(systemData);
+    this._calculateResources(systemData);
+    this._clampValues(systemData);
+
+
+    if (game.user.isGM || (game.user.id === this.isOwner)) {
+      const statusMapping = {
+        "DEAD": "dead",
+        "STONE": "paralysis",
+        "FLY": "fly",
+        "PARALYZE": "stun",
+        "CHARM": "blind",
+        "POISON": "poison",
+        "CLOSE": "silence",
+        "BIND": "restrain",
+        "FREEZE": "frozen",
+        "SLEEP": "sleep",
+        "PANIC": "fear",
+        "SHOCK": "shock",
+        "HAPPY": "deaf"
       };
 
-      // Total EXP from all tiers
-      const totalExp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree;
-
-      let currentLevel = 1; // Track the current level
-      let nextThreshold = 0; // EXP required for the next level
-      let currentMultiplier = tierMultipliers.tierOne; // Multiplier based on the active tier
-
-      // Function to calculate the threshold for a given level and multiplier
-      const calculateThreshold = (level, multiplier) => Math.floor(Math.pow(level, 3) * multiplier);
-
-      // Determine the tier and calculate the level
-      if (systemData.attributes.exp.tierTwo > 0)
-        currentMultiplier = tierMultipliers.tierTwo;
-      if (systemData.attributes.exp.tierThree > 0)
-        currentMultiplier = tierMultipliers.tierThree;
-
-      // Calculate the level dynamically
-      while (true) {
-        const threshold = calculateThreshold(currentLevel + 1, currentMultiplier);
-        if (totalExp < threshold) {
-          nextThreshold = threshold;
-          break;
-        }
-        currentLevel++;
-      }
-
-      // Update actor's level and EXP requirement for the next level
-      systemData.attributes.level = currentLevel;
-      systemData.attributes.totalexp = totalExp;
-      systemData.attributes.expnext = nextThreshold - totalExp;
+      this.toggleStatusEffect("curse", { active: this.system.isCursed });
     }
 
 
+    // Notify all items after final actor data is set
+    this.items.forEach(item => {
+      if (item.prepareDerivedData) {
+        item.prepareDerivedData();
+      }
+    });
+  }
 
-    // Loop through stats, and reset temp to 0
+
+  // =============================
+  //  HELPER METHODS
+  // =============================
+  _initializeBaseStats(systemData) {
     for (let [key, stat] of Object.entries(systemData.stats)) {
       systemData.stats[key].temp = 0;
+      systemData.stats[key].value = stat.base ?? 0;
+      systemData.stats[key].tn = 0;
     }
 
-    this.items.forEach((item) => {
+    systemData.phydef = 0;
+    systemData.magdef = 0;
+    systemData.meleePower = 0;
+    systemData.rangedPower = 0;
+    systemData.spellPower = 0;
+    systemData.init = 0;
+    systemData.dodgetn = 0;
+    systemData.talktn = 0;
+    systemData.affinityFinal = foundry.utils.deepClone(systemData.affinity);
+    systemData.affinityBSFinal = foundry.utils.deepClone(systemData.affinityBS);
+  }
+
+
+  _calculateCharacterLevel(systemData) {
+    const tierMultipliers = { tierOne: 0.8, tierTwo: 1.0, tierThree: 1.3 };
+    const totalExp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree;
+
+    let currentLevel = 1;
+    let nextThreshold = 0;
+    let currentMultiplier = tierMultipliers.tierOne;
+
+    if (systemData.attributes.exp.tierTwo > 0) currentMultiplier = tierMultipliers.tierTwo;
+    if (systemData.attributes.exp.tierThree > 0) currentMultiplier = tierMultipliers.tierThree;
+
+    while (true) {
+      const threshold = Math.floor(Math.pow(currentLevel + 1, 3) * currentMultiplier);
+      if (totalExp < threshold) {
+        nextThreshold = threshold;
+        break;
+      }
+      currentLevel++;
+    }
+
+    systemData.attributes.level = currentLevel;
+    systemData.attributes.totalexp = totalExp;
+    systemData.attributes.expnext = nextThreshold - totalExp;
+  }
+
+
+  _applyEquippedItems() {
+    const systemData = this.system;
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    this.items.forEach(item => {
       if (item.type === "armor" && item.system.equipped) {
-        systemData.stats.st.temp += item.system.st || 0;
-        systemData.stats.mg.temp += item.system.mg || 0;
-        systemData.stats.vt.temp += item.system.vt || 0;
-        systemData.stats.ag.temp += item.system.ag || 0;
-        systemData.stats.lk.temp += item.system.lk || 0;
+
+        ["st", "mg", "vt", "ag", "lk"].forEach(stat => {
+          systemData.stats[stat].temp += item.system[stat] ?? 0;
+        });
+
+        systemData.phydef += item.system.phydef ?? 0;
+        systemData.magdef += item.system.magdef ?? 0;
+        systemData.meleePower += item.system.meleePower ?? 0;
+        systemData.rangedPower += item.system.rangedPower ?? 0;
+        systemData.spellPower += item.system.spellPower ?? 0;
+        systemData.init += item.system.init ?? 0;
+
+        if (!item.system.changeAffinity) return;
+
+        Object.keys(systemData.affinity).forEach(affinityType => {
+          if (item.system.affinity[affinityType] == "none") return;
+          const itemAffinity = item.system.affinity[affinityType];
+          const currentAffinity = systemData.affinityFinal[affinityType];
+          if (affinityPriority[itemAffinity] > affinityPriority[currentAffinity]) {
+            systemData.affinityFinal[affinityType] = itemAffinity;
+          }
+        });
+
+        Object.keys(systemData.affinityBS).forEach(bsType => {
+          if (item.system.affinityBS[bsType] == "none") return;
+          const itemAffinityBS = item.system.affinityBS[bsType];
+          const currentAffinityBS = systemData.affinityBSFinal[bsType];
+          if (affinityPriority[itemAffinityBS] > affinityPriority[currentAffinityBS]) {
+            systemData.affinityBSFinal[bsType] = itemAffinityBS;
+          }
+        });
       }
     });
 
-    // Loop through stats, and total up
+
+    this.items.forEach(item => {
+      if (item.type === "passive") {
+        if (!item.system.changeAffinity) return;
+
+        Object.keys(systemData.affinity).forEach(affinityType => {
+          if (item.system.affinity[affinityType] == "none") return;
+          const itemAffinity = item.system.affinity[affinityType];
+          const currentAffinity = systemData.affinityFinal[affinityType];
+          if (affinityPriority[itemAffinity] > affinityPriority[currentAffinity]) {
+            systemData.affinityFinal[affinityType] = itemAffinity;
+          }
+        });
+
+        Object.keys(systemData.affinityBS).forEach(bsType => {
+          if (item.system.affinityBS[bsType] == "none") return;
+          const itemAffinityBS = item.system.affinityBS[bsType];
+          const currentAffinityBS = systemData.affinityBSFinal[bsType];
+          if (affinityPriority[itemAffinityBS] > affinityPriority[currentAffinityBS]) {
+            systemData.affinityBSFinal[bsType] = itemAffinityBS;
+          }
+        });
+      }
+    });
+  }
+
+
+
+  _setDerivedBSAffinities(systemData) {
+    // Define the mapping: each BS type is associated with a primary affinity type.
+    const bsMapping = {
+      "STONE": "death",
+      "FLY": "death",
+      "PARALYZE": "nerve",
+      "BIND": "nerve",
+      "CHARM": "mind",
+      "SLEEP": "mind",
+      "PANIC": "mind",
+      "HAPPY": "mind",
+      "POISON": "curse",
+      "CLOSE": "curse",
+      "FREEZE": "ice",
+      "SHOCK": "elec"
+    };
+
+    // Loop over each BS type in the mapping.
+    for (let bsType in bsMapping) {
+      // Conditionally skip processing SHOCK if the setting is false.
+      if (bsType === "SHOCK" && !game.settings.get("smt-200x", "showTCheaders")) {
+        continue;
+      }
+
+      const primaryType = bsMapping[bsType];
+      const primaryAffinity = systemData.affinityFinal[primaryType] || "normal";
+      // If the primary affinity is null, repel, or drain, set the BS affinity to "null".
+      if (["null", "repel", "drain"].includes(primaryAffinity.toLowerCase())) {
+        systemData.affinityBSFinal[bsType] = "null";
+      }
+    }
+  }
+
+
+
+  _calculateBuffEffects(systemData) {
+    ["raku", "taru", "suku", "maka"].forEach(buff => {
+      systemData[`sum${buff.charAt(0).toUpperCase() + buff.slice(1)}`] =
+        systemData.buffs[buff] - Math.abs(systemData.debuffs[buff]);
+    });
+  }
+
+
+
+  _calculateCombatStats(systemData) {
+    // Compute final stats with buffs
+    const phyDefFormula = this.parseFormula(systemData.human ? game.settings.get("smt-200x", "phyDefHuman") : game.settings.get("smt-200x", "phyDefDemon"), systemData);
+    const magDefFormula = this.parseFormula(systemData.human ? game.settings.get("smt-200x", "magDefHuman") : game.settings.get("smt-200x", "magDefDemon"), systemData);
+    const initFormula = this.parseFormula(game.settings.get("smt-200x", "initFormula"), systemData);
+
+    systemData.phydef += phyDefFormula + systemData.sumRaku;
+    systemData.magdef += magDefFormula + systemData.sumRaku;
+    systemData.init += initFormula;
+
+    // Compute Power stats
+    systemData.meleePower += systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
+    systemData.rangedPower += systemData.stats.ag.value +
+      (game.settings.get("smt-200x", "addLevelToRangedPower") ? systemData.attributes.level : 0) +
+      systemData.sumTaru;
+    systemData.spellPower += systemData.stats.mg.value + systemData.attributes.level +
+      (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
+
+    // Compute TN values
     for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].value = stat.base + stat.temp;
+      systemData.stats[key].tn += (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
     }
 
+    systemData.dodgetn += 10 + systemData.stats.ag.value + systemData.sumSuku;
+    systemData.talktn += 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
+  }
 
-    // Collect buff / debuff stacks
-    systemData.sumRaku = systemData.raku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.raku.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumTaru = systemData.taru.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.taru.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumSuku = systemData.suku.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.suku.debuff.reduce((total, num) => total + num, 0));
-    systemData.sumMaka = systemData.maka.buff.reduce((total, num) => total + num, 0) - Math.abs(systemData.maka.debuff.reduce((total, num) => total + num, 0));
 
-    // DEFENSES
-    systemData.phydef = this.parseFormula(systemData.phydefFormula) + systemData.sumRaku;
-    systemData.magdef = this.parseFormula(systemData.magdefFormula) + systemData.sumRaku;
 
-    // INITIATIVE
-    systemData.init = this.parseFormula(systemData.initFormula);
+  _calculateResources(systemData) {
+    const hpFormula = this.parseFormula(game.settings.get("smt-200x", "hpFormula"), systemData);
+    const mpFormula = this.parseFormula(game.settings.get("smt-200x", "mpFormula"), systemData);
+    const fateFormula = this.parseFormula(game.settings.get("smt-200x", "fateFormula"), systemData);
 
-    // POWERS
-    systemData.meleePower = systemData.stats.st.value + systemData.attributes.level + systemData.sumTaru;
-    systemData.spellPower = systemData.stats.mg.value + systemData.attributes.level + (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
-    systemData.rangedPower = systemData.stats.ag.value + (game.settings.get("smt-200x", "addLevelToRangedPower") ? systemData.attributes.level : 0) + systemData.sumTaru;
-
-    if (actorData.type === 'character') {
-      // Start with base values
-      let physicalDefense = 0;
-      let magicalDefense = 0;
-      let meleePower = 0;
-      let rangedPower = 0;
-      let spellPower = 0;
-      let initiative = 0;
-
-      // Add defense bonuses from equipped armor
-      this.items.forEach((item) => {
-        if (item.type === "armor" && item.system.equipped) {
-          console.log(item.system);
-          physicalDefense += item.system.phydef ?? 0;
-          magicalDefense += item.system.magdef ?? 0;
-          meleePower += item.system.meleePower ?? 0;
-          rangedPower += item.system.rangedPower ?? 0;
-          spellPower += item.system.spellPower ?? 0;
-          initiative += item.system.init ?? 0;
-        }
-      });
-
-      // Update the derived defense attribute
-      systemData.phydef += physicalDefense;
-      systemData.magdef += magicalDefense;
-      systemData.meleePower += meleePower;
-      systemData.rangedPower += rangedPower;
-      systemData.spellPower += spellPower;
-      systemData.init += initiative;
-    }
-
-    // Set Max HP / MP / Fate
-    systemData.hp.max = (systemData.stats.vt.value + systemData.attributes.level) * systemData.hp.mult;
-    systemData.mp.max = (systemData.stats.mg.value + systemData.attributes.level) * systemData.mp.mult;
-    systemData.fate.max = 5 + Math.floor(systemData.stats.lk.value / 5);
+    systemData.hp.max = (hpFormula) * systemData.hp.mult;
+    systemData.mp.max = (mpFormula) * systemData.mp.mult;
+    systemData.fate.max = fateFormula;
 
     if (systemData.isBoss) {
       systemData.hp.max *= 5;
       systemData.mp.max *= 2;
     }
+  }
 
-    // Loop through stats, and add their TNs to sheet output
+
+
+  _clampStats(systemData) {
+    const STAT_CAP = 40;
     for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].tn = (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
-    }
-
-    systemData.dodgetn = 10 + systemData.stats.ag.value + systemData.sumSuku;
-    systemData.talktn = 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
-  }
-
-
-  prepareEmbeddedDocuments() {
-    // Call the parent class to ensure other embedded documents are processed
-    super.prepareEmbeddedDocuments();
-
-    // Process non-"Skill" items first
-    const nonSkills = this.items.filter(item => item.type !== "feature");
-    nonSkills.forEach(item => item.prepareData());
-
-    // Ensure the actor stats are fully prepared here
-    this.prepareDerivedData(); // Ensure derived stats are finalized
-
-    // Process "Skill" items last
-    const skills = this.items.filter(item => item.type === "feature");
-    skills.forEach(item => item.prepareData());
-  }
-
-
-
-  /**
-   * @override
-   * Augment the actor source data with additional dynamic data. Typically,
-   * you'll want to handle most of your calculated/derived data in this step.
-   * Data calculated in this step should generally not exist in template.json
-   * (such as ability modifiers rather than ability scores) and should be
-   * available both inside and outside of character sheets (such as if an actor
-   * is queried and has a roll executed directly from it).
-   */
-  prepareDerivedData() {
-    const actorData = this;
-    const systemData = actorData.system;
-    const flags = actorData.flags.smt200x || {};
-
-    // Make separate methods for each Actor type (character, npc, etc.) to keep
-    // things organized.
-    this._prepareCharacterData(actorData);
-    this._prepareNpcData(actorData);
-
-    // clamp HP
-    if (systemData.hp.value > systemData.hp.max) {
-      systemData.hp.value = systemData.hp.max;
-    } else if (systemData.hp.value < systemData.hp.min) {
-      systemData.hp.value = systemData.hp.min;
-    }
-
-    // clamp MP
-    if (systemData.mp.value > systemData.mp.max) {
-      systemData.mp.value = systemData.mp.max;
-    } else if (systemData.mp.value < systemData.mp.min) {
-      systemData.mp.value = systemData.mp.min;
-    }
-
-    // clamp Fate
-    if (systemData.fate.value > systemData.fate.max) {
-      systemData.fate.value = systemData.fate.max;
-    } else if (systemData.fate.value < systemData.fate.min) {
-      systemData.fate.value = systemData.fate.min;
+      systemData.stats[key].value = Math.min(STAT_CAP, systemData.stats[key].value);
     }
   }
 
 
 
-  /**
-   * Prepare Character type specific data
-   */
+  _clampValues(systemData) {
+    systemData.hp.value = Math.min(systemData.hp.value, systemData.hp.max);
+    systemData.mp.value = Math.min(systemData.mp.value, systemData.mp.max);
+    systemData.fate.value = Math.min(systemData.fate.value, systemData.fate.max);
+  }
+
+
+
   _prepareCharacterData(actorData) {
     if (actorData.type !== 'character') return;
     const systemData = actorData.system;
@@ -226,9 +347,6 @@ export class SMTXActor extends Actor {
 
 
 
-  /**
-   * Prepare NPC type specific data.
-   */
   _prepareNpcData(actorData) {
     if (actorData.type !== 'npc') return;
     const systemData = actorData.system;
@@ -247,36 +365,31 @@ export class SMTXActor extends Actor {
 
 
 
-  parseFormula(formula) {
-    // Evaluate the mathematical expression
+  parseFormula(formula, systemData) {
     try {
-      // Use Function with an explicit Math object
-      const result = new Roll(formula, this).evaluateSync({ minimize: true }).total;
+      const result = new Roll(formula, systemData).evaluateSync({ minimize: true }).total;
       return result;
     } catch (error) {
       console.error("Error evaluating formula:", formula, error);
-      return null;
+      return 0;
     }
   }
 
 
 
-  /**
-   * Override getRollData() that's supplied to rolls.
-   */
   getRollData() {
     // Copy the system data (core stats) into the roll data
     const data = foundry.utils.deepClone(this.system);
 
     // Loop through stats, and add their TNs to sheet output
-    for (let [key, stat] of Object.entries(data.stats)) {
+    /*for (let [key, stat] of Object.entries(data.stats)) {
       data.stats[key].tn = (stat.value * 5) + data.attributes.level + (data.sumSuku || 0);
-    }
+    }*/
 
     // Copy stats to the top level for shorthand usage in rolls
     if (data.stats) {
-      for (let [k, v] of Object.entries(data.stats)) {
-        data[k] = v;
+      for (let [key, value] of Object.entries(data.stats)) {
+        data[key] = value;
       }
     }
 
@@ -291,96 +404,212 @@ export class SMTXActor extends Actor {
 
 
   async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
+    // Save the actor's original HP
+    const oldHP = this.system.hp.value;
+
+    // 1. Determine base defense based on the incoming affinity.
     let defense = this.system.magdef;
-    if (affinity === "strike" || affinity === "gun") defense = this.system.phydef;
-    if (ignoreDefense || crit) defense = 0;
-    if (halfDefense) defense = Math.floor(defense / 2);
-
-    let damage = amount;
-    let fateUsed = 0;
-
-    // If character, ask for Fate points and adjust damage accordingly
+    if (affinity === "strike" || affinity === "gun") {
+      defense = this.system.phydef;
+    }
+    // 2. Prompt for Fate Points, an Affinity Override, and Additional Defense Modifier.
+    let fatePoints = 0, defenseBonus = 0, affinityOverride = "";
     if (this.type === 'character' || game.settings.get("smt-200x", "fateForNPCs") || this.system.allowFate) {
-      const fatePoints = await new Promise((resolve) => {
+      const dialogData = await new Promise((resolve) => {
         new Dialog({
-          title: "Fate Points Adjustment",
+          title: "Damage Adjustment",
           content: `
-                    <p>Enter the number of Fate points to spend to reduce incoming damage:</p>
-                    <div class="form-group">
-                        <label for="fate-points">Fate Points:</label>
-                        <input type="number" id="fate-points" name="fate-points" value="0" min="0" />
-                    </div>
-                `,
+          <form>
+            <div class="form-group">
+              <label for="fate-points">Fate Points to spend:</label>
+              <input type="number" id="fate-points" name="fate-points" value="0" min="0" style="width: 100%;" />
+            </div>
+            <div class="form-group">
+              <label for="affinity-override">Affinity Override:</label>
+              <select id="affinity-override" name="affinity-override" style="width: 100%;">
+                <option value="${this.system.affinityFinal[affinity]}">-- Use Default (${this.system.affinityFinal[affinity]})--</option>
+                <option value="normal">Normal</option>
+                <option value="weak">Weak</option>
+                <option value="resist">Resist</option>
+                <option value="null">Null</option>
+                <option value="drain">Drain</option>
+                <option value="repel">Repel</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="defense-modifier">Additional Defense Modifier:</label>
+              <input type="number" id="defense-modifier" name="defense-modifier" value="0" style="width: 100%;" />
+            </div>
+          </form>
+        `,
           buttons: {
             apply: {
               icon: '<i class="fas fa-check"></i>',
               label: "Apply",
               callback: (html) => {
-                const fatePointsInput = parseInt(html.find('input[name="fate-points"]').val(), 10);
-                resolve(fatePointsInput);
+                const fp = parseInt(html.find('input[name="fate-points"]').val(), 10) || 0;
+                const defMod = parseInt(html.find('input[name="defense-modifier"]').val(), 10) || 0;
+                const affOverride = html.find('select[name="affinity-override"]').val();
+                resolve({ fp, defMod, affOverride });
               }
             },
             cancel: {
               icon: '<i class="fas fa-times"></i>',
               label: "Cancel",
-              callback: () => resolve(-1) // Default to 0 if canceled
+              callback: () => resolve(null)
             }
           },
           default: "apply"
         }).render(true);
       });
 
-      if (fatePoints == -1) return // Player clicked cancel, don't apply damage.
-
-      if (fatePoints > 0) {
-        damage = Math.floor(amount / (fatePoints * 2));
-        fateUsed = fatePoints;
-      }
+      if (!dialogData) return; // User cancelled.
+      fatePoints = dialogData.fp;
+      defenseBonus = dialogData.defMod;
+      affinityOverride = dialogData.affOverride;
     }
 
-    let finalAmount = Math.max(Math.floor(damage * mult) - defense, 0);
-    if (game.settings.get("smt-200x", "resistAfterDefense") && mult < 1) {
-      finalAmount = Math.max(Math.floor((damage - defense) * mult), 0);
+    // 3. Apply additional defense bonus.
+    defense += defenseBonus;
+    if (ignoreDefense || crit) {
+      defense = 0;
+    }
+    if (halfDefense) {
+      defense = Math.floor(defense / 2);
     }
 
+    // 4. Fate Adjustment: reduce incoming damage if fatePoints > 0.
+    let damage = amount;
+    let fateUsed = 0;
+    if (fatePoints > 0) {
+      damage = Math.floor(amount / (fatePoints * 2));
+      fateUsed = fatePoints;
+    }
+
+    // 6. Determine effective affinity rating.
+    // Use the override if provided; otherwise, use the actor's affinity rating from affinityFinal.
+    const effectiveAffinity = affinityOverride !== "" ? affinityOverride : (this.system.affinityFinal[affinity] || "normal");
+    const targetAffinity = effectiveAffinity.toLowerCase();
+
+    // 7. Adjust damage based on the affinity modifier.
+    let affinityMod = 1;
+    let affinityNote = "Normal (x1)";
+    switch (targetAffinity) {
+      case "weak":
+        affinityMod = 2;
+        affinityNote = "Weak (x2)";
+        break;
+      case "resist":
+        affinityMod = 0.5;
+        affinityNote = "Resist (x0.5)";
+        break;
+      case "null":
+        affinityMod = 0;
+        affinityNote = "Null (0 damage)";
+        break;
+      case "drain":
+        affinityMod = -1;
+        affinityNote = "Drain (heals target)";
+        break;
+      case "repel":
+        affinityMod = 0;
+        affinityNote = "Repel (damage returned)";
+        break;
+      default:
+        affinityMod = 1;
+        affinityNote = "Normal (x1)";
+        break;
+    }
+
+    let finalAmount = Math.max(Math.floor(damage * affinityMod) - defense, 0);
+    if (game.settings.get("smt-200x", "resistAfterDefense") && affinityMod < 1) {
+      finalAmount = Math.max(Math.floor((damage - defense) * affinityMod), 0);
+    }
+
+    if (affinityMod < 0) {
+      // For drain, call applyHeal instead and exit.
+      this.applyHeal(amount, affectsMP);
+      return;
+    }
+
+    // 8. Update the actor's HP or MP.
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value;
-
+    const newHP = affectsMP ? currentMP - finalAmount : Math.max(currentHP - finalAmount, 0);
     if (affectsMP) {
       this.update({ "system.mp.value": Math.max(currentMP - finalAmount, 0) });
     } else {
-      this.update({ "system.hp.value": Math.max(currentHP - finalAmount, 0) });
+      this.update({ "system.hp.value": newHP });
     }
 
-    let chatContent = `<span style="font-size: var(--font-size-16);">Received <strong>${finalAmount}</strong> <span title="Affinity Multiplier x${mult}">${game.i18n.localize("SMT_X.Affinity." + affinity)} damage.</span></span>`;
-    if (fateUsed > 0) {
-      chatContent += `<br><em>(spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>`;
+    // 9. Calculate damage applied and note if damage exceeded available HP.
+    const damageApplied = currentHP - newHP;
+    let extraNote = "";
+    if (damageApplied < finalAmount) {
+      extraNote = ` (${finalAmount - damageApplied} Overkill)`;
     }
+
+    // 10. Build chat feedback content and include an "Undo" button.
+    let chatContent = `
+    <div class="flexrow damage-line">
+      <span class="damage-text">
+        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} damage${extraNote}.
+        ${fateUsed > 0 ? `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>` : ''}
+        ${defenseBonus !== 0 ? `<br><em>Defense Bonus: ${defenseBonus}</em>` : ''}
+      </span>
+      <button class="flex0 undo-damage height: 32px; width: 32px;" 
+              data-actor-id="${this.id}" 
+              data-token-id="${this.token ? this.token.id : ''}" 
+              data-damage="${damageApplied}" 
+              data-old-hp="${currentHP}"
+              style="margin-left: auto;">
+        <i class="fas fa-undo"></i>
+      </button>
+    </div>
+    `;
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
       content: chatContent
     });
 
+    // 11. Show floating numbers if enabled.
     if (game.settings.get("smt-200x", "showFloatingDamage")) {
       for (let t of this.getActiveTokens()) {
-        createFloatingNumber(t.document, `-${finalAmount}`, { fillColor: "#FF0000", crit: crit, mult: mult });
+        const floatText = (damageApplied >= 0) ? `-${damageApplied}` : `+${-damageApplied}`;
+        createFloatingNumber(t.document, floatText, { fillColor: (damageApplied >= 0) ? "#FF0000" : "#00FF00", crit: crit, mult: mult });
       }
     }
   }
+
+
 
   applyHeal(amount, affectsMP = false) {
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value
 
     if (affectsMP)
-      this.update({ "system.mp.value": currentMP + amount });
+      this.update({ "system.mp.value": currentMP + Math.abs(amount) });
     else
-      this.update({ "system.hp.value": currentHP + amount });
+      this.update({ "system.hp.value": currentHP + Math.abs(amount) });
+
+    let chatContent = `
+    <div class="flexrow damage-line">
+      <span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>
+      <button class="flex0 undo-damage height: 32px; width: 32px;" 
+              data-actor-id="${this.id}" 
+              data-token-id="${this.token ? this.token.id : ''}" 
+              data-damage="${amount}" 
+              data-old-hp="${currentHP}"
+              style="margin-left: auto;">
+        <i class="fas fa-undo"></i>
+      </button>
+    </div>
+    `;
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
-      content: `<span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>`
+      content: chatContent
     });
 
     if (game.settings.get("smt-200x", "showFloatingDamage")) {
@@ -390,113 +619,36 @@ export class SMTXActor extends Actor {
     }
   }
 
-  dekaja() {
-    this.update({
-      "system.suku.buff": [0, 0, 0, 0],
-      "system.taru.buff": [0, 0, 0, 0],
-      "system.raku.buff": [0, 0, 0, 0],
-      "system.maka.buff": [0, 0, 0, 0],
-    });
-  }
 
-  dekunda() {
-    this.update({
-      "system.suku.debuff": [0, 0, 0, 0],
-      "system.taru.debuff": [0, 0, 0, 0],
-      "system.raku.debuff": [0, 0, 0, 0],
-      "system.maka.debuff": [0, 0, 0, 0],
-    });
-  }
 
-  clearAllBuffs() {
-    this.dekaja();
-    this.dekunda();
-  }
-
-  applyBuffs(buffsArray, applyTo) {
-    const updateBuffs = (type, field) => {
-      let currentValues = this.system[type][field];
-      const buffsArrayCopy = [...buffsArray];
-      for (let i = 0; i < 4; i++) {
-        if (currentValues[i] === 0) {
-          currentValues[i] = buffsArrayCopy.shift();
-        } else {
-          continue;
-        }
-      }
-      this.update({
-        [`system.${type}.${field}`]: currentValues,
-      });
+  applyBS(status) {
+    const priority = {
+      "DEAD": 0,
+      "STONE": 1,
+      "FLY": 2,
+      "PARALYZE": 3,
+      "CHARM": 4,
+      "POISON": 5,
+      "CLOSE": 6,
+      "BIND": 7,
+      "FREEZE": 8,
+      "SLEEP": 9,
+      "PANIC": 10,
+      "SHOCK": 11,
+      "HAPPY": 12,
+      "NONE": 999
     };
 
-    let taruPowerContent = "Melee & Ranged";
-    if (game.settings.get("smt-200x", "taruOnly")) taruPowerContent = "All"
+    const currentPriorityBS = priority[this.system.badStatus];
+    const incomingPriorityBS = priority[status];
 
-    if (applyTo.sukukaja) {
-      updateBuffs("suku", "buff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">All TN Accuracy Up.</span>`
+    if (incomingPriorityBS < currentPriorityBS)
+      this.update({
+        "system.badStatus": status
       });
-    }
-    if (applyTo.tarukaja) {
-      updateBuffs("taru", "buff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Power Up.</span>`
-      });
-    }
-    if (applyTo.rakukaja) {
-      updateBuffs("raku", "buff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Defense Up.</span>`
-      });
-    }
-    if (applyTo.makakaja) {
-      updateBuffs("maka", "buff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Spell Power Up.</span>`
-      });
-    }
-    if (applyTo.sukunda) {
-      updateBuffs("suku", "debuff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">All TN Accuracy Down.</span>`
-      });
-    }
-    if (applyTo.tarunda) {
-      updateBuffs("taru", "debuff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">${taruPowerContent} Power Down.</span>`
-      });
-    }
-    if (applyTo.rakunda) {
-      updateBuffs("raku", "debuff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Defense Down.</span>`
-      });
-    }
-    if (applyTo.makunda) {
-      updateBuffs("maka", "debuff");
-
-      ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: this }),
-        content: `<span style="font-size: var(--font-size-16);">Spell Power Down.</span>`
-      });
-    }
   }
+
+
 
   applyEXP(amount) {
     if (this.system.attributes.exp.tierThree > 0) {
@@ -516,11 +668,15 @@ export class SMTXActor extends Actor {
     }
   }
 
+
+
   applyMacca(amount) {
     this.update({
       "system.macca": this.system.macca + amount
     });
   }
+
+
 
   /**
 * Handle clickable rolls.
@@ -853,6 +1009,65 @@ export class SMTXActor extends Actor {
   }
 }
 
+
+
+
+
+
+
+
+
+
+Hooks.on("renderChatMessage", (message, html, data) => {
+  html.find(".undo-damage").on("click", async (event) => {
+    event.preventDefault();
+    const button = $(event.currentTarget);
+    const actorId = button.data("actor-id");
+    const actor = game.actors.get(actorId);
+    const tokenId = button.data("token-id");
+    const token = canvas.tokens.get(tokenId);
+    const damageApplied = parseInt(button.data("damage"));
+    const oldHP = parseInt(button.data("old-hp"));
+
+    // Restore HP on the actor (or token's actor)
+    if (token) {
+      await token.actor.update({ "system.hp.value": oldHP });
+    } else if (actor) {
+      await actor.update({ "system.hp.value": oldHP });
+    }
+
+    // Find the parent container for the damage line.
+    const damageLine = button.closest(".damage-line");
+
+    // Option 1: Add a class that applies strike-through styling.
+    damageLine.css("text-decoration", "line-through");
+
+    // Option 2: Or update inline styles directly:
+    // damageLine.find(".damage-text").css("text-decoration", "line-through");
+
+    // Disable or replace the undo button.
+    button.replaceWith(`<button class="flex0 undo-damage" disabled style="margin-left: auto; opacity: 0.5;"><i class="fas fa-undo"></i></button>`);
+
+    // Get the updated HTML from the rendered message and update the chat message.
+    await updateChatMessage(message, message.content);
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Creates a floating text that rises and fades above a token.
  *
@@ -880,7 +1095,6 @@ export function createFloatingNumber(token, textValue, options = {}) {
   const floatingText = new PIXI.Text(String(textValue), style);
   floatingText.anchor.set(0.5); // Center the text
 
-  console.log(token)
   // Position at the token’s center
   const gridSize = canvas.dimensions.size;
   const tokenWidthPx = token.width * gridSize;
@@ -926,4 +1140,22 @@ export function createFloatingNumber(token, textValue, options = {}) {
   }
 
   requestAnimationFrame(animate);
+}
+
+
+
+
+
+
+
+async function updateChatMessage(message, updatedContent) {
+  if (game.user.isGM) {
+    return await message.update({ _id: message.id, content: updatedContent });
+  } else {
+    game.socket.emit("system.smt-200x", {
+      action: "updateChatMessage",
+      messageId: message.id,
+      content: updatedContent
+    });
+  }
 }

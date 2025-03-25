@@ -15,12 +15,21 @@
           </div>
         </div>
 
+        {{#if (showTC)}}
+        <div class="resource flex-group-center grid-span-2">
+          <label for="system.race" class="resource-label">Clan</label>
+          <div class="resource-content flexrow flex-center flex-between">
+            <input type="text" name="system.race" value="{{system.race}}" />
+          </div>
+        </div>
+        {{else}}
         <div class="resource flex-group-center grid-span-2">
           <label for="system.race" class="resource-label">Race</label>
           <div class="resource-content flexrow flex-center flex-between">
             <input type="text" name="system.race" value="{{system.race}}" />
           </div>
         </div>
+        {{/if}}
       </div>
       {{!-- The grid classes are defined in scss/global/_grid.scss. To use,
       use both the "grid" and "grid-Ncol" class where "N" can be any number
@@ -53,12 +62,15 @@
           </div>
         </div>
 
+        {{#if (showTC)}}
+        {{else}}
         <div class="resource flex-group-center">
           <label for="system.fuseID" class="resource-label">Fuse ID</label>
           <div class="resource-content flexrow flex-center flex-between">
             <input type="text" name="system.fuseID" value="{{system.fuseID}}" />
           </div>
         </div>
+        {{/if}}
       </div>
     </div>
     <div class="grid grid-5col" style="flex-basis: 100%;">
@@ -80,9 +92,10 @@
 
       <div class="flexrow grid-span-2">
         <div class="align-center" style="border: 2px groove #eeede0;">
-          <label for="system.meleePower" class="resource-label">Melee</label>
+          <label for="system.meleePower" class="resource-label">
+            {{#if (showTC)}}Physical{{else}}Melee{{/if}}</label>
           <div>
-            <h1>{{system.meleePower}}</h1>
+            <h1 class="melee-power-roll clickable">{{system.meleePower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.melee" value="{{system.powerDice.melee}}" data-dtype="Number" />&nbsp;d10</div>
@@ -91,16 +104,17 @@
         <div class="align-center" style="border: 2px groove #eeede0;">
           <label for="system.rangedPower" class="resource-label">Ranged</label>
           <div>
-            <h1>{{system.rangedPower}}</h1>
+            <h1 class="ranged-power-roll clickable">{{system.rangedPower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.ranged" value="{{system.powerDice.ranged}}" data-dtype="Number" />&nbsp;d10</div>
         </div>
 
         <div class="align-center" style="border: 2px groove #eeede0;">
-          <label for="system.spellPower" class="resource-label">Spell</label>
+          <label for="system.spellPower" class="resource-label">
+            {{#if (showTC)}} Magical{{else}}Spell{{/if}}</label>
           <div>
-            <h1>{{system.spellPower}}</h1>
+            <h1 class="spell-power-roll clickable">{{system.spellPower}}</h1>
           </div>
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.spell" value="{{system.powerDice.spell}}" data-dtype="Number" />&nbsp;d10</div>
@@ -114,6 +128,7 @@
           <div class="flexrow flex-group-center" style="padding: 6px;">+&nbsp;<input type="text"
               name="system.powerDice.init" value="{{system.powerDice.init}}" data-dtype="Number" />&nbsp;d10</div>
         </div>
+
 
 
         <div class="flexrow" style="flex-basis: 100%;">
@@ -132,14 +147,16 @@
           </div>
 
           <div class="align-center" style="border: 2px groove #eeede0;">
-            <label for="system.init" class="resource-label">Phy Def</label>
+            <label for="system.init" class="resource-label">
+              {{#if (showTC)}}Phy Res{{else}}Phy Def{{/if}}</label>
             <div>
               <h1>{{system.phydef}}</h1>
             </div>
           </div>
 
           <div class="align-center" style="border: 2px groove #eeede0;">
-            <label for="system.init" class="resource-label">Mag Def</label>
+            <label for="system.init" class="resource-label">
+              {{#if (showTC)}}Mag Res{{else}}Mag Def{{/if}}</label>
             <div>
               <h1>{{system.magdef}}</h1>
             </div>
@@ -150,9 +167,13 @@
       <div class="flexcol grid-span-2">
         <div class='flexrow' style="justify-content: center; align-items: center;">
           <label class="resource-label flex0">Affinity&nbsp;</label>
-          <label for="system.badStatus" class="resource-label align-right">Current BS:&nbsp;</label>
+          <label for="system.badStatus" class="resource-label align-right">Status:&nbsp;</label>
           <select name="system.badStatus">
+            {{#if (showTC)}}
+            {{selectOptions @root.config.badStatusList_TC selected=system.badStatus localize=true}}
+            {{else}}
             {{selectOptions @root.config.badStatusList selected=system.badStatus localize=true}}
+            {{/if}}
           </select>
           <label for="system.isCursed" class="resource-label align-right">!CURSED!&nbsp;</label>
           <input type="checkbox" name="system.isCursed" {{#if system.isCursed}}checked{{/if}} />
@@ -169,7 +190,7 @@
           <label for="system.alignment" class="resource-label">Alignment&nbsp;</label>
           <input type="text" name="system.alignment" class="flex2" value="{{system.alignment}}" />
 
-          {{#if system.aux.showTCheaders}}
+          {{#if (showTC)}}
           <label for="system.tone" class="resource-label">&emsp;Behavior&nbsp;</label>
           {{else}}
           <label for="system.tone" class="resource-label">&emsp;Tone&nbsp;</label>
@@ -178,7 +199,7 @@
         </div>
 
         <div class="flexrow">
-          {{#if system.aux.showTCheaders}}
+          {{#if (showTC)}}
           <label for="system.keywords" class="resource-label">Evolve?&nbsp;</label>
           {{else}}
           <label for="system.keywords" class="resource-label">Keywords&nbsp;</label>
@@ -186,7 +207,7 @@
           <input type="text" name="system.keywords" class="flex2" value="{{system.keywords}}" />
 
 
-          {{#if system.aux.showTCheaders}}
+          {{#if (showTC)}}
           <label for="system.ngWords" class="resource-label">&emsp;Inherits&nbsp;</label>
           {{else}}
           <label for="system.ngWords" class="resource-label">&emsp;NG Words&nbsp;</label>
@@ -243,39 +264,9 @@
 
     {{!-- Active Effects Tab --}}
     <div class="tab effects flexcol" data-group="primary" data-tab="effects">
-      {{> "systems/smt-200x/templates/actor/parts/actor-buffs.hbs"}}
-
-      <hr>
-
       <section class="main">
         {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
       </section>
-      <hr>
-      <section class="main">
-        <div class="flexcol">
-          <label for="system.phydefFormula" class="resource-label">Physical Defense Formula</label>
-          <input style="font-size: 10pt; font-style: italic;"
-            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.vt.value + @system.attributes.level)/2)"
-            disabled />
-          <input type="text" name="system.phydefFormula" value="{{system.phydefFormula}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.magdefFormula" class="resource-label">Magical Defense Formula</label>
-          <input style="font-size: 10pt; font-style: italic;"
-            value="Demons: + @system.attributes.level    --    Tokyo Conception: floor((@system.stats.mg.value + @system.attributes.level)/2)"
-            disabled />
-          <input type="text" name="system.magdefFormula" value="{{system.magdefFormula}}" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.initFormula" class="resource-label">Initiative Formula</label>
-          <input style="font-size: 10pt; font-style: italic;" value="Tokyo Conception: @system.stats.ag.value"
-            disabled />
-          <input type="text" name="system.initFormula" value="{{system.initFormula}}" />
-        </div>
-      </section>
-
       <hr>
 
       <section>
@@ -322,7 +313,9 @@
           </div>
 
           <div class="flexcol">
-            <label class="resource-label">TC Demon Favored Stat</label>
+            <label class="resource-label"
+              title="Tokyo Conception Demon Favored Stat (marks an asterisk by a stat for randomized level-up stats)">Favored
+              Stat</label>
             <select name="system.favoredStat">
               <option value="none">None</option>
               {{selectOptions @root.config.stats selected=system.favoredStat localize=true}}
@@ -345,20 +338,6 @@
           </div>
 
           <div class="flexcol">
-            <label class="resource-label">Set TC Formulas</label>
-            <button class="set-tc-formulas" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              TC Formulas</button>
-          </div>
-
-          <div class="flexcol">
-            <label class="resource-label">Set X Demon Formulas</label>
-            <button class="set-x-demon" type="button"
-              style="padding: 10px 15px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Set
-              X Demon Formulas</button>
-          </div>
-
-          <div class="flexcol">
             <label for="system.allowFate" class="resource-label">Show Spend Fate Prompt</label>
             <input type="checkbox" name="system.allowFate" {{#if system.allowFate}}checked{{/if}} />
           </div>
@@ -375,31 +354,10 @@
         </div>
       </section>
 
-      <hr>
 
+      <br><br>
       <section class="main">
-        <div class="flexrow">
-          {{#each system.affinity as |aff key|}}
-          <div class="flexcol">
-            <label for="system.affinity.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.affinities key)}}</label>
-            <select name="system.affinity.{{key}}">
-              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
-            </select>
-          </div>
-          {{/each}}
-        </div>
-        <div class="flexrow">
-          {{#each system.affinityBS as |aff key|}}
-          <div class="flexcol">
-            <label for="system.affinityBS.{{key}}" class="resource-label align-center">{{localize
-              (lookup @root.config.badStatusList key)}}</label>
-            <select name="system.affinityBS.{{key}}">
-              {{selectOptions @root.config.charAffinity selected=aff localize=true}}
-            </select>
-          </div>
-          {{/each}}
-        </div>
+        {{> "systems/smt-200x/templates/part-affinity-bs-selectors.hbs"}}
       </section>
     </div>
   </section>

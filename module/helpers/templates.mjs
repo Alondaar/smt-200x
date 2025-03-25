@@ -14,9 +14,9 @@ export const preloadHandlebarsTemplates = async function () {
     'systems/smt-200x/templates/actor/parts/actor-items.hbs',
     'systems/smt-200x/templates/actor/parts/actor-consumables.hbs',
     'systems/smt-200x/templates/actor/parts/actor-spells.hbs',
-    'systems/smt-200x/templates/actor/parts/actor-buffs.hbs',
     'systems/smt-200x/templates/actor/parts/actor-effects.hbs',
     // Item partials
     'systems/smt-200x/templates/item/parts/item-effects.hbs',
+    'systems/smt-200x/templates/part-affinity-bs-selectors.hbs',
   ]);
 };

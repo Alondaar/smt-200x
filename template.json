@@ -29,7 +29,10 @@
           "exp": {
             "tierOne": 0,
             "tierTwo": 0,
-            "tierThree": 0
+            "tierThree": 0,
+            "activeOne": true,
+            "activeTwo": false,
+            "activeThree": false
           }
         },
         "stats": {
@@ -53,6 +56,18 @@
             "value": 0,
             "base": 0
           }
+        },
+        "buffs": {
+          "taru": 0,
+          "maka": 0,
+          "suku": 0,
+          "raku": 0
+        },
+        "debuffs": {
+          "taru": 0,
+          "maka": 0,
+          "suku": 0,
+          "raku": 0
         },
         "suku": {
           "buff": [
@@ -124,34 +139,37 @@
         "chaos": 0,
         "neutral": 0,
         "heeho": 0,
+        "human": false,
         "affinity": {
-          "strike": "Normal",
-          "gun": "Normal",
-          "fire": "Normal",
-          "ice": "Normal",
-          "elec": "Normal",
-          "force": "Normal",
-          "expel": "Normal",
-          "death": "Normal",
-          "mind": "Normal",
-          "nerve": "Normal",
-          "curse": "Normal",
-          "almighty": "Normal"
+          "strike": "normal",
+          "gun": "normal",
+          "fire": "normal",
+          "ice": "normal",
+          "elec": "normal",
+          "force": "normal",
+          "expel": "normal",
+          "death": "normal",
+          "mind": "normal",
+          "nerve": "normal",
+          "curse": "normal",
+          "almighty": "normal",
+          "magic": "normal"
         },
         "affinityBS": {
-          "DEAD": "Normal",
-          "STONE": "Normal",
-          "FLY": "Normal",
-          "PARALYZE": "Normal",
-          "CHARM": "Normal",
-          "POISON": "Normal",
-          "CLOSE": "Normal",
-          "BIND": "Normal",
-          "FREEZE": "Normal",
-          "SLEEP": "Normal",
-          "PANIC": "Normal",
-          "SHOCK": "Normal",
-          "HAPPY": "Normal"
+          "BS": "normal",
+          "DEAD": "normal",
+          "STONE": "normal",
+          "FLY": "normal",
+          "PARALYZE": "normal",
+          "CHARM": "normal",
+          "POISON": "normal",
+          "CLOSE": "normal",
+          "BIND": "normal",
+          "FREEZE": "normal",
+          "SLEEP": "normal",
+          "PANIC": "normal",
+          "SHOCK": "normal",
+          "HAPPY": "normal"
         },
         "wepA": {
           "name": "",
@@ -174,7 +192,7 @@
           "hit": 0
         },
         "isCursed": false,
-        "badStatus": "none",
+        "badStatus": "NONE",
         "affinityField": "",
         "aux": {
           "useTCDef": false,
@@ -253,6 +271,41 @@
         "vtReq": 0,
         "sex": "-",
         "alignment": "-"
+      },
+      "affinityChange": {
+        "changeAffininty": false,
+        "priority": 0,
+        "affinity": {
+          "strike": "none",
+          "gun": "none",
+          "fire": "none",
+          "ice": "none",
+          "elec": "none",
+          "force": "none",
+          "expel": "none",
+          "death": "none",
+          "mind": "none",
+          "nerve": "none",
+          "curse": "none",
+          "almighty": "none",
+          "magic": "none"
+        },
+        "affinityBS": {
+          "DEAD": "none",
+          "STONE": "none",
+          "FLY": "none",
+          "PARALYZE": "none",
+          "CHARM": "none",
+          "POISON": "none",
+          "CLOSE": "none",
+          "BIND": "none",
+          "FREEZE": "none",
+          "SLEEP": "none",
+          "PANIC": "none",
+          "SHOCK": "none",
+          "HAPPY": "none",
+          "BS": "none"
+        }
       }
     },
     "weapon": {
@@ -272,7 +325,8 @@
       "templates": [
         "base",
         "item",
-        "equipment"
+        "equipment",
+        "affinityChange"
       ],
       "phydef": 0,
       "magdef": 0,
@@ -320,6 +374,8 @@
       "hasAffinity": false,
       "hasTarget": false,
       "hasType": false,
+      "lifeDrain": 0,
+      "manaDrain": 0,
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -366,6 +422,9 @@
       "hideCritDamage": false,
       "affectsMP": false,
       "actionPattern": "-",
+      "appliesBadStatus": "NONE",
+      "badStatusChance": "0",
+      "attackType": "none",
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -384,7 +443,8 @@
     },
     "passive": {
       "templates": [
-        "base"
+        "base",
+        "affinityChange"
       ]
     }
   }

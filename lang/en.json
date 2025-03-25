@@ -53,7 +53,8 @@
       "curse": "Curse",
       "almighty": "Almighty",
       "recovery": "Recovery",
-      "none": "None"
+      "none": "None",
+      "magic": "Magic"
     },
     "WeaponChoices": {
       "x": "X",
@@ -61,6 +62,7 @@
       "b": "B"
     },
     "CharAffinity": {
+      "none": "None",
       "normal": "Normal",
       "resist": "Resist",
       "weak": "Weak",
@@ -82,7 +84,51 @@
       "PANIC": "PANIC",
       "SHOCK": "SHOCK",
       "HAPPY": "HAPPY",
-      "NONE": "NONE"
+      "NONE": "NONE",
+      "BS": "BS"
+    },
+    "Affinity_TC": {
+      "gun": "Gun",
+      "fire": "Fire",
+      "ice": "Ice",
+      "elec": "Elec",
+      "force": "Force",
+      "mind": "Mind",
+      "nerve": "Nerve",
+      "almighty": "Almighty",
+      "recovery": "Recovery",
+      "none": "None",
+      "strike": "Phys",
+      "expel": "Light",
+      "death": "Dark",
+      "curse": "Ruin",
+      "magic": "Magic"
+    },
+    "CharAffinity_TC": {
+      "none": "None",
+      "normal": "Normal",
+      "resist": "Strong",
+      "weak": "Weak",
+      "null": "Null",
+      "drain": "Drain",
+      "repel": "Repel"
+    },
+    "AffinityBS_TC": {
+      "DEAD": "Dead",
+      "STONE": "Stone",
+      "FLY": "Fly",
+      "PARALYZE": "Stun",
+      "CHARM": "Charm",
+      "POISON": "Poison",
+      "CLOSE": "Mute",
+      "BIND": "Restrain",
+      "FREEZE": "Freeze",
+      "SLEEP": "Sleep",
+      "PANIC": "Panic",
+      "SHOCK": "Shock",
+      "HAPPY": "Happy",
+      "NONE": "None",
+      "BS": "Ailments"
     }
   },
   "TYPES": {
