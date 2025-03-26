@@ -54,6 +54,8 @@ Hooks.once('init', function () {
     label: 'SMT_X.SheetLabels.Item',
   });
 
+
+
   console.log('SMT 200X | Initializing socket listener');
   game.socket.on("system.smt-200x", async (data) => {
     if (!game.user.isGM) return; // Only the GM processes these requests.
@@ -870,37 +872,71 @@ class BuffEffectsWidget extends Application {
 
 
 
-Hooks.on("dropCanvasToken", async (tokenDocument, event) => {
-  console.log("dropCanvasToken");
-  // Extract the raw data from the drop event.
-  const rawData = event.dataTransfer.getData("text/plain").trim();
-  if (!rawData) return ui.notifications.warn("No effect data found on drop.");
+Hooks.once("canvasReady", () => {
+  const canvasEl = canvas.app.view;
 
-  // Attempt to parse the data as JSON. If it fails, assume it's a plain string.
-  let data;
-  try {
-    data = JSON.parse(rawData);
-  } catch (err) {
-    data = rawData;
-  }
-  // If the data is an object with a uuid property, extract it.
-  const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
-  if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
-    return ui.notifications.warn("Dropped item is not a valid effect.");
-  }
+  // Allow drops on the canvas.
+  canvasEl.addEventListener("dragover", (event) => {
+    event.preventDefault();
+  });
 
-  // Retrieve the effect document using Foundry's fromUuid helper.
-  const effectDoc = await fromUuid(uuid);
-  if (!effectDoc) return ui.notifications.warn("Failed to load the effect document.");
+  canvasEl.addEventListener("drop", async (event) => {
+    event.preventDefault();
 
-  // Duplicate the active effect data from the effect item.
-  const effectData = duplicate(effectDoc.system.activeEffectData || effectDoc.data.system.activeEffectData);
-  if (!effectData) return ui.notifications.warn("This effect does not contain Active Effect data.");
+    // Get the canvas's bounding rectangle.
+    const rect = canvas.app.view.getBoundingClientRect();
+    // Get drop position in screen (client) coordinates.
+    let dropX = event.clientX - rect.left;
+    let dropY = event.clientY - rect.top;
 
-  // Apply the effect to the token's actor.
-  await tokenDocument.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
-  ui.notifications.info(`Applied effect: ${effectDoc.name} to ${tokenDocument.name}`);
+    // Convert these screen coordinates into canvas (world) coordinates.
+    const dropPoint = canvas.app.stage.toLocal(new PIXI.Point(dropX, dropY));
+
+    // Loop through tokens to see if the drop point is over any token.
+    for (let token of canvas.tokens.placeables) {
+      if (
+        dropPoint.x >= token.x &&
+        dropPoint.x <= token.x + token.w &&
+        dropPoint.y >= token.y &&
+        dropPoint.y <= token.y + token.h
+      ) {
+        console.log("Drop detected on token:", token.name);
+
+        const rawData = event.dataTransfer.getData("text/plain").trim();
+        if (!rawData) return //ui.notifications.warn("No effect data found on drop.");
+
+        let data;
+        try {
+          data = JSON.parse(rawData);
+        } catch (err) {
+          data = rawData;
+        }
+        const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
+        if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
+          return //ui.notifications.warn("Dropped item is not a valid effect.");
+        }
+
+        // Load the effect document.
+        const effectDoc = await fromUuid(uuid);
+        if (!effectDoc) return ui.notifications.warn("Failed to load the effect document.");
+
+        if (effectDoc.effects.size < 1) {
+          return ui.notifications.warn("No active effects found on this effect document.");
+        }
+        // Grab the first active effect document.
+        const activeEffect = effectDoc.effects.contents[0];
+        // Duplicate its data (and remove the _id so that a new one is generated).
+        let effectData = foundry.utils.duplicate(activeEffect.toObject());
+        delete effectData._id;
+
+        await token.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+        ui.notifications.info(`Applied effect: ${effectDoc.name} to ${token.document.name}`);
+        break;
+      }
+    }
+  });
 });
+
 
 
 
@@ -908,8 +944,8 @@ Hooks.on("renderChatMessage", (message, html, data) => {
   html.find(".draggable-effect").each((i, el) => {
     el.addEventListener("dragstart", (ev) => {
       const uuid = ev.currentTarget.dataset.uuid;
+      // console.log("Drag started with UUID:", uuid);
       if (uuid) {
-        // Set the dataTransfer payload as JSON with the uuid.
         ev.dataTransfer.setData("text/plain", JSON.stringify({ uuid: uuid }));
       }
     });
