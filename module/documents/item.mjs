@@ -49,13 +49,13 @@ export class SMTXItem extends Item {
     }
 
     // Compute Power Formula
-    const preCalcPower = new Roll(`${systemData.power} + ${weaponPower}`, rollData.actor).evaluateSync({ minimize: true });
+    const preCalcPower = new Roll(`${systemData.power} + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
 
     const totalDice = preCalcPower.dice.reduce((sum, die) => sum + die.number, 0);
     const staticPower = (preCalcPower.total - totalDice) > 0 ? Math.floor((preCalcPower.total - totalDice) * systemData.powerBoost) : "";
 
     // Compute Dice Roll Formula
-    const preCalcPowerDice = new Roll(systemData.powerDice || "0", rollData.actor).evaluateSync({ minimize: true });
+    const preCalcPowerDice = new Roll(systemData.powerDice || "0", rollData).evaluateSync({ minimize: true });
     let displayDice = preCalcPowerDice.dice.reduce((sum, die) => sum + die.number, 0);
     displayDice = displayDice ? `${displayDice}D` : "";
 
@@ -67,7 +67,7 @@ export class SMTXItem extends Item {
 
     // Compute TN
     try {
-      const preCalcTN = new Roll(`${systemData.tn} + ${weaponTN}`, rollData.actor).evaluateSync();
+      const preCalcTN = new Roll(`${systemData.tn} + ${weaponTN}`, rollData).evaluateSync();
       systemData.calcTN = isNaN(preCalcTN.total) ? systemData.tn : preCalcTN.total;
       if (this.actor.system.badStatus == "PARALYZE" && systemData.attackType != "none")
         systemData.calcTN = Math.min(systemData.calcTN, 25)
@@ -83,7 +83,7 @@ export class SMTXItem extends Item {
     const systemData = this.system;
 
     // Compute Power Formula
-    const preCalcPower = new Roll(systemData.power, rollData.actor).evaluateSync({ minimize: true });
+    const preCalcPower = new Roll(systemData.power, rollData).evaluateSync({ minimize: true });
     systemData.formula = `(${systemData.powerDice || 0}) + (${preCalcPower.total})`;
   }
 
@@ -100,9 +100,10 @@ export class SMTXItem extends Item {
     if (!this.actor) return rollData;
 
     // If present, add the actor's roll data
-    rollData.actor = this.actor.getRollData();
+    const rollDataActor = this.actor.getRollData();
+    rollDataActor.item = rollData
 
-    return rollData;
+    return rollDataActor;
   }
 
 
@@ -579,7 +580,7 @@ export class SMTXItem extends Item {
     }
 
     // Roll for regular damage
-    const regularRoll = new Roll(systemData.formula, rollData.actor);
+    const regularRoll = new Roll(systemData.formula, rollData);
     await regularRoll.evaluate();
 
     if (game.dice3d)
@@ -589,7 +590,7 @@ export class SMTXItem extends Item {
 
     // Roll for sub-formula
     const hasBuffSubRoll = systemData.subBuffRoll != "" ? true : false;
-    const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData.actor);
+    const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData);
     await subBuffRoll.evaluate();
 
     if (game.dice3d && hasBuffSubRoll)
@@ -769,13 +770,13 @@ export class SMTXItem extends Item {
     const hasBuffSubRoll = systemData.subBuffRoll && systemData.subBuffRoll.trim() !== "";
     let subBuffRoll;
     if (hasBuffSubRoll) {
-      subBuffRoll = new Roll(systemData.subBuffRoll, rollData.actor);
+      subBuffRoll = new Roll(systemData.subBuffRoll, rollData);
       await subBuffRoll.evaluate();
       if (game.dice3d) await game.dice3d.showForRoll(subBuffRoll, game.user, true);
     }
 
     const isPoisoned = (this.actor.system.badStatus === "POISON" && systemData.attackType !== "none");
-    const damageRoll = new Roll(isPoisoned ? "(" + systemData.formula + ") * " + 0.5 : systemData.formula, rollData.actor);
+    const damageRoll = new Roll(isPoisoned ? "(" + systemData.formula + ") * " + 0.5 : systemData.formula, rollData);
     await damageRoll.evaluate();
     if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
     const baseDamage = Math.floor(damageRoll.total);
