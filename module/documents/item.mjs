@@ -37,7 +37,7 @@ export class SMTXItem extends Item {
   _prepareFeature(rollData) {
     if (!this.actor) return;
     const systemData = this.system;
-    const actorData = this.actor.system;
+    const actorData = rollData;
 
     const isPoisoned = (actorData.badStatus == "POISON" && systemData.attackType != "none");
 
@@ -53,9 +53,7 @@ export class SMTXItem extends Item {
 
 
     let basePower = systemData.power;
-    console.log(basePower)
     if (basePower == "") {
-      console.log("No power override.")
       basePower = 0;
       if (systemData.basePower == "melee")
         basePower = actorData.meleePower ?? "@meleePower";
@@ -63,9 +61,6 @@ export class SMTXItem extends Item {
         basePower = actorData.rangedPower ?? "@rangedPower";
       if (systemData.basePower == "spell")
         basePower = actorData.spellPower ?? "@spellPower";
-
-      console.log(actorData)
-      console.log(basePower)
     }
 
 
@@ -86,7 +81,6 @@ export class SMTXItem extends Item {
     const modPowerRoll = new Roll(`(${systemData.modPower}) + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
     const modPower = Math.floor((modPowerRoll.total - (modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0))) /** (rollData.booster[systemData.affinity] ?? 1)*/);
 
-    console.log(basePower)
     // Condense Power base, set up template for X Boost effect TODO
     const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
     const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * systemData.powerBoost);
@@ -127,6 +121,8 @@ export class SMTXItem extends Item {
     } catch (err) {
       systemData.calcTN = baseTN;
     }
+
+    systemData.displayTN = isNaN(systemData.calcTN) ? systemData.calcTN : `${systemData.calcTN}%`;
   }
 
   /**
@@ -468,8 +464,6 @@ export class SMTXItem extends Item {
         targetHtml += effectButtonsHtml;
       }
     }
-
-    console.log(this);
 
     ChatMessage.create({
       speaker: speaker,

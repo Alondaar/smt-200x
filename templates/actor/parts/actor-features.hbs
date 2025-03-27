@@ -43,11 +43,7 @@
     </div>
     {{/ifEq}}
     <div class="item-prop clickable roll-tn">
-      {{#ifNumber item.system.calcTN}}
-      {{item.system.calcTN}}%
-      {{else}}
-      {{item.system.calcTN}}
-      {{/ifNumber}}
+      {{item.system.displayTN}}
     </div>
     <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
     <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>
