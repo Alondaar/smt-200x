@@ -58,7 +58,6 @@ SMT_X.powerDice = {
   melee: 'Melee',
   ranged: 'Ranged',
   spell: 'Spell',
-  item: 'Item'
 };
 
 SMT_X.affinities = {

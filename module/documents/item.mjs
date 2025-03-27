@@ -37,42 +37,95 @@ export class SMTXItem extends Item {
   _prepareFeature(rollData) {
     if (!this.actor) return;
     const systemData = this.system;
+    const actorData = this.actor.system;
+
+    const isPoisoned = (actorData.badStatus == "POISON" && systemData.attackType != "none");
 
     // Fetch weapon stats from actor
     let weaponTN = 0, weaponPower = 0;
     if (systemData.wep) {
       const weaponSlot = systemData.wep === "a" ? "wepA" : systemData.wep === "b" ? "wepB" : null;
       if (weaponSlot) {
-        weaponTN = !systemData.wepIgnoreTN ? this.actor.system[weaponSlot]?.hit ?? 0 : 0;
-        weaponPower = !systemData.wepIgnorePower ? this.actor.system[weaponSlot]?.power ?? 0 : 0;
+        weaponTN = !systemData.wepIgnoreTN ? actorData[weaponSlot]?.hit ?? 0 : 0;
+        weaponPower = !systemData.wepIgnorePower ? actorData[weaponSlot]?.power ?? 0 : 0;
       }
     }
 
-    // Compute Power Formula
-    const preCalcPower = new Roll(`${systemData.power} + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
 
-    const totalDice = preCalcPower.dice.reduce((sum, die) => sum + die.number, 0);
-    const staticPower = (preCalcPower.total - totalDice) > 0 ? Math.floor((preCalcPower.total - totalDice) * systemData.powerBoost) : "";
+    let basePower = systemData.power;
+    console.log(basePower)
+    if (basePower == "") {
+      console.log("No power override.")
+      basePower = 0;
+      if (systemData.basePower == "melee")
+        basePower = actorData.meleePower ?? "@meleePower";
+      if (systemData.basePower == "ranged")
+        basePower = actorData.rangedPower ?? "@rangedPower";
+      if (systemData.basePower == "spell")
+        basePower = actorData.spellPower ?? "@spellPower";
 
-    // Compute Dice Roll Formula
-    const preCalcPowerDice = new Roll(systemData.powerDice || "0", rollData).evaluateSync({ minimize: true });
-    let displayDice = preCalcPowerDice.dice.reduce((sum, die) => sum + die.number, 0);
-    displayDice = displayDice ? `${displayDice}D` : "";
+      console.log(actorData)
+      console.log(basePower)
+    }
 
-    const isPoisoned = (this.actor.system.badStatus == "POISON" && systemData.attackType != "none");
 
-    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + (isPoisoned ? Math.floor(staticPower / 2) : staticPower);
-    systemData.formula = `(${systemData.powerDice || 0}) + (${staticPower || 0})`;
+    let baseDice = systemData.powerDice;
+    let displayDice = "";
+    if (baseDice == "") {
+      const usedDice = systemData.basePowerDice == "match" ? systemData.basePower : systemData.basePowerDice;
+      baseDice = actorData.powerDice[usedDice] ?? 0;
+      baseDice += systemData.modPowerDice ? systemData.modPowerDice : 0;
+      displayDice = baseDice > 0 ? `${baseDice}D` : ``;
+    } else {
+      const basePowerDiceRoll = new Roll(`${systemData.powerDice}` ?? "0", rollData).evaluateSync({ minimize: true });
+      displayDice = basePowerDiceRoll.dice.reduce((sum, die) => sum + die.number, 0);
+      displayDice = displayDice ? `${displayDice}D` : "";
+    }
+
+    // Condense Power modifier, set up template for X Booster effect
+    const modPowerRoll = new Roll(`(${systemData.modPower}) + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
+    const modPower = Math.floor((modPowerRoll.total - (modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0))) /** (rollData.booster[systemData.affinity] ?? 1)*/);
+
+    console.log(basePower)
+    // Condense Power base, set up template for X Boost effect TODO
+    const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
+    const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * systemData.powerBoost);
+
+    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1));
+    const formatDice = baseDice != systemData.powerDice ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}` : baseDice;
+    systemData.formula = `${formatDice ?? 0} + ${staticPower ?? 0}`;
 
 
     // Compute TN
+    let baseTN = systemData.tn;
+    if (baseTN == "") {
+      switch (systemData.baseTN) {
+        case "auto":
+          baseTN = "Auto";
+          break;
+        case "dodge":
+          baseTN = actorData.dodgetn;
+          break;
+        case "talk":
+          baseTN = actorData.talktn;
+          break;
+        case "fifty":
+          baseTN = 50;
+          break;
+        default:
+          baseTN = actorData.stats[systemData.baseTN].tn;
+          break;
+      }
+    }
+
+
     try {
-      const preCalcTN = new Roll(`${systemData.tn} + ${weaponTN}`, rollData).evaluateSync();
-      systemData.calcTN = isNaN(preCalcTN.total) ? systemData.tn : preCalcTN.total;
-      if (this.actor.system.badStatus == "PARALYZE" && systemData.attackType != "none")
+      const preCalcTN = new Roll(`(${baseTN}) + (${systemData.modTN}) + (${weaponTN})`, rollData).evaluateSync();
+      systemData.calcTN = isNaN(preCalcTN.total) ? baseTN : preCalcTN.total;
+      if (actorData.badStatus == "PARALYZE" && systemData.attackType != "none")
         systemData.calcTN = Math.min(systemData.calcTN, 25)
     } catch (err) {
-      systemData.calcTN = systemData.tn;
+      systemData.calcTN = baseTN;
     }
   }
 
@@ -224,6 +277,7 @@ export class SMTXItem extends Item {
         ${systemData.uses.max > 0 ? `<span class="feature-info-tag">Used: ${systemData.uses.value}/${systemData.uses.max}</span>` : ``}
         <span class="feature-info-tag">Target: ${target}</span>
         ${affinity != "none" ? `<span class="feature-info-tag">Affinity: ${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>` : ``}
+        ${item.actor.system.badStatus != "NONE" ? `<span class="feature-info-tag">Status: ${game.i18n.localize("SMT_X.AffinityBS." + item.actor.system.badStatus)}</span>` : ``}
       </div>
     `;
     const descriptionContent = `${item.system.shortEffect}`;
@@ -776,7 +830,7 @@ export class SMTXItem extends Item {
     }
 
     const isPoisoned = (this.actor.system.badStatus === "POISON" && systemData.attackType !== "none");
-    const damageRoll = new Roll(isPoisoned ? "(" + systemData.formula + ") * " + 0.5 : systemData.formula, rollData);
+    const damageRoll = new Roll(isPoisoned ? "floor(  (" + systemData.formula + ") / 2  )" : systemData.formula, rollData);
     await damageRoll.evaluate();
     if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
     const baseDamage = Math.floor(damageRoll.total);
