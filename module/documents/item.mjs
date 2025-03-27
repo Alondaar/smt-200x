@@ -211,23 +211,20 @@ export class SMTXItem extends Item {
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
     const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
-    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
+    const label = `<div class="smtx-roll-header" style="display: flex; align-items: center;">${itemImg} ${item.name}</div>`;
 
-    const cost = item.system.cost ?? 'N/A';
-    const target = item.system.target ?? 'N/A';
-    const affinity = item.system.affinity ?? 'N/A';
+    const cost = systemData.cost ?? 'N/A';
+    const target = systemData.target ?? 'N/A';
+    const affinity = systemData.affinity ?? 'N/A';
     const featureInfoContent = `
-          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
-            <span><strong>Cost</strong></span>
-            <span><strong>Target</strong></span>
-            <span><strong>Affinity</strong></span>
-          </div>
-          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
-            <span>${cost}</span>
-            <span>${target}</span>
-            <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
-          </div>
-        `;
+      <div class="feature-info-container">
+      <span class="feature-info-tag">Type: ${systemData.type}</span>
+        <span class="feature-info-tag">Cost: ${cost}</span>
+        ${systemData.uses.max > 0 ? `<span class="feature-info-tag">Used: ${systemData.uses.value}/${systemData.uses.max}</span>` : ``}
+        <span class="feature-info-tag">Target: ${target}</span>
+        ${affinity != "none" ? `<span class="feature-info-tag">Affinity: ${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>` : ``}
+      </div>
+    `;
     const descriptionContent = `${item.system.shortEffect}`;
 
     if (isNaN(systemData.calcTN)) {
@@ -1561,4 +1558,46 @@ Hooks.on("renderChatMessage", (message, html, data) => {
   if (!game.user.isGM) {
     html.find(".roll-all-dodges").hide();
   }
+});
+
+
+
+function toggleTokenHighlight(token, shouldHighlight = true) {
+  // Check if the token already has a highlight graphics object; if not, create one.
+  if (shouldHighlight) {
+    if (!token._highlight) {
+      token._highlight = new PIXI.Graphics();
+      token.addChild(token._highlight);
+    }
+    // Clear and redraw the highlight border.
+    token._highlight.clear();
+    // Customize these values to match PF2e’s style.
+    token._highlight.lineStyle(4, 0xffff00, 1); // 4px yellow border
+    token._highlight.drawRoundedRect(0, 0, token.w, token.h, 5);
+  } else {
+    if (token._highlight) {
+      token._highlight.clear();
+    }
+  }
+}
+
+
+Hooks.on("renderChatMessage", (message, html, data) => {
+  // Find elements with the "target-token" class
+  html.find(".target-name").each((i, el) => {
+    const tokenId = el.dataset.tokenId;
+    if (!tokenId) return;
+
+    // On mouseenter, highlight the token.
+    $(el).on("mouseenter", () => {
+      const token = canvas.tokens.get(tokenId);
+      if (token) toggleTokenHighlight(token, true);
+    });
+
+    // On mouseleave, remove the highlight.
+    $(el).on("mouseleave", () => {
+      const token = canvas.tokens.get(tokenId);
+      if (token) toggleTokenHighlight(token, false);
+    });
+  });
 });

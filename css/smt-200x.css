@@ -556,3 +556,30 @@
 .buff-label {
   font-weight: bold !important;
 }
+
+
+.feature-info-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.feature-info-tag {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+/* basically a modified h2*/
+.smtx-roll-header {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--color-underline-header);
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+}
