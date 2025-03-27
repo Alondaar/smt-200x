@@ -86,6 +86,7 @@ export class SMTXItem extends Item {
     const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * systemData.powerBoost);
 
     systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1));
+    systemData.calcPower = systemData.calcPower == "0" || systemData.calcPower == 0 ? "-" : systemData.calcPower;
     const formatDice = baseDice != systemData.powerDice ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}` : baseDice;
     systemData.formula = `${formatDice ?? 0} + ${staticPower ?? 0}`;
 
@@ -396,7 +397,7 @@ export class SMTXItem extends Item {
     <div class="flexrow flex-group-center flex-between" style="font-size: 14px; font-weight: bold;">
       ${tnParts.map((tn, i) => `<span class="tn-display" data-split-index="${i}">TN ${tn}%</span>`).join("")}
     </div>
-    <div class="flexrow flex-group-center flex-between" style="font-size: 32px;">
+    <div class="flexrow flex-group-center flex-between" style="font-size: var(--font-size-20); font-weight: bold;">
       ${rolls.map(({ roll }, i) => `
         <span class="roll-result" data-split-index="${i}" data-tn="${tnParts[i]}"
               style="border: 2px solid #ccc; border-radius: 4px; padding: 4px; margin: 2px; cursor: pointer;"
