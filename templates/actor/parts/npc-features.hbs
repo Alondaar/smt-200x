@@ -39,6 +39,8 @@
       <span class="clickable roll-tn" style="padding: 0 4px;">
         {{item.system.displayTN}}
       </span>
+      {{#if item.system.disableMultiaction}}
+      {{else}}
       <span class="clickable roll-tn-2" style="padding: 0 4px;">
         <i
           class=" fa-solid fa-circle-2 {{#ifOver item.system.calcTN 99}}{{else}}smtx-multi-action-disabled{{/ifOver}}"></i>
@@ -47,6 +49,7 @@
         style="padding: 0 4px;">
         <i class="fa-solid fa-circle-3"></i>
       </span>
+      {{/if}}
     </div>
     {{else}}
     <div class="item-prop clickable roll-tn">

@@ -197,6 +197,11 @@
             {{selectOptions @root.config.attackTypes localize=true selected=system.attackType}}
           </select>
         </div>
+
+        <div class="flexcol">
+          <label for="system.disableMultiaction" class="resource-label">Disable Multi-action</label>
+          <input type="checkbox" name="system.disableMultiaction" {{#if system.disableMultiaction}}checked{{/if}} />
+        </div>
       </div>
 
       <br><br>

@@ -434,6 +434,7 @@
       "appliesBadStatus": "NONE",
       "badStatusChance": "0",
       "attackType": "none",
+      "disableMultiaction": false,
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
