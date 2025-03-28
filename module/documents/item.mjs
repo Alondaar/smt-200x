@@ -534,6 +534,7 @@ export class SMTXItem extends Item {
     const descriptionContent = `${item.system.shortEffect}<hr>${item.system.description}`;
 
     let overrides = {
+      bonusFormula: "",
       affinity: systemData.affinity,
       ignoreDefense: systemData.ingoreDefense,
       halfDefense: systemData.halfDefense,
@@ -577,6 +578,10 @@ export class SMTXItem extends Item {
           content: `
                 <form>
                     <div class="form-group">
+                        <label for="extraModifier">Power Modifier:</label>
+                        <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
+                    </div>
+                    <div class="form-group">
                         <label for="affinity">Affinity:</label>
                        ${affinityContent}
                     </div>
@@ -595,10 +600,6 @@ export class SMTXItem extends Item {
                     <div class="form-group">
                         <label for="critMult">Critical Multiplier:</label>
                         <input type="number" id="critMult" name="critMult" value="${overrides.critMult}" />
-                    </div>
-                    <div class="form-group">
-                        <label for="extraModifier">Additional Modifier:</label>
-                        <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
                     </div>
                     <div class="form-group">
                         <label for="baseMult">Base Multiplier (Charge/Focus):</label>

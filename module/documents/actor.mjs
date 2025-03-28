@@ -295,7 +295,7 @@ export class SMTXActor extends Actor {
     systemData.spellPower += systemData.stats.mg.value + systemData.attributes.level +
       (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
 
-    // Compute TN values
+    // Compute TN values // TODO, split this into a tnmod field too for better chat-auditing
     for (let [key, stat] of Object.entries(systemData.stats)) {
       systemData.stats[key].tn += (stat.value * 5) + systemData.attributes.level + systemData.sumSuku + systemData.quickModTN;
     }
@@ -825,7 +825,8 @@ export class SMTXActor extends Actor {
 * @private
 */
   async rollPower(formula = "0", defAffinity = "almighty", skipDialog = false) {
-    let rollName = "Melee"
+    let rollName = ""
+    if (event.target.classList.value.includes("melee-power-roll")) rollName = "Melee"
     if (event.target.classList.value.includes("ranged-power-roll")) rollName = "Ranged"
     if (event.target.classList.value.includes("spell-power-roll")) rollName = "Spell"
 
@@ -874,6 +875,10 @@ export class SMTXActor extends Actor {
           content: `
                 <form>
                     <div class="form-group">
+                        <label for="extraModifier">Power Modifier:</label>
+                        <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
+                    </div>
+                    <div class="form-group">
                         <label for="affinity">Affinity:</label>
                        ${affinityContent}
                     </div>
@@ -888,10 +893,6 @@ export class SMTXActor extends Actor {
                     <div class="form-group">
                         <label for="critMult">Critical Multiplier:</label>
                         <input type="number" id="critMult" name="critMult" value="${overrides.critMult}" />
-                    </div>
-                    <div class="form-group">
-                        <label for="extraModifier">Additional Modifier:</label>
-                        <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
                     </div>
                     <div class="form-group">
                         <label for="baseMult">Base Multiplier (Charge/Focus):</label>

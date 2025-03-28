@@ -614,6 +614,10 @@ export class SMTXActorSheet extends ActorSheet {
       this.actor.update({ "system.resetModTN": !this.actor.system.resetModTN })
     });
 
+    html.on('click', '.custom-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower();
+    });
 
 
 
