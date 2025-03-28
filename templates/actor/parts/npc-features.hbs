@@ -34,7 +34,25 @@
     <div class='item-prop'>{{item.system.type}}</div>
     <div class='item-control item-prop clickable pay-cost'>{{item.system.cost}}</div>
     <div class='item-prop'>{{item.system.target}}</div>
-    <div class='item-prop clickable roll-tn'>{{item.system.calcTN}}%</div>
+    {{#ifNumber item.system.calcTN}}
+    <div class="item-prop">
+      <span class="clickable roll-tn" style="padding: 0 4px;">
+        {{item.system.displayTN}}
+      </span>
+      <span class="clickable roll-tn-2" style="padding: 0 4px;">
+        <i
+          class=" fa-solid fa-circle-2 {{#ifOver item.system.calcTN 99}}{{else}}smtx-multi-action-disabled{{/ifOver}}"></i>
+      </span>
+      <span class="clickable roll-tn-3 {{#ifOver item.system.calcTN 199}}{{else}}smtx-multi-action-disabled{{/ifOver}}"
+        style="padding: 0 4px;">
+        <i class="fa-solid fa-circle-3"></i>
+      </span>
+    </div>
+    {{else}}
+    <div class="item-prop clickable roll-tn">
+      {{item.system.displayTN}}
+    </div>
+    {{/ifNumber}}
     <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
     <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>
     <div class='item-controls'>

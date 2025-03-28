@@ -480,6 +480,14 @@ Handlebars.registerHelper("ifNumber", function (value, options) {
     : options.inverse(this);
 });
 
+Handlebars.registerHelper('ifOver', function (value, threshold, options) {
+  if (value > threshold) {
+    return options.fn(this);
+  } else {
+    return options.inverse(this);
+  }
+});
+
 Handlebars.registerHelper("showTC", function () {
   return game.settings.get("smt-200x", "showTCheaders");
 });

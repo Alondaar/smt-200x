@@ -297,11 +297,11 @@ export class SMTXActor extends Actor {
 
     // Compute TN values
     for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].tn += (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
+      systemData.stats[key].tn += (stat.value * 5) + systemData.attributes.level + systemData.sumSuku + systemData.quickModTN;
     }
 
-    systemData.dodgetn += 10 + systemData.stats.ag.value + systemData.sumSuku;
-    systemData.talktn += 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
+    systemData.dodgetn += 10 + systemData.stats.ag.value + systemData.sumSuku + systemData.quickModTN;
+    systemData.talktn += 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku + systemData.quickModTN;
   }
 
 
@@ -811,6 +811,10 @@ export class SMTXActor extends Actor {
       </details>
     `,
     });
+
+    if (this.system.resetModTN) {
+      await this.update({ "system.quickModTN": 0 });
+    }
   }
 
 

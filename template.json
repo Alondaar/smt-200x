@@ -187,6 +187,8 @@
           "maxAmmo": 0,
           "ammo": 0
         },
+        "quickModTN": 0,
+        "resetModTN": true,
         "unarmed": {
           "power": 0,
           "hit": 0

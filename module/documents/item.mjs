@@ -115,7 +115,11 @@ export class SMTXItem extends Item {
 
 
     try {
-      const preCalcTN = new Roll(`(${baseTN}) + (${systemData.modTN}) + (${weaponTN})`, rollData).evaluateSync();
+      let quickTN = 0; // For non-derived stat TNs
+      if (systemData.tn != "" && !systemData.tn.includes(".tn"))
+        quickTN = actorData.quickModTN;
+
+      const preCalcTN = new Roll(`(${baseTN}) + (${systemData.modTN}) + (${weaponTN}) + (${quickTN})`, rollData).evaluateSync();
       systemData.calcTN = isNaN(preCalcTN.total) ? baseTN : preCalcTN.total;
       if (actorData.badStatus == "PARALYZE" && systemData.attackType != "none")
         systemData.calcTN = Math.min(systemData.calcTN, 25)
@@ -255,10 +259,10 @@ export class SMTXItem extends Item {
  * @param {Event} event   The originating click event
  * @private
  */
-  async rollSplitD100(skipDialog = false) {
+  async rollSplitD100(skipDialog = false, splits = 1) {
     const item = this;
     const systemData = item.system;
-    let [modifier, split] = [0, 1];
+    let [modifier, split] = [0, splits];
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
     const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
@@ -267,16 +271,6 @@ export class SMTXItem extends Item {
     const cost = systemData.cost ?? 'N/A';
     const target = systemData.target ?? 'N/A';
     const affinity = systemData.affinity ?? 'N/A';
-    const featureInfoContent = `
-      <div class="feature-info-container">
-      <span class="feature-info-tag">Type: ${systemData.type}</span>
-        <span class="feature-info-tag">Cost: ${cost}</span>
-        ${systemData.uses.max > 0 ? `<span class="feature-info-tag">Used: ${systemData.uses.value}/${systemData.uses.max}</span>` : ``}
-        <span class="feature-info-tag">Target: ${target}</span>
-        ${affinity != "none" ? `<span class="feature-info-tag">Affinity: ${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>` : ``}
-        ${item.actor.system.badStatus != "NONE" ? `<span class="feature-info-tag">Status: ${game.i18n.localize("SMT_X.AffinityBS." + item.actor.system.badStatus)}</span>` : ``}
-      </div>
-    `;
     const descriptionContent = `${item.system.shortEffect}`;
 
     if (isNaN(systemData.calcTN)) {
@@ -300,15 +294,15 @@ export class SMTXItem extends Item {
           content: `
         <form>
           <div class="form-group">
-            <label for="modifier">Modifier to TN:</label>
+            <label for="modifier">TN Modifier:</label>
             <input type="number" id="modifier" name="modifier" value="0" />
           </div>
           <div class="form-group">
-            <label for="split">Split TN into:</label>
+            <label for="split">Multi-action:</label>
             <select id="split" name="split">
-              <option value="1">1 Part</option>
-              <option value="2">2 Parts</option>
-              <option value="3">3 Parts</option>
+              <option value="1">None</option>
+              <option ${splits == 2 ? `selected` : ``} value="2">2-way</option>
+              <option ${splits == 3 ? `selected` : ``} value="3">3-way</option>
             </select>
           </div>
         </form>
@@ -337,6 +331,20 @@ export class SMTXItem extends Item {
       modifier = dia_modifier
       split = dia_split
     }
+
+    const featureInfoContent = `
+      <div class="feature-info-container">
+      <span class="feature-info-tag">Type: ${systemData.type}</span>
+        <span class="feature-info-tag">Cost: ${cost}</span>
+        ${systemData.uses.max > 0 ? `<span class="feature-info-tag">Used: ${systemData.uses.value}/${systemData.uses.max}</span>` : ``}
+        <span class="feature-info-tag">Target: ${target}</span>
+        ${affinity != "none" ? `<span class="feature-info-tag">Affinity: ${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>` : ``}
+        ${item.actor.system.badStatus != "NONE" ? `<span class="feature-info-tag">Status: ${game.i18n.localize("SMT_X.AffinityBS." + item.actor.system.badStatus)}</span>` : ``}
+        ${split != 1 ? `<span class="feature-info-tag">Multi-action: ${split}</span>` : ``}
+        ${item.actor.system.quickModTN != 0 ? `<span class="feature-info-tag">Sheet TN: ${item.actor.system.quickModTN}%</span>` : ``}
+        ${modifier != 0 ? `<span class="feature-info-tag">Dialog TN: ${modifier}%</span>` : ``}
+      </div>
+    `;
 
     // Step 2: Calculate modified TN and split values
     const baseTN = systemData.calcTN ?? 0;
@@ -377,8 +385,8 @@ export class SMTXItem extends Item {
     const tnInfoContent = `
     <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
         <span><strong>Base TN</strong></span>
-        <span><strong>Mod Base</strong></span>
-        <span><strong>Splits</strong></span>
+        <span><strong>Mod</strong></span>
+        <span><strong>Multi</strong></span>
     </div>
     <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
         <span>${baseTN}%</span>
@@ -485,6 +493,10 @@ export class SMTXItem extends Item {
     </details>
     ${targetHtml}`,
     });
+
+    if (item.actor.system.resetModTN) {
+      await item.actor.update({ "system.quickModTN": 0 });
+    }
   }
 
 
@@ -897,6 +909,7 @@ export class SMTXItem extends Item {
             affinityMultiplier = 1;
         }
 
+        // TODO It seems that Magic doesn't stack with other aff
         // --- Compute Magic Multiplier ---
         let magicMultiplier = 1;
         const magicX = !["strike", "gun", "almighty"].includes(systemData.affinity.toLowerCase());

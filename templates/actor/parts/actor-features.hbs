@@ -71,9 +71,11 @@
         {{item.system.displayTN}}
       </span>
       <span class="clickable roll-tn-2" style="padding: 0 4px;">
-        <i class=" fa-solid fa-circle-2"></i>
+        <i
+          class=" fa-solid fa-circle-2 {{#ifOver item.system.calcTN 99}}{{else}}smtx-multi-action-disabled{{/ifOver}}"></i>
       </span>
-      <span class="clickable roll-tn-3" style="padding: 0 4px;">
+      <span class="clickable roll-tn-3 {{#ifOver item.system.calcTN 199}}{{else}}smtx-multi-action-disabled{{/ifOver}}"
+        style="padding: 0 4px;">
         <i class="fa-solid fa-circle-3"></i>
       </span>
     </div>

@@ -384,6 +384,32 @@ export class SMTXActorSheet extends ActorSheet {
       }
     });
 
+    html.on('mousedown', '.roll-tn-2', async (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      if (!item) return;
+      if (ev.button === 2) {
+        ev.preventDefault();
+        await item.rollSplitD100(false, 2);
+
+      } else if (ev.button === 0) {
+        await item.rollSplitD100(true, 2);
+      }
+    });
+
+    html.on('mousedown', '.roll-tn-3', async (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      if (!item) return;
+      if (ev.button === 2) {
+        ev.preventDefault();
+        await item.rollSplitD100(false, 3);
+
+      } else if (ev.button === 0) {
+        await item.rollSplitD100(true, 3);
+      }
+    });
+
 
     html.on('mousedown', '.roll-power', async (ev) => {
       const li = $(ev.currentTarget).parents('.item');
@@ -572,6 +598,21 @@ export class SMTXActorSheet extends ActorSheet {
       this.actor.rollSplitD100(this.actor.system.stats.lk.tn, "Luck")
     });
 
+
+    html.on('click', '.increase-quickModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.quickModTN": this.actor.system.quickModTN + 20 })
+    });
+
+    html.on('click', '.decrease-quickModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.quickModTN": this.actor.system.quickModTN - 20 })
+    });
+
+    html.on('click', '.toggle-resetModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.resetModTN": !this.actor.system.resetModTN })
+    });
 
 
 

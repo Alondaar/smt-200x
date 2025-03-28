@@ -134,14 +134,14 @@
         <div class="flexrow" style="flex-basis: 100%;">
           <div class="align-center" style="border: 2px groove #eeede0;">
             <label for="system.init" class="resource-label">Dodge TN</label>
-            <div>
+            <div class="dodge-roll clickable">
               <h1>{{system.dodgetn}}%</h1>
             </div>
           </div>
 
           <div class="align-center" style="border: 2px groove #eeede0;">
             <label for="system.init" class="resource-label">Talk TN</label>
-            <div>
+            <div class="talk-roll clickable">
               <h1>{{system.talktn}}%</h1>
             </div>
           </div>
@@ -251,6 +251,21 @@
   <section class="sheet-body">
     {{!-- Owned Features Tab --}}
     <div class="tab features" data-group="primary" data-tab="features">
+      <section class="main">
+        <div class="grid grid-4col">
+          <div class="flexrow flex-center flex-between align-center">
+            <i title="Toggles resetting this field to 0% after rolling a TN check."
+              class="fa-solid clickable {{#if system.resetModTN}}fa-arrows-spin{{else}}fa-xmark{{/if}} toggle-resetModTN"
+              style="margin: auto;"></i>
+            <span class="flex2" style="margin: auto;">TN Mod:</span>
+            <i class="fa-solid clickable fa-minus decrease-quickModTN" style="margin: auto;"></i>
+            <input type="text" name="system.quickModTN" value="{{system.quickModTN}}%" data-dtype="Number" disabled />
+            <i class="fa-solid clickable fa-plus increase-quickModTN" style="margin: auto;"></i>
+          </div>
+        </div>
+      </section>
+
+
       <section class="main">
         {{> "systems/smt-200x/templates/actor/parts/npc-features.hbs"}}
       </section>
