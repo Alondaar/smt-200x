@@ -85,7 +85,7 @@ export class SMTXItem extends Item {
     const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
     const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * systemData.powerBoost);
 
-    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1));
+    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + (staticPower ? Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1)) : "");
     systemData.calcPower = systemData.calcPower == "0" || systemData.calcPower == 0 ? "-" : systemData.calcPower;
     const formatDice = baseDice != systemData.powerDice ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}` : baseDice;
     systemData.formula = `${formatDice ?? 0} + ${staticPower ?? 0}`;

@@ -91,27 +91,6 @@ export class SMTXItemSheet extends ItemSheet {
     );
 
 
-    html.on('change', 'select.attack-type', (event) => {
-      event.preventDefault();
-      const selectedTN = $(event.currentTarget).val();
-
-      switch (selectedTN) {
-        case "melee":
-          this.item.update({ "system.attackType": "melee" });
-          break;
-        case "ranged":
-          this.item.update({ "system.attackType": "ranged" });
-          break;
-        case "magic":
-          this.item.update({ "system.attackType": "magic" });
-          break;
-        default:
-          this.item.update({ "system.attackType": "none" });
-          break;
-      }
-    });
-
-
     html.on('click', '.remove-effect-link', (event) => {
       event.preventDefault();
       this.item.update({ "system.inflictedEffect": "" });
