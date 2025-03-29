@@ -382,11 +382,6 @@ export class SMTXActor extends Actor {
     // Copy the system data (core stats) into the roll data
     const data = foundry.utils.deepClone(this.system);
 
-    // Loop through stats, and add their TNs to sheet output
-    /*for (let [key, stat] of Object.entries(data.stats)) {
-      data.stats[key].tn = (stat.value * 5) + data.attributes.level + (data.sumSuku || 0);
-    }*/
-
     // Copy stats to the top level for shorthand usage in rolls
     if (data.stats) {
       for (let [key, value] of Object.entries(data.stats)) {
@@ -644,9 +639,9 @@ export class SMTXActor extends Actor {
     const incomingPriorityBS = priority[status];
 
     if (incomingPriorityBS < currentPriorityBS)
-      this.update({
-        "system.badStatus": status
-      });
+      this.toggleStatusEffect(status, { active: true })
+    else if (incomingPriorityBS != currentPriorityBS)
+      ui.notifications.info(`Current Status ${this.system.badStatus} > ${status} in priority.`);
   }
 
 

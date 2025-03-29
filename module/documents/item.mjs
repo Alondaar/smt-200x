@@ -474,6 +474,28 @@ export class SMTXItem extends Item {
       }
     }
 
+
+    let statusDisplay = ``;
+    if (systemData.appliesBadStatus != "NONE") {
+      // Create a draggable HTML snippet that shows the effect's name.
+      statusDisplay = `<div class="draggable-status flex-center align-center" draggable="true" data-status="${systemData.appliesBadStatus}" style="border: 1px dashed #888; padding: 4px; margin: auto; cursor:move; background-color:PeachPuff; font-weight: bold;" title="Drag this onto an Actor or Token to apply the effect.">
+        ${systemData.badStatusChance}% ${systemData.appliesBadStatus}
+      </div>`;
+    }
+
+
+    let effectDisplay = ``;
+    if (systemData.inflictedEffect) {
+      // Retrieve the document using the stored UUID.
+      const effectDoc = await fromUuid(systemData.inflictedEffect);
+      if (effectDoc) {
+        // Create a draggable HTML snippet that shows the effect's name.
+        effectDisplay = `<div class="draggable-effect flex-center align-center" draggable="true" data-uuid="${systemData.inflictedEffect}" style="border: 1px dashed #888; padding: 4px; margin-bottom: auto; cursor:move; background-color:PeachPuff; font-weight: bold;">
+        ${effectDoc.name}
+      </div>`;
+      }
+    }
+
     ChatMessage.create({
       speaker: speaker,
       rollMode: rollMode,
@@ -484,6 +506,8 @@ export class SMTXItem extends Item {
     ${rollResults}
     <hr>
     ${descriptionContent}
+    ${statusDisplay}
+    ${effectDisplay}
     <hr>
     <details>
       <summary style="cursor: pointer; font-weight: bold;">Details</summary>
@@ -870,8 +894,9 @@ export class SMTXItem extends Item {
       .map(([key]) => key)
       .join(", ");
 
-    const buffContent = `<p>Applies to: ${activeBuffs}</p> ${subRollDisplay} ${showBuffButtons ?
-      `<div class="flexrow buff-button-container" data-apply-buffs-to='${JSON.stringify(systemData.buffs)}' data-buffs='${JSON.stringify(buffArray)}'>
+    const buffContent = `${showBuffButtons ?
+      `<p>Applies to: ${activeBuffs}</p> ${subRollDisplay} 
+      <div class="flexrow buff-button-container" data-apply-buffs-to='${JSON.stringify(systemData.buffs)}' data-buffs='${JSON.stringify(buffArray)}'>
       <button class="apply-buffs-friendly smtx-roll-button">Apply to PCs</button>
       <button class="apply-buffs-hostile smtx-roll-button">Apply to Hostiles</button>
     </div>` : ""}`;
@@ -1024,7 +1049,7 @@ export class SMTXItem extends Item {
           <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
         ? "SMT_X.CharAffinity_TC."
         : "SMT_X.CharAffinity.") + result.affinityStrength)})</span>
-          <span>${result.badStatus !== "NONE"
+          <span>${result.badStatus != "NONE"
           ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
             ? "SMT_X.AffinityBS_TC."
             : "SMT_X.AffinityBS.") + result.badStatus)
@@ -1041,7 +1066,7 @@ export class SMTXItem extends Item {
       data-affects-mp="${systemData.affectsMP}"
     >DMG</button>
     </div>
-  ${(systemData.appliesBadStatus !== "NONE" && result.rawBSchance > 0)
+  ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
           ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity}) - d100: ${result.ailmentRoll}</span>
       <button class="apply-ailment-btn smtx-roll-button" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
           : ""}  

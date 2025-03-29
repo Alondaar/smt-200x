@@ -635,6 +635,14 @@ export class SMTXActorSheet extends ActorSheet {
       } catch (err) {
         data = rawData;
       }
+
+      if (data.status) {
+        this.actor.applyBS(data.status);
+        return
+      }
+
+
+
       const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
       if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
         return //ui.notifications.warn("Dropped item is not a valid effect.");

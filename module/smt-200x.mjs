@@ -1112,6 +1112,12 @@ Hooks.once("canvasReady", () => {
         } catch (err) {
           data = rawData;
         }
+
+        if (data.status) {
+          token.actor.applyBS(data.status);
+          return
+        }
+
         const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
         if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
           return //ui.notifications.warn("Dropped item is not a valid effect.");
@@ -1149,6 +1155,13 @@ Hooks.on("renderChatMessage", (message, html, data) => {
       if (uuid) {
         ev.dataTransfer.setData("text/plain", JSON.stringify({ uuid: uuid }));
       }
+    });
+  });
+
+  html.find(".draggable-status").each((i, el) => {
+    el.addEventListener("dragstart", (ev) => {
+      const effectID = ev.currentTarget.dataset.status;
+      ev.dataTransfer.setData("text/plain", JSON.stringify({ status: effectID }));
     });
   });
 });
