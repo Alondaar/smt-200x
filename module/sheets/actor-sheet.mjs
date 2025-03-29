@@ -384,6 +384,32 @@ export class SMTXActorSheet extends ActorSheet {
       }
     });
 
+    html.on('mousedown', '.roll-tn-2', async (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      if (!item) return;
+      if (ev.button === 2) {
+        ev.preventDefault();
+        await item.rollSplitD100(false, 2);
+
+      } else if (ev.button === 0) {
+        await item.rollSplitD100(true, 2);
+      }
+    });
+
+    html.on('mousedown', '.roll-tn-3', async (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      if (!item) return;
+      if (ev.button === 2) {
+        ev.preventDefault();
+        await item.rollSplitD100(false, 3);
+
+      } else if (ev.button === 0) {
+        await item.rollSplitD100(true, 3);
+      }
+    });
+
 
     html.on('mousedown', '.roll-power', async (ev) => {
       const li = $(ev.currentTarget).parents('.item');
@@ -571,6 +597,78 @@ export class SMTXActorSheet extends ActorSheet {
       event.preventDefault();
       this.actor.rollSplitD100(this.actor.system.stats.lk.tn, "Luck")
     });
+
+
+    html.on('click', '.increase-quickModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.quickModTN": this.actor.system.quickModTN + 20 })
+    });
+
+    html.on('click', '.decrease-quickModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.quickModTN": this.actor.system.quickModTN - 20 })
+    });
+
+    html.on('click', '.toggle-resetModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.resetModTN": !this.actor.system.resetModTN })
+    });
+
+    html.on('click', '.custom-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower();
+    });
+
+
+
+
+    // Listen for a drop event anywhere on the actor sheet.
+    html.on("drop", async (event) => {
+      event.preventDefault();
+      // Get the raw data from the event.
+      const rawData = event.originalEvent.dataTransfer.getData("text/plain").trim();
+      if (!rawData) return //ui.notifications.warn("No effect data found on drop.");
+
+      let data;
+      try {
+        data = JSON.parse(rawData);
+      } catch (err) {
+        data = rawData;
+      }
+
+      if (data.status) {
+        this.actor.applyBS(data.status);
+        return
+      }
+
+
+
+      const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
+      if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
+        return //ui.notifications.warn("Dropped item is not a valid effect.");
+      }
+
+      // Load the effect document.
+      const effectDoc = await fromUuid(uuid);
+      if (!effectDoc) return ui.notifications.warn("Failed to load the effect document.");
+
+      if (effectDoc.effects.size < 1) {
+        return ui.notifications.warn("No active effects found on this effect document.");
+      }
+      // Grab the first active effect document.
+      const activeEffect = effectDoc.effects.contents[0];
+      // Duplicate its data (and remove the _id so that a new one is generated).
+      let effectData = foundry.utils.duplicate(activeEffect.toObject());
+      delete effectData._id;
+
+      await this.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      ui.notifications.info(`Applied effect: ${effectDoc.name}`);
+    });
+
+
+
+
+
 
 
 
