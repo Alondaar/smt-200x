@@ -273,18 +273,27 @@ export class SMTXItem extends Item {
     const affinity = systemData.affinity ?? 'N/A';
     const descriptionContent = `${item.system.shortEffect}`;
 
-    if (isNaN(systemData.calcTN)) {
-      ChatMessage.create({
-        speaker: speaker,
-        rolMode: rollMode,
-        flavor: label,
-        content: `
-      ${featureInfoContent}
-    `,
-      });
-
-      return
+    let statusDisplay = ``;
+    if (systemData.appliesBadStatus != "NONE") {
+      // Create a draggable HTML snippet that shows the effect's name.
+      statusDisplay = `<div class="draggable-status flex-center align-center" draggable="true" data-status="${systemData.appliesBadStatus}" style="border: 1px dashed #888; padding: 4px; margin: auto; cursor:move; background-color:PeachPuff; font-weight: bold;" title="Drag this onto an Actor or Token to apply the effect.">
+        ${systemData.badStatusChance}% ${systemData.appliesBadStatus}
+      </div>`;
     }
+
+
+    let effectDisplay = ``;
+    if (systemData.inflictedEffect) {
+      // Retrieve the document using the stored UUID.
+      const effectDoc = await fromUuid(systemData.inflictedEffect);
+      if (effectDoc) {
+        // Create a draggable HTML snippet that shows the effect's name.
+        effectDisplay = `<div class="draggable-effect flex-center align-center" draggable="true" data-uuid="${systemData.inflictedEffect}" style="border: 1px dashed #888; padding: 4px; margin-bottom: auto; cursor:move; background-color:PeachPuff; font-weight: bold;">
+        ${effectDoc.name}
+      </div>`;
+      }
+    }
+
 
     // Step 1: Prompt the user for modifier and TN split
     if (!skipDialog) {
@@ -345,6 +354,23 @@ export class SMTXItem extends Item {
         ${modifier != 0 ? `<span class="feature-info-tag">Dialog TN: ${modifier}%</span>` : ``}
       </div>
     `;
+
+    if (isNaN(systemData.calcTN)) {
+      ChatMessage.create({
+        speaker: speaker,
+        rolMode: rollMode,
+        flavor: label,
+        content: `<div>${featureInfoContent}</div>
+          <hr>
+          ${descriptionContent}
+          ${statusDisplay}
+          ${effectDisplay}
+          <hr>
+          `,
+      });
+
+      return
+    }
 
     // Step 2: Calculate modified TN and split values
     const baseTN = systemData.calcTN ?? 0;
@@ -471,28 +497,6 @@ export class SMTXItem extends Item {
           }).join('') +
           `</div>`;
         targetHtml += effectButtonsHtml;
-      }
-    }
-
-
-    let statusDisplay = ``;
-    if (systemData.appliesBadStatus != "NONE") {
-      // Create a draggable HTML snippet that shows the effect's name.
-      statusDisplay = `<div class="draggable-status flex-center align-center" draggable="true" data-status="${systemData.appliesBadStatus}" style="border: 1px dashed #888; padding: 4px; margin: auto; cursor:move; background-color:PeachPuff; font-weight: bold;" title="Drag this onto an Actor or Token to apply the effect.">
-        ${systemData.badStatusChance}% ${systemData.appliesBadStatus}
-      </div>`;
-    }
-
-
-    let effectDisplay = ``;
-    if (systemData.inflictedEffect) {
-      // Retrieve the document using the stored UUID.
-      const effectDoc = await fromUuid(systemData.inflictedEffect);
-      if (effectDoc) {
-        // Create a draggable HTML snippet that shows the effect's name.
-        effectDisplay = `<div class="draggable-effect flex-center align-center" draggable="true" data-uuid="${systemData.inflictedEffect}" style="border: 1px dashed #888; padding: 4px; margin-bottom: auto; cursor:move; background-color:PeachPuff; font-weight: bold;">
-        ${effectDoc.name}
-      </div>`;
       }
     }
 

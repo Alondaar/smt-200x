@@ -57,6 +57,10 @@ export class SMTXActor extends Actor {
     });
 
     this._setDerivedBSAffinities(systemData);
+    this._displayAffinity(systemData);
+    this._displayAffinityBS(systemData);
+    console.log(this.system.displayAffinity)
+    console.log(this.system.displayAffinityBS)
     this._calculateCombatStats(systemData);
     this._calculateResources(systemData);
     this._clampValues(systemData);
@@ -265,6 +269,78 @@ export class SMTXActor extends Actor {
         systemData.affinityBSFinal[bsType] = "null";
       }
     }
+  }
+
+
+
+  _displayAffinity(systemData) {
+    // Define the group order (all in lowercase for consistency)
+    const groupOrder = ["repel", "drain", "null", "resist", "weak"];
+    // Object to hold arrays of affinity types keyed by their effect value
+    const groups = {};
+
+    // Iterate over each affinity type in the input object.
+    for (let type in systemData.affinityFinal) {
+      const value = systemData.affinityFinal[type];
+      if (value === "normal") continue; // Skip normal values
+
+      // Initialize the group if it doesn't exist
+      if (!groups[value]) groups[value] = [];
+      groups[value].push(type);
+    }
+
+    // Build the final output string in the desired group order.
+    const outputGroups = groupOrder.reduce((acc, effectValue) => {
+      if (groups[effectValue] && groups[effectValue].length) {
+        // Capitalize the effect label (e.g., "resist" -> "Resist")
+        const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
+        // Capitalize each affinity type and join them with " / "
+        const typesStr = groups[effectValue]
+          .map(type => type.charAt(0).toUpperCase() + type.slice(1))
+          .join(", ");
+        acc.push(`${effectLabel} ${typesStr}`);
+      }
+      return acc;
+    }, []);
+
+    // Join groups with "; " to create the final condensed string.
+    systemData.displayAffinity = outputGroups.join("; ");
+  }
+
+
+
+  _displayAffinityBS(systemData) {
+    // Define the group order (all in lowercase for consistency)
+    const groupOrder = ["null", "resist", "weak"];
+    // Object to hold arrays of affinity types keyed by their effect value
+    const groups = {};
+
+    // Iterate over each affinity type in the input object.
+    for (let type in systemData.affinityBSFinal) {
+      const value = systemData.affinityBSFinal[type];
+      if (value === "normal") continue; // Skip normal values
+
+      // Initialize the group if it doesn't exist
+      if (!groups[value]) groups[value] = [];
+      groups[value].push(type);
+    }
+
+    // Build the final output string in the desired group order.
+    const outputGroups = groupOrder.reduce((acc, effectValue) => {
+      if (groups[effectValue] && groups[effectValue].length) {
+        // Capitalize the effect label (e.g., "resist" -> "Resist")
+        const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
+        // Capitalize each affinity type and join them with " / "
+        const typesStr = groups[effectValue]
+          .map(type => type.charAt(0) + type.slice(1).toLowerCase())
+          .join(", ");
+        acc.push(`${effectLabel} ${typesStr}`);
+      }
+      return acc;
+    }, []);
+
+    // Join groups with "; " to create the final condensed string.
+    systemData.displayAffinityBS = outputGroups.join("; ");
   }
 
 

@@ -167,19 +167,20 @@
       <div class="flexcol grid-span-2">
         <div class='flexrow' style="justify-content: center; align-items: center;">
           <label class="resource-label flex0">Affinity&nbsp;</label>
-          <label for="system.badStatus" class="resource-label align-right">Status:&nbsp;</label>
-          <select name="system.badStatus">
-            {{#if (showTC)}}
-            {{selectOptions @root.config.badStatusList_TC selected=system.badStatus localize=true}}
-            {{else}}
-            {{selectOptions @root.config.badStatusList selected=system.badStatus localize=true}}
-            {{/if}}
-          </select>
-          <label for="system.isCursed" class="resource-label align-right">!CURSED!&nbsp;</label>
-          <input type="checkbox" name="system.isCursed" {{#if system.isCursed}}checked{{/if}} />
+          <!-- <label for="system.badStatus" class="resource-label align-right">Status:&nbsp;</label>
+                          <select name="system.badStatus">
+                            {{#if (showTC)}}
+                            {{selectOptions @root.config.badStatusList_TC selected=system.badStatus localize=true}}
+                            {{else}}
+                            {{selectOptions @root.config.badStatusList selected=system.badStatus localize=true}}
+                            {{/if}}
+                          </select>
+                          <label for="system.isCursed" class="resource-label align-right">!CURSED!&nbsp;</label>
+                          <input type="checkbox" name="system.isCursed" {{#if system.isCursed}}checked{{/if}} /> -->
         </div>
-        <div class='flexrow'>
-          <input type="text" name="system.affinityField" value="{{system.affinityField}}" />
+        <div class='flexrow' style="font-weight: bold">
+          {{system.displayAffinity}} {{#if system.displayAffinityBS}} / {{system.displayAffinityBS}}{{/if}}
+          <!-- <input type="text" name="system.affinityField" value="{{system.affinityField}}" /> -->
         </div>
 
         <textarea name="system.biography" rows="5" cols="40">{{system.biography}}</textarea>
