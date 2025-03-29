@@ -91,61 +91,6 @@ export class SMTXItemSheet extends ItemSheet {
     );
 
 
-    html.on('change', 'select.quick-set-tn', (event) => {
-      event.preventDefault();
-      const selectedTN = $(event.currentTarget).val();
-
-      switch (selectedTN) {
-        case "st":
-          this.item.update({ "system.tn": "@st.tn" })
-          break;
-        case "mg":
-          this.item.update({ "system.tn": "@mg.tn" })
-          break;
-        case "vt":
-          this.item.update({ "system.tn": "@vt.tn" })
-          break;
-        case "ag":
-          this.item.update({ "system.tn": "@ag.tn" })
-          break;
-        case "lk":
-          this.item.update({ "system.tn": "@lk.tn" })
-          break;
-        case "dodge":
-          this.item.update({ "system.tn": "@dodgetn" })
-          break;
-        case "talk":
-          this.item.update({ "system.tn": "@talktn" })
-          break;
-        default:
-          break;
-      }
-    });
-
-
-    html.on('change', 'select.quick-set-pow', (event) => {
-      event.preventDefault();
-      const selectedTN = $(event.currentTarget).val();
-
-      switch (selectedTN) {
-        case "melee":
-          this.item.update({ "system.power": "@meleePower" });
-          this.item.update({ "system.powerDice": "(@powerDice.melee)d10x" });
-          break;
-        case "ranged":
-          this.item.update({ "system.power": "@rangedPower" });
-          this.item.update({ "system.powerDice": "(@powerDice.ranged)d10x" });
-          break;
-        case "spell":
-          this.item.update({ "system.power": "@spellPower" });
-          this.item.update({ "system.powerDice": "(@powerDice.spell)d10x" });
-          break;
-        default:
-          break;
-      }
-    });
-
-
     html.on('change', 'select.attack-type', (event) => {
       event.preventDefault();
       const selectedTN = $(event.currentTarget).val();
@@ -164,6 +109,12 @@ export class SMTXItemSheet extends ItemSheet {
           this.item.update({ "system.attackType": "none" });
           break;
       }
+    });
+
+
+    html.on('click', '.remove-effect-link', (event) => {
+      event.preventDefault();
+      this.item.update({ "system.inflictedEffect": "" });
     });
 
 
