@@ -96,6 +96,199 @@ Hooks.once('init', function () {
     },
   ]);*/
 
+  // Overrides the statuses
+  CONFIG.statusEffects = [
+    {
+      id: "DEAD",
+      img: "icons/svg/skull.svg",
+      name: "Dead",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "DEAD",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 65,
+      }]
+    },
+    {
+      id: "STONE",
+      img: "icons/commodities/treasure/totem-wood-face-brown.webp",
+      name: "Petrified",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "STONE",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 64,
+      }]
+    },
+    {
+      id: "FLY",
+      img: "icons/creatures/invertebrates/bee-simple-green.webp",
+      name: "Fly",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "FLY",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 63,
+      }]
+    },
+    {
+      id: "PARALYZE",
+      img: "icons/skills/wounds/injury-pain-body-orange.webp",
+      name: "Stunned",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "PARALYZE",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 62,
+      }]
+    },
+    {
+      id: "CHARM",
+      img: "icons/magic/control/hypnosis-mesmerism-eye.webp",
+      name: "Charmed",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "CHARM",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 61,
+      }]
+    },
+    {
+      id: "POISON",
+      img: "icons/skills/toxins/cauldron-bubbles-overflow-green.webp",
+      name: "Poisoned",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "POISON",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 60,
+      }]
+    },
+    {
+      id: "CLOSE",
+      img: "icons/magic/unholy/strike-body-life-soul-purple.webp",
+      name: "Muted",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "CLOSE",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 59,
+      }]
+    },
+    {
+      id: "BIND",
+      img: "icons/magic/control/debuff-chains-shackle-movement-red.webp",
+      name: "Restrained",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "BIND",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 58,
+      }]
+    },
+    {
+      id: "FREEZE",
+      img: "icons/magic/water/barrier-ice-crystal-wall-faceted.webp",
+      name: "Frozen",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "FREEZE",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 57,
+      }]
+    },
+    {
+      id: "SLEEP",
+      img: "icons/magic/control/sleep-bubble-purple.webp",
+      name: "Asleep",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "SLEEP",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 56,
+      }]
+    },
+    {
+      id: "PANIC",
+      img: "icons/magic/control/fear-fright-white.webp",
+      name: "Panicked",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "PANIC",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 55,
+      }]
+    },
+    {
+      id: "SHOCK",
+      img: "icons/magic/lightning/bolts-forked-large-orange.webp",
+      name: "Shocked",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "SHOCK",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 54,
+      }]
+    },
+    {
+      id: "HAPPY",
+      img: "icons/skills/social/peace-luck-insult.webp",
+      name: "Happy",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "HAPPY",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 53,
+      }]
+    },
+    {
+      id: "CURSE",
+      img: "icons/magic/perception/eye-tendrils-web-purple.webp",
+      name: "Cursed",
+      changes: [{
+        key: "system.isCursed",
+        value: true,
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 50,
+      }]
+    }
+  ];
+
+  /*interface ActiveEffectData {
+    _id: string;
+    name: string;
+    img: string;
+    changes: EffectChangeData[];
+    disabled: boolean;
+    duration: EffectDurationData;
+    description: string;
+    origin: string;
+    tint: string;
+    transfer: boolean;
+    statuses: Set<string>;
+    flags: object;
+  }*/
+
+  /*interface EffectChangeData {
+    key: string;
+    value: string;
+    mode: number;
+    priority: number;
+  }*/
+
 
 
   game.settings.register("smt-200x", "showTCheaders", {
@@ -958,4 +1151,23 @@ Hooks.on("renderChatMessage", (message, html, data) => {
       }
     });
   });
+});
+
+
+
+
+Hooks.on("preCreateActiveEffect", async (effect, options, userId) => {
+  // Check if the new effect has a BS flag
+  if (effect.flags?.type === "BS") {
+    const actor = effect.parent;
+    // Find any other active effects on the actor with the BS flag (excluding the Curse effect)
+    const conflictingEffects = actor.effects.filter(e =>
+      e.id !== effect.id &&
+      e.flags?.type === "BS"
+    );
+    // Remove any conflicting BS effects
+    if (conflictingEffects.length > 0) {
+      await actor.deleteEmbeddedDocuments("ActiveEffect", conflictingEffects.map(e => e.id));
+    }
+  }
 });

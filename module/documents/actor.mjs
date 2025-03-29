@@ -27,6 +27,8 @@ export class SMTXActor extends Actor {
     super.prepareEmbeddedDocuments();
 
     this._applyEquippedItems();
+
+    this._applyBadStatusEffects();
   }
 
 
@@ -41,64 +43,23 @@ export class SMTXActor extends Actor {
     this._calculateBuffEffects(systemData);
     this._clampStats(systemData);
 
-    switch (systemData.badStatus) {
-      case "FLY":
-        for (let [key, stat] of Object.entries(systemData.stats)) {
-          if (key == "ag") continue;
-          systemData.stats[key].value = 1;
-        }
-        break;
-      case "FREEZE":
-        systemData.affinityFinal.strike = systemData.affinityFinal.strike == "weak" ? "weak" : "normal"
-        systemData.affinityFinal.gun = systemData.affinityFinal.gun == "weak" ? "weak" : "normal"
-        break;
-      case "STONE":
-        systemData.affinityFinal = {
-          "strike": "normal",
-          "gun": "normal",
-          "fire": "resist",
-          "ice": "resist",
-          "elec": "resist",
-          "force": "resist",
-          "expel": "resist",
-          "death": "resist",
-          "mind": "resist",
-          "nerve": "resist",
-          "curse": "resist",
-          "almighty": "normal",
-          "magic": "normal"
-        };
-        break;
-      default:
-        break;
-    }
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    Object.keys(systemData.affinityOverride).forEach(affinityType => {
+      systemData.affinityFinal[affinityType] = systemData.affinityOverride[affinityType];
+    });
 
     this._setDerivedBSAffinities(systemData);
     this._calculateCombatStats(systemData);
     this._calculateResources(systemData);
     this._clampValues(systemData);
-
-
-    if (game.user.isGM || (game.user.id === this.isOwner)) {
-      const statusMapping = {
-        "DEAD": "dead",
-        "STONE": "paralysis",
-        "FLY": "fly",
-        "PARALYZE": "stun",
-        "CHARM": "blind",
-        "POISON": "poison",
-        "CLOSE": "silence",
-        "BIND": "restrain",
-        "FREEZE": "frozen",
-        "SLEEP": "sleep",
-        "PANIC": "fear",
-        "SHOCK": "shock",
-        "HAPPY": "deaf"
-      };
-
-      this.toggleStatusEffect("curse", { active: this.system.isCursed });
-    }
-
 
     // Notify all items after final actor data is set
     this.items.forEach(item => {
@@ -129,6 +90,9 @@ export class SMTXActor extends Actor {
     systemData.talktn = 0;
     systemData.affinityFinal = foundry.utils.deepClone(systemData.affinity);
     systemData.affinityBSFinal = foundry.utils.deepClone(systemData.affinityBS);
+
+    systemData.affinityOverride = {};
+    systemData.affinityBSOverride = {};
   }
 
 
@@ -229,6 +193,43 @@ export class SMTXActor extends Actor {
         });
       }
     });
+  }
+
+
+
+  _applyBadStatusEffects() {
+    const systemData = this.system;
+    switch (systemData.badStatus) {
+      case "FLY":
+        for (let [key, stat] of Object.entries(systemData.stats)) {
+          if (key === "ag") continue;
+          systemData.stats[key].value = 1;
+        }
+        break;
+      case "FREEZE":
+        systemData.affinityFinal.strike = systemData.affinityFinal.strike === "weak" ? "weak" : "normal";
+        systemData.affinityFinal.gun = systemData.affinityFinal.gun === "weak" ? "weak" : "normal";
+        break;
+      case "STONE":
+        systemData.affinityFinal = {
+          "strike": "normal",
+          "gun": "normal",
+          "fire": "resist",
+          "ice": "resist",
+          "elec": "resist",
+          "force": "resist",
+          "expel": "resist",
+          "death": "resist",
+          "mind": "resist",
+          "nerve": "resist",
+          "curse": "resist",
+          "almighty": "normal",
+          "magic": "normal"
+        };
+        break;
+      default:
+        break;
+    }
   }
 
 
