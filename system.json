@@ -20,6 +20,12 @@
       "thumbnail": "systems/smt-200x/assets/anvil-impact.png"
     }
   ],
+  "dependencies": [
+    {
+      "id": "smt-200x-kyane-sheet",
+      "optional": true
+    }
+  ],
   "version": "0.875",
   "compatibility": {
     "minimum": 12,

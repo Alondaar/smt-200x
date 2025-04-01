@@ -193,49 +193,75 @@ export class SMTXActorSheet extends ActorSheet {
     html.on('click', '.pay-cost', (ev) => {
       const li = $(ev.currentTarget).parents('.item');
       const item = this.actor.items.get(li.data('itemId'));
-
       const rollData = this.actor.getRollData();
 
+      // Retrieve current resource values
       const currentHP = this.actor.system.hp.value;
       const currentMP = this.actor.system.mp.value;
       const currentFate = this.actor.system.fate.value;
 
+      // Calculate cost values using Roll formulas
       const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true }).total));
       const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true }).total));
       const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true }).total));
       const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true }).total));
 
+      // Handle ammo consumption if required.
       if (ammoCost > 0) {
-        if (item.system.wep == "x") {
+        if (item.system.wep === "x") {
           ui.notifications.info(`You do not have a weapon equipped.`);
-          return
+          return;
         }
-        if (item.system.wep == "a") {
-          if (this.actor.system.wepA.ammo - ammoCost >= 0)
-            this.actor.update({
-              "system.wepA.ammo": this.actor.system.wepA.ammo - ammoCost,
-            });
-          else
+        if (item.system.wep === "a") {
+          if (this.actor.system.wepA.ammo - ammoCost >= 0) {
+            this.actor.update({ "system.wepA.ammo": this.actor.system.wepA.ammo - ammoCost });
+          } else {
             ui.notifications.info(`You do not have enough ammo.`);
-        }
-        else {
-          if (this.actor.system.wepB.ammo - ammoCost >= 0)
-            this.actor.update({
-              "system.wepA.ammo": this.actor.system.wepB.ammo - ammoCost,
-            });
-          else
+            return;
+          }
+        } else {
+          if (this.actor.system.wepB.ammo - ammoCost >= 0) {
+            this.actor.update({ "system.wepB.ammo": this.actor.system.wepB.ammo - ammoCost });
+          } else {
             ui.notifications.info(`You do not have enough ammo.`);
+            return;
+          }
         }
       }
 
-      if (/*currentHP - hpCost >= 0 &&*/ currentMP - mpCost >= 0 && currentMP - fateCost >= 0)
+      // Check that the actor can pay the cost (adjust as needed for HP, if required)
+      if (currentMP - mpCost >= 0 && currentFate - fateCost >= 0) {
+        // Update the actor's resources.
         this.actor.update({
           "system.hp.value": currentHP - hpCost,
           "system.mp.value": currentMP - mpCost,
           "system.fate.value": currentFate - fateCost
         });
-      else
+
+        // Build a list of cost items that are greater than 0.
+        const costs = [];
+        if (hpCost > 0) costs.push(`HP: ${hpCost}`);
+        if (mpCost > 0) costs.push(`MP: ${mpCost}`);
+        if (fateCost > 0) costs.push(`Fate: ${fateCost}`);
+        if (ammoCost > 0) costs.push(`Ammo: ${ammoCost}`);
+
+        // Join the costs with commas
+        const costText = costs.join(', ');
+
+        // Create a chat message displaying the costs paid in a slim, comma-separated format.
+        const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+        const rollMode = game.settings.get("core", "rollMode");
+        const flavor = `<strong>Paid for ${item.name}</strong>`;
+
+        ChatMessage.create({
+          speaker: speaker,
+          rollMode: rollMode,
+          flavor: flavor,
+          content: `<div class="pay-cost-message">${costText}</div>`
+        });
+      } else {
         ui.notifications.info(`You are unable to pay the cost for that skill.`);
+      }
     });
 
 

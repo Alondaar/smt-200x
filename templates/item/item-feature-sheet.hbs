@@ -202,6 +202,24 @@
           <label for="system.disableMultiaction" class="resource-label">Disable Multi-action</label>
           <input type="checkbox" name="system.disableMultiaction" {{#if system.disableMultiaction}}checked{{/if}} />
         </div>
+
+        <div class="flexcol">
+          <label for="system.lifeDrain" class="resource-label"
+            title="The % of HP restored from the effective damage dealt to a target">Life drain</label>
+          <input type="text" name="system.lifeDrain" value="{{system.lifeDrain}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.manaDrain" class="resource-label"
+            title="The % of MP restored from the effective damage dealt to a target">Mana drain</label>
+          <input type="text" name="system.manaDrain" value="{{system.manaDrain}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.hpCut" class="resource-label" title="Reduce a target's current HP by this percentage">HP
+            Cut</label>
+          <input type="text" name="system.hpCut" value="{{system.hpCut}}" data-dtype="Number" />
+        </div>
       </div>
 
       <br><br>

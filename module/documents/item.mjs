@@ -1047,6 +1047,7 @@ export class SMTXItem extends Item {
     // --- 6. Log the Damage Roll Results ---
     let logMessage = `${diceHtml} ${buffContent}`;
     damageResults.forEach(result => {
+      let currentToken = canvas.tokens.get(result.tokenId);
       logMessage += `<div class="flexcol target-row" data-token-id="${result.tokenId}" style="margin: 10px 0px">
         <div class="flexrow">
           <strong>${result.tokenName}:</strong>
@@ -1068,14 +1069,19 @@ export class SMTXItem extends Item {
       data-half-defense="${systemData.halfDefense}"
       data-critical="${baseEffect === 2}"
       data-affects-mp="${systemData.affectsMP}"
+      data-lifedrain="${systemData.lifeDrain}"
+      data-manadrain="${systemData.manaDrain}"
     >DMG</button>
     </div>
-  ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
-          ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity}) - d100: ${result.ailmentRoll}</span>
-      <button class="apply-ailment-btn smtx-roll-button" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
+    ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
+          ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity})</div>`
+          : ""}  
+    ${(systemData.hpCut > 0)
+          ? `<div>Current HP cut by ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)})</div>`
           : ""}  
 </div><hr>`;
     });
+
 
     const speaker = ChatMessage.getSpeaker({ actor: item.actor });
     await ChatMessage.create({
@@ -1450,6 +1456,8 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const halfDefense = button.data("half-defense");
     const critical = button.data("critical") === "true" || button.data("critical") === true;
     const affectsMP = button.data("affects-mp");
+    const lifedrain = button.data("lifedrain");
+    const manadrain = button.data("manadrain");
 
     const token = canvas.tokens.get(tokenId);
     if (!token || !token.actor) return;
@@ -1460,7 +1468,9 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       ignoreDefense,
       halfDefense,
       critical,
-      affectsMP
+      affectsMP,
+      lifedrain,
+      manadrain
     );
     // Disable the button after applying damage
     //button.prop("disabled", true).text("Damage Applied");

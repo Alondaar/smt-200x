@@ -59,11 +59,10 @@ export class SMTXActor extends Actor {
     this._setDerivedBSAffinities(systemData);
     this._displayAffinity(systemData);
     this._displayAffinityBS(systemData);
-    console.log(this.system.displayAffinity)
-    console.log(this.system.displayAffinityBS)
     this._calculateCombatStats(systemData);
     this._calculateResources(systemData);
     this._clampValues(systemData);
+    this._prepareNpcData(systemData)
 
     // Notify all items after final actor data is set
     this.items.forEach(item => {
@@ -390,7 +389,7 @@ export class SMTXActor extends Actor {
 
     systemData.hp.max = (hpFormula) * systemData.hp.mult;
     systemData.mp.max = (mpFormula) * systemData.mp.mult;
-    systemData.fate.max = fateFormula;
+    systemData.fate.max = fateFormula + (systemData.fate?.maxMod ? systemData.fate.maxMod : 0);
 
     if (systemData.isBoss) {
       systemData.hp.max *= 5;
@@ -417,16 +416,15 @@ export class SMTXActor extends Actor {
 
 
 
-  _prepareCharacterData(actorData) {
-    if (actorData.type !== 'character') return;
-    const systemData = actorData.system;
+  _prepareCharacterData(systemData) {
+    if (this.type !== 'character') return;
   }
 
 
 
-  _prepareNpcData(actorData) {
-    if (actorData.type !== 'npc') return;
-    const systemData = actorData.system;
+  _prepareNpcData(systemData) {
+    if (this.type !== 'npc') return;
+    console.log("test")
 
     systemData.wepA.hit = systemData.stats.ag.value;
     systemData.wepA.power = systemData.meleePower;
@@ -475,7 +473,7 @@ export class SMTXActor extends Actor {
 
 
 
-  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
+  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false, lifedrain = 0, manadrain = 0, attackerTokenID = null, attackerActorID = null) {
     // Save the actor's original HP
     const oldHP = this.system.hp.value;
 
@@ -621,11 +619,19 @@ export class SMTXActor extends Actor {
       extraNote = ` (${finalAmount - damageApplied} Overkill)`;
     }
 
+    if (lifedrain > 0) {
+      extraNote += `<br>${Math.floor(damageApplied * lifedrain)} Life Drained`;
+    }
+
+    if (manadrain > 0) {
+      extraNote += `<br>${Math.floor(damageApplied * manadrain)} Mana Drained`;
+    }
+
     // 10. Build chat feedback content and include an "Undo" button.
     let chatContent = `
     <div class="flexrow damage-line">
       <span class="damage-text">
-        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} damage${extraNote}.
+        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} damage${extraNote}
         ${fateUsed > 0 ? `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>` : ''}
         ${defenseBonus !== 0 ? `<br><em>Defense Bonus: ${defenseBonus}</em>` : ''}
       </span>

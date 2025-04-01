@@ -378,6 +378,7 @@
       "hasType": false,
       "lifeDrain": 0,
       "manaDrain": 0,
+      "hpCut": 0,
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -450,7 +451,7 @@
         "value": 0,
         "max": 0
       },
-      "inflictedEffect": []
+      "inflictedEffect": ""
     },
     "passive": {
       "templates": [
