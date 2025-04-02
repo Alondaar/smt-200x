@@ -670,12 +670,18 @@ export class SMTXItem extends Item {
     }
 
     // Add extra modifier to the formula
+    let rollFormula = systemData.formula;
+
     if (overrides.extraModifier.trim() !== "0") {
-      systemData.formula += ` + (${overrides.extraModifier.trim()})`;
+      rollFormula += ` + (${overrides.extraModifier.trim()})`;
+    }
+
+    if (item.actor.system?.chargeMod) {
+      rollFormula = `(${rollFormula})*${item.actor.system.chargeMod}`;
     }
 
     // Roll for regular damage
-    const regularRoll = new Roll(systemData.formula, rollData);
+    const regularRoll = new Roll(rollFormula, rollData);
     await regularRoll.evaluate();
 
     if (game.dice3d)
@@ -870,8 +876,14 @@ export class SMTXItem extends Item {
       if (game.dice3d) await game.dice3d.showForRoll(subBuffRoll, game.user, true);
     }
 
+    let rollFormula = systemData.formula;
+
+    if (item.actor.system?.chargeMod) {
+      rollFormula = `(${rollFormula})*${item.actor.system.chargeMod}`;
+    }
+
     const isPoisoned = (this.actor.system.badStatus === "POISON" && systemData.attackType !== "none");
-    const damageRoll = new Roll(isPoisoned ? "floor(  (" + systemData.formula + ") / 2  )" : systemData.formula, rollData);
+    const damageRoll = new Roll(isPoisoned ? "floor(  (" + rollFormula + ") / 2  )" : rollFormula, rollData);
     await damageRoll.evaluate();
     if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
     const baseDamage = Math.floor(damageRoll.total);
