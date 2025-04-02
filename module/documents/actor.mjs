@@ -257,9 +257,10 @@ export class SMTXActor extends Actor {
     // Loop over each BS type in the mapping.
     for (let bsType in bsMapping) {
       // Conditionally skip processing SHOCK if the setting is false.
-      if (bsType === "SHOCK" && !game.settings.get("smt-200x", "showTCheaders")) {
+      if (bsType === "SHOCK" && !game.settings.get("smt-200x", "showTCheaders"))
         continue;
-      }
+      if (bsType === "FLY") // Turns out you can't be immune to it
+        continue;
 
       const primaryType = bsMapping[bsType];
       const primaryAffinity = systemData.affinityFinal[primaryType] || "normal";
