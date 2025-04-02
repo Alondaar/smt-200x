@@ -424,8 +424,6 @@ export class SMTXActor extends Actor {
 
   _prepareNpcData(systemData) {
     if (this.type !== 'npc') return;
-    console.log("test")
-
     systemData.wepA.hit = systemData.stats.ag.value;
     systemData.wepA.power = systemData.meleePower;
     systemData.wepA.type = "Demon";

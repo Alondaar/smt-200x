@@ -27,6 +27,11 @@ export class SMTXItem extends Item {
       case "consumable":
         this._prepareConsumable(rollData);
         break;
+      case "armor":
+        for (let effect of this.effects.contents) {
+          effect.update({ disabled: !this.system.equipped });
+        }
+        break;
     }
   }
 
