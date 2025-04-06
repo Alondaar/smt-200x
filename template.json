@@ -11,13 +11,13 @@
           "value": 10,
           "min": 0,
           "max": 10,
-          "mult": 4
+          "mult": 6
         },
         "mp": {
           "value": 5,
           "min": 0,
           "max": 5,
-          "mult": 2
+          "mult": 3
         },
         "fate": {
           "value": 5,
@@ -187,6 +187,8 @@
           "maxAmmo": 0,
           "ammo": 0
         },
+        "quickModTN": 0,
+        "resetModTN": true,
         "unarmed": {
           "power": 0,
           "hit": 0
@@ -376,6 +378,7 @@
       "hasType": false,
       "lifeDrain": 0,
       "manaDrain": 0,
+      "hpCut": 0,
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -402,9 +405,16 @@
       "wep": "x",
       "wepIgnoreTN": false,
       "wepIgnorePower": false,
-      "tn": "0",
-      "power": "0",
-      "powerDice": "1d10x",
+      "baseTN": "auto",
+      "modTN": "0",
+      "basePower": "none",
+      "modPower": "0",
+      "basePowerDice": "match",
+      "modPowerDice": "0",
+      "explodeDice": true,
+      "tn": "",
+      "power": "",
+      "powerDice": "",
       "affinity": "strike",
       "ingoreDefense": false,
       "halfDefense": false,
@@ -425,6 +435,7 @@
       "appliesBadStatus": "NONE",
       "badStatusChance": "0",
       "attackType": "none",
+      "disableMultiaction": false,
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -439,7 +450,8 @@
       "uses": {
         "value": 0,
         "max": 0
-      }
+      },
+      "inflictedEffect": ""
     },
     "passive": {
       "templates": [

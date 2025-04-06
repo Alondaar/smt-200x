@@ -20,7 +20,7 @@
       "thumbnail": "systems/smt-200x/assets/anvil-impact.png"
     }
   ],
-  "version": "0.871",
+  "version": "0.876",
   "compatibility": {
     "minimum": 12,
     "verified": "12.331"
@@ -50,7 +50,7 @@
   "packFolders": [],
   "socket": true,
   "manifest": "https://github.com/Alondaar/smt-200x/raw/main/system.json",
-  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-025.zip",
+  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-027.zip",
   "background": "systems/smt-200x/assets/anvil-impact.png",
   "gridDistance": 2,
   "gridUnits": "m",

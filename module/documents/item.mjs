@@ -27,6 +27,11 @@ export class SMTXItem extends Item {
       case "consumable":
         this._prepareConsumable(rollData);
         break;
+      case "armor":
+        for (let effect of this.effects.contents) {
+          effect.update({ disabled: !this.system.equipped });
+        }
+        break;
     }
   }
 
@@ -37,43 +42,97 @@ export class SMTXItem extends Item {
   _prepareFeature(rollData) {
     if (!this.actor) return;
     const systemData = this.system;
+    const actorData = rollData;
+
+    const isPoisoned = (actorData.badStatus == "POISON" && systemData.attackType != "none");
 
     // Fetch weapon stats from actor
     let weaponTN = 0, weaponPower = 0;
     if (systemData.wep) {
       const weaponSlot = systemData.wep === "a" ? "wepA" : systemData.wep === "b" ? "wepB" : null;
       if (weaponSlot) {
-        weaponTN = !systemData.wepIgnoreTN ? this.actor.system[weaponSlot]?.hit ?? 0 : 0;
-        weaponPower = !systemData.wepIgnorePower ? this.actor.system[weaponSlot]?.power ?? 0 : 0;
+        weaponTN = !systemData.wepIgnoreTN ? actorData[weaponSlot]?.hit ?? 0 : 0;
+        weaponPower = !systemData.wepIgnorePower ? actorData[weaponSlot]?.power ?? 0 : 0;
       }
     }
 
-    // Compute Power Formula
-    const preCalcPower = new Roll(`${systemData.power} + ${weaponPower}`, rollData.actor).evaluateSync({ minimize: true });
 
-    const totalDice = preCalcPower.dice.reduce((sum, die) => sum + die.number, 0);
-    const staticPower = (preCalcPower.total - totalDice) > 0 ? Math.floor((preCalcPower.total - totalDice) * systemData.powerBoost) : "";
+    let basePower = systemData.power;
+    if (basePower == "") {
+      basePower = 0;
+      if (systemData.basePower == "melee")
+        basePower = actorData.meleePower ?? "@meleePower";
+      if (systemData.basePower == "ranged")
+        basePower = actorData.rangedPower ?? "@rangedPower";
+      if (systemData.basePower == "spell")
+        basePower = actorData.spellPower ?? "@spellPower";
+    }
 
-    // Compute Dice Roll Formula
-    const preCalcPowerDice = new Roll(systemData.powerDice || "0", rollData.actor).evaluateSync({ minimize: true });
-    let displayDice = preCalcPowerDice.dice.reduce((sum, die) => sum + die.number, 0);
-    displayDice = displayDice ? `${displayDice}D` : "";
 
-    const isPoisoned = (this.actor.system.badStatus == "POISON" && systemData.attackType != "none");
+    let baseDice = systemData.powerDice;
+    let displayDice = "";
+    if (baseDice == "") {
+      const usedDice = systemData.basePowerDice == "match" ? systemData.basePower : systemData.basePowerDice;
+      baseDice = actorData.powerDice[usedDice] ?? 0;
+      baseDice += systemData.modPowerDice ? systemData.modPowerDice : 0;
+      displayDice = baseDice > 0 ? `${baseDice}D` : ``;
+    } else {
+      const basePowerDiceRoll = new Roll(`${systemData.powerDice}` ?? "0", rollData).evaluateSync({ minimize: true });
+      displayDice = basePowerDiceRoll.dice.reduce((sum, die) => sum + die.number, 0);
+      displayDice = displayDice ? `${displayDice}D` : "";
+    }
 
-    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + (isPoisoned ? Math.floor(staticPower / 2) : staticPower);
-    systemData.formula = `(${systemData.powerDice || 0}) + (${staticPower || 0})`;
+    // Condense Power modifier, set up template for X Booster effect
+    const modPowerRoll = new Roll(`(${systemData.modPower}) + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
+    const modPower = Math.floor((modPowerRoll.total - (modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0))) /** (rollData.booster[systemData.affinity] ?? 1)*/);
+
+    // Condense Power base, set up template for X Boost effect TODO
+    const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
+    const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * systemData.powerBoost);
+
+    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + (staticPower ? Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1)) : "");
+    systemData.calcPower = systemData.calcPower == "0" || systemData.calcPower == 0 ? "-" : systemData.calcPower;
+    const formatDice = baseDice != systemData.powerDice ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}` : baseDice;
+    systemData.formula = `${formatDice ?? 0} + ${staticPower ?? 0}`;
 
 
     // Compute TN
+    let baseTN = systemData.tn;
+    if (baseTN == "") {
+      switch (systemData.baseTN) {
+        case "auto":
+          baseTN = "Auto";
+          break;
+        case "dodge":
+          baseTN = actorData.dodgetn;
+          break;
+        case "talk":
+          baseTN = actorData.talktn;
+          break;
+        case "fifty":
+          baseTN = 50;
+          break;
+        default:
+          baseTN = actorData.stats[systemData.baseTN].tn;
+          break;
+      }
+    }
+
+
     try {
-      const preCalcTN = new Roll(`${systemData.tn} + ${weaponTN}`, rollData.actor).evaluateSync();
-      systemData.calcTN = isNaN(preCalcTN.total) ? systemData.tn : preCalcTN.total;
-      if (this.actor.system.badStatus == "PARALYZE" && systemData.attackType != "none")
+      let quickTN = 0; // For non-derived stat TNs
+      if (systemData.tn != "" && !systemData.tn.includes(".tn"))
+        quickTN = actorData.quickModTN;
+
+      const preCalcTN = new Roll(`(${baseTN}) + (${systemData.modTN}) + (${weaponTN}) + (${quickTN})`, rollData).evaluateSync();
+      systemData.calcTN = isNaN(preCalcTN.total) ? baseTN : preCalcTN.total;
+      if (actorData.badStatus == "PARALYZE" && systemData.attackType != "none")
         systemData.calcTN = Math.min(systemData.calcTN, 25)
     } catch (err) {
-      systemData.calcTN = systemData.tn;
+      systemData.calcTN = baseTN;
     }
+
+    systemData.displayTN = isNaN(systemData.calcTN) ? systemData.calcTN : `${systemData.calcTN}%`;
   }
 
   /**
@@ -83,7 +142,7 @@ export class SMTXItem extends Item {
     const systemData = this.system;
 
     // Compute Power Formula
-    const preCalcPower = new Roll(systemData.power, rollData.actor).evaluateSync({ minimize: true });
+    const preCalcPower = new Roll(systemData.power, rollData).evaluateSync({ minimize: true });
     systemData.formula = `(${systemData.powerDice || 0}) + (${preCalcPower.total})`;
   }
 
@@ -100,9 +159,10 @@ export class SMTXItem extends Item {
     if (!this.actor) return rollData;
 
     // If present, add the actor's roll data
-    rollData.actor = this.actor.getRollData();
+    const rollDataActor = this.actor.getRollData();
+    rollDataActor.item = rollData
 
-    return rollData;
+    return rollDataActor;
   }
 
 
@@ -138,42 +198,56 @@ export class SMTXItem extends Item {
   async roll() {
     const item = this;
 
+    // Retrieve the linked effect, if any.
+    let effectDisplay = "";
+    if (item.system.inflictedEffect) {
+      // Retrieve the document using the stored UUID.
+      const effectDoc = await fromUuid(item.system.inflictedEffect);
+      if (effectDoc) {
+        // Create a draggable HTML snippet that shows the effect's name.
+        effectDisplay = `<div class="draggable-effect" draggable="true" data-uuid="${item.system.inflictedEffect}" style="border: 1px dashed #888; padding: 5px; margin-bottom: 5px; display:inline-block; cursor:move;">
+        ${effectDoc.name}
+      </div>`;
+      }
+    }
+
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
     const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
-    const label = `
-    <h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
-    let content = (item.system.shortEffect + `<hr>` + item.system.description) ?? ''
+    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
 
+    let content = (item.system.shortEffect + `<hr>` + item.system.description) ?? '';
+
+    // Optionally add extra info based on item type.
     switch (item.type) {
       case 'feature':
         const cost = item.system.cost ?? 'N/A';
         const target = item.system.target ?? 'N/A';
-        const tn = item.system.calcTN ?? 'N/A';
-        const power = item.system.calcPower ?? 'N/A';
         const affinity = item.system.affinity ?? 'N/A';
 
         const featureInfo = `
-          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
-            <span><strong>Cost</strong></span>
-            <span><strong>Target</strong></span>
-            <span><strong>Affinity</strong></span>
-          </div>
-          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
-            <span>${cost}</span>
-            <span>${target}</span>
-            <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
-          </div>
-          <hr>
-        `;
+        <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+          <span><strong>Cost</strong></span>
+          <span><strong>Target</strong></span>
+          <span><strong>Affinity</strong></span>
+        </div>
+        <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
+          <span>${cost}</span>
+          <span>${target}</span>
+          <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
+        </div>
+        <hr>
+      `;
 
         content = featureInfo + content;
         break;
-
       default:
         break;
     }
+
+    // Prepend the draggable effect display if present.
+    if (effectDisplay) content = effectDisplay + "<br>" + content;
 
     ChatMessage.create({
       speaker: speaker,
@@ -190,44 +264,41 @@ export class SMTXItem extends Item {
  * @param {Event} event   The originating click event
  * @private
  */
-  async rollSplitD100(skipDialog = false) {
+  async rollSplitD100(skipDialog = false, splits = 1) {
     const item = this;
     const systemData = item.system;
-    let [modifier, split] = [0, 1];
+    let [modifier, split] = [0, splits];
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
     const itemImg = item.img ? `<img src="${item.img}" style="width:32px; height:32px; vertical-align:middle; margin-right:5px;">` : '';
-    const label = `<h2 style="display: flex; align-items: center;">${itemImg} ${item.name}</h2>`;
+    const label = `<div class="smtx-roll-header" style="display: flex; align-items: center;">${itemImg} ${item.name}</div>`;
 
-    const cost = item.system.cost ?? 'N/A';
-    const target = item.system.target ?? 'N/A';
-    const affinity = item.system.affinity ?? 'N/A';
-    const featureInfoContent = `
-          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
-            <span><strong>Cost</strong></span>
-            <span><strong>Target</strong></span>
-            <span><strong>Affinity</strong></span>
-          </div>
-          <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
-            <span>${cost}</span>
-            <span>${target}</span>
-            <span>${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>
-          </div>
-        `;
+    const cost = systemData.cost ?? 'N/A';
+    const target = systemData.target ?? 'N/A';
+    const affinity = systemData.affinity ?? 'N/A';
     const descriptionContent = `${item.system.shortEffect}`;
 
-    if (isNaN(systemData.calcTN)) {
-      ChatMessage.create({
-        speaker: speaker,
-        rolMode: rollMode,
-        flavor: label,
-        content: `
-      ${featureInfoContent}
-    `,
-      });
-
-      return
+    let statusDisplay = ``;
+    if (systemData.appliesBadStatus != "NONE") {
+      // Create a draggable HTML snippet that shows the effect's name.
+      statusDisplay = `<div class="draggable-status flex-center align-center" draggable="true" data-status="${systemData.appliesBadStatus}" style="border: 1px dashed #888; padding: 4px; margin: auto; cursor:move; background-color:PeachPuff; font-weight: bold;" title="Drag this onto an Actor or Token to apply the effect.">
+        ${systemData.badStatusChance}% ${systemData.appliesBadStatus}
+      </div>`;
     }
+
+
+    let effectDisplay = ``;
+    if (systemData.inflictedEffect) {
+      // Retrieve the document using the stored UUID.
+      const effectDoc = await fromUuid(systemData.inflictedEffect);
+      if (effectDoc) {
+        // Create a draggable HTML snippet that shows the effect's name.
+        effectDisplay = `<div class="draggable-effect flex-center align-center" draggable="true" data-uuid="${systemData.inflictedEffect}" style="border: 1px dashed #888; padding: 4px; margin-bottom: auto; cursor:move; background-color:PeachPuff; font-weight: bold;">
+        ${effectDoc.name}
+      </div>`;
+      }
+    }
+
 
     // Step 1: Prompt the user for modifier and TN split
     if (!skipDialog) {
@@ -237,15 +308,15 @@ export class SMTXItem extends Item {
           content: `
         <form>
           <div class="form-group">
-            <label for="modifier">Modifier to TN:</label>
+            <label for="modifier">TN Modifier:</label>
             <input type="number" id="modifier" name="modifier" value="0" />
           </div>
           <div class="form-group">
-            <label for="split">Split TN into:</label>
+            <label for="split">Multi-action:</label>
             <select id="split" name="split">
-              <option value="1">1 Part</option>
-              <option value="2">2 Parts</option>
-              <option value="3">3 Parts</option>
+              <option value="1">None</option>
+              <option ${splits == 2 ? `selected` : ``} value="2">2-way</option>
+              <option ${splits == 3 ? `selected` : ``} value="3">3-way</option>
             </select>
           </div>
         </form>
@@ -273,6 +344,37 @@ export class SMTXItem extends Item {
 
       modifier = dia_modifier
       split = dia_split
+    }
+
+    const featureInfoContent = `
+      <div class="feature-info-container">
+      <span class="feature-info-tag">Type: ${systemData.type}</span>
+        <span class="feature-info-tag">Cost: ${cost}</span>
+        ${systemData.uses.max > 0 ? `<span class="feature-info-tag">Used: ${systemData.uses.value}/${systemData.uses.max}</span>` : ``}
+        <span class="feature-info-tag">Target: ${target}</span>
+        ${affinity != "none" ? `<span class="feature-info-tag">Affinity: ${game.i18n.localize("SMT_X.Affinity." + affinity)}</span>` : ``}
+        ${item.actor.system.badStatus != "NONE" ? `<span class="feature-info-tag">Status: ${game.i18n.localize("SMT_X.AffinityBS." + item.actor.system.badStatus)}</span>` : ``}
+        ${split != 1 ? `<span class="feature-info-tag">Multi-action: ${split}</span>` : ``}
+        ${item.actor.system.quickModTN != 0 ? `<span class="feature-info-tag">Sheet TN: ${item.actor.system.quickModTN}%</span>` : ``}
+        ${modifier != 0 ? `<span class="feature-info-tag">Dialog TN: ${modifier}%</span>` : ``}
+      </div>
+    `;
+
+    if (isNaN(systemData.calcTN)) {
+      ChatMessage.create({
+        speaker: speaker,
+        rolMode: rollMode,
+        flavor: label,
+        content: `<div>${featureInfoContent}</div>
+          <hr>
+          ${descriptionContent}
+          ${statusDisplay}
+          ${effectDisplay}
+          <hr>
+          `,
+      });
+
+      return
     }
 
     // Step 2: Calculate modified TN and split values
@@ -314,8 +416,8 @@ export class SMTXItem extends Item {
     const tnInfoContent = `
     <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
         <span><strong>Base TN</strong></span>
-        <span><strong>Mod Base</strong></span>
-        <span><strong>Splits</strong></span>
+        <span><strong>Mod</strong></span>
+        <span><strong>Multi</strong></span>
     </div>
     <div class="flexrow flex-center flex-between" style="display: flex; align-items: center;">
         <span>${baseTN}%</span>
@@ -334,7 +436,7 @@ export class SMTXItem extends Item {
     <div class="flexrow flex-group-center flex-between" style="font-size: 14px; font-weight: bold;">
       ${tnParts.map((tn, i) => `<span class="tn-display" data-split-index="${i}">TN ${tn}%</span>`).join("")}
     </div>
-    <div class="flexrow flex-group-center flex-between" style="font-size: 32px;">
+    <div class="flexrow flex-group-center flex-between" style="font-size: var(--font-size-20); font-weight: bold;">
       ${rolls.map(({ roll }, i) => `
         <span class="roll-result" data-split-index="${i}" data-tn="${tnParts[i]}"
               style="border: 2px solid #ccc; border-radius: 4px; padding: 4px; margin: 2px; cursor: pointer;"
@@ -403,8 +505,6 @@ export class SMTXItem extends Item {
       }
     }
 
-    console.log(this);
-
     ChatMessage.create({
       speaker: speaker,
       rollMode: rollMode,
@@ -415,6 +515,8 @@ export class SMTXItem extends Item {
     ${rollResults}
     <hr>
     ${descriptionContent}
+    ${statusDisplay}
+    ${effectDisplay}
     <hr>
     <details>
       <summary style="cursor: pointer; font-weight: bold;">Details</summary>
@@ -424,6 +526,10 @@ export class SMTXItem extends Item {
     </details>
     ${targetHtml}`,
     });
+
+    if (item.actor.system.resetModTN) {
+      await item.actor.update({ "system.quickModTN": 0 });
+    }
   }
 
 
@@ -461,6 +567,7 @@ export class SMTXItem extends Item {
     const descriptionContent = `${item.system.shortEffect}<hr>${item.system.description}`;
 
     let overrides = {
+      bonusFormula: "",
       affinity: systemData.affinity,
       ignoreDefense: systemData.ingoreDefense,
       halfDefense: systemData.halfDefense,
@@ -504,6 +611,10 @@ export class SMTXItem extends Item {
           content: `
                 <form>
                     <div class="form-group">
+                        <label for="extraModifier">Power Modifier:</label>
+                        <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
+                    </div>
+                    <div class="form-group">
                         <label for="affinity">Affinity:</label>
                        ${affinityContent}
                     </div>
@@ -522,10 +633,6 @@ export class SMTXItem extends Item {
                     <div class="form-group">
                         <label for="critMult">Critical Multiplier:</label>
                         <input type="number" id="critMult" name="critMult" value="${overrides.critMult}" />
-                    </div>
-                    <div class="form-group">
-                        <label for="extraModifier">Additional Modifier:</label>
-                        <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
                     </div>
                     <div class="form-group">
                         <label for="baseMult">Base Multiplier (Charge/Focus):</label>
@@ -563,12 +670,18 @@ export class SMTXItem extends Item {
     }
 
     // Add extra modifier to the formula
+    let rollFormula = systemData.formula;
+
     if (overrides.extraModifier.trim() !== "0") {
-      systemData.formula += ` + (${overrides.extraModifier.trim()})`;
+      rollFormula += ` + (${overrides.extraModifier.trim()})`;
+    }
+
+    if (item.actor.system?.chargeMod) {
+      rollFormula = `(${rollFormula})*${item.actor.system.chargeMod}`;
     }
 
     // Roll for regular damage
-    const regularRoll = new Roll(systemData.formula, rollData.actor);
+    const regularRoll = new Roll(rollFormula, rollData);
     await regularRoll.evaluate();
 
     if (game.dice3d)
@@ -578,7 +691,7 @@ export class SMTXItem extends Item {
 
     // Roll for sub-formula
     const hasBuffSubRoll = systemData.subBuffRoll != "" ? true : false;
-    const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData.actor);
+    const subBuffRoll = new Roll(hasBuffSubRoll ? systemData.subBuffRoll : "0", rollData);
     await subBuffRoll.evaluate();
 
     if (game.dice3d && hasBuffSubRoll)
@@ -758,13 +871,19 @@ export class SMTXItem extends Item {
     const hasBuffSubRoll = systemData.subBuffRoll && systemData.subBuffRoll.trim() !== "";
     let subBuffRoll;
     if (hasBuffSubRoll) {
-      subBuffRoll = new Roll(systemData.subBuffRoll, rollData.actor);
+      subBuffRoll = new Roll(systemData.subBuffRoll, rollData);
       await subBuffRoll.evaluate();
       if (game.dice3d) await game.dice3d.showForRoll(subBuffRoll, game.user, true);
     }
 
+    let rollFormula = systemData.formula;
+
+    if (item.actor.system?.chargeMod) {
+      rollFormula = `(${rollFormula})*${item.actor.system.chargeMod}`;
+    }
+
     const isPoisoned = (this.actor.system.badStatus === "POISON" && systemData.attackType !== "none");
-    const damageRoll = new Roll(isPoisoned ? "(" + systemData.formula + ") * " + 0.5 : systemData.formula, rollData.actor);
+    const damageRoll = new Roll(isPoisoned ? "floor(  (" + rollFormula + ") / 2  )" : rollFormula, rollData);
     await damageRoll.evaluate();
     if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
     const baseDamage = Math.floor(damageRoll.total);
@@ -796,8 +915,9 @@ export class SMTXItem extends Item {
       .map(([key]) => key)
       .join(", ");
 
-    const buffContent = `<p>Applies to: ${activeBuffs}</p> ${subRollDisplay} ${showBuffButtons ?
-      `<div class="flexrow buff-button-container" data-apply-buffs-to='${JSON.stringify(systemData.buffs)}' data-buffs='${JSON.stringify(buffArray)}'>
+    const buffContent = `${showBuffButtons ?
+      `<p>Applies to: ${activeBuffs}</p> ${subRollDisplay} 
+      <div class="flexrow buff-button-container" data-apply-buffs-to='${JSON.stringify(systemData.buffs)}' data-buffs='${JSON.stringify(buffArray)}'>
       <button class="apply-buffs-friendly smtx-roll-button">Apply to PCs</button>
       <button class="apply-buffs-hostile smtx-roll-button">Apply to Hostiles</button>
     </div>` : ""}`;
@@ -836,6 +956,7 @@ export class SMTXItem extends Item {
             affinityMultiplier = 1;
         }
 
+        // TODO It seems that Magic doesn't stack with other aff
         // --- Compute Magic Multiplier ---
         let magicMultiplier = 1;
         const magicX = !["strike", "gun", "almighty"].includes(systemData.affinity.toLowerCase());
@@ -943,13 +1064,14 @@ export class SMTXItem extends Item {
     // --- 6. Log the Damage Roll Results ---
     let logMessage = `${diceHtml} ${buffContent}`;
     damageResults.forEach(result => {
+      let currentToken = canvas.tokens.get(result.tokenId);
       logMessage += `<div class="flexcol target-row" data-token-id="${result.tokenId}" style="margin: 10px 0px">
         <div class="flexrow">
           <strong>${result.tokenName}:</strong>
           <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
         ? "SMT_X.CharAffinity_TC."
         : "SMT_X.CharAffinity.") + result.affinityStrength)})</span>
-          <span>${result.badStatus !== "NONE"
+          <span>${result.badStatus != "NONE"
           ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
             ? "SMT_X.AffinityBS_TC."
             : "SMT_X.AffinityBS.") + result.badStatus)
@@ -964,14 +1086,19 @@ export class SMTXItem extends Item {
       data-half-defense="${systemData.halfDefense}"
       data-critical="${baseEffect === 2}"
       data-affects-mp="${systemData.affectsMP}"
+      data-lifedrain="${systemData.lifeDrain}"
+      data-manadrain="${systemData.manaDrain}"
     >DMG</button>
     </div>
-  ${(systemData.appliesBadStatus !== "NONE" && result.rawBSchance > 0)
-          ? `<span>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity}) - d100: ${result.ailmentRoll}</span>
-      <button class="apply-ailment-btn smtx-roll-button" data-status="${systemData.appliesBadStatus}">Apply Status</button>`
+    ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
+          ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity})</div>`
+          : ""}  
+    ${(systemData.hpCut > 0)
+          ? `<div>Current HP cut by ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)})</div>`
           : ""}  
 </div><hr>`;
     });
+
 
     const speaker = ChatMessage.getSpeaker({ actor: item.actor });
     await ChatMessage.create({
@@ -1346,6 +1473,8 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const halfDefense = button.data("half-defense");
     const critical = button.data("critical") === "true" || button.data("critical") === true;
     const affectsMP = button.data("affects-mp");
+    const lifedrain = button.data("lifedrain");
+    const manadrain = button.data("manadrain");
 
     const token = canvas.tokens.get(tokenId);
     if (!token || !token.actor) return;
@@ -1356,7 +1485,9 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       ignoreDefense,
       halfDefense,
       critical,
-      affectsMP
+      affectsMP,
+      lifedrain,
+      manadrain
     );
     // Disable the button after applying damage
     //button.prop("disabled", true).text("Damage Applied");
@@ -1547,4 +1678,46 @@ Hooks.on("renderChatMessage", (message, html, data) => {
   if (!game.user.isGM) {
     html.find(".roll-all-dodges").hide();
   }
+});
+
+
+
+function toggleTokenHighlight(token, shouldHighlight = true) {
+  // Check if the token already has a highlight graphics object; if not, create one.
+  if (shouldHighlight) {
+    if (!token._highlight) {
+      token._highlight = new PIXI.Graphics();
+      token.addChild(token._highlight);
+    }
+    // Clear and redraw the highlight border.
+    token._highlight.clear();
+    // Customize these values to match PF2e’s style.
+    token._highlight.lineStyle(4, 0xffff00, 1); // 4px yellow border
+    token._highlight.drawRoundedRect(0, 0, token.w, token.h, 5);
+  } else {
+    if (token._highlight) {
+      token._highlight.clear();
+    }
+  }
+}
+
+
+Hooks.on("renderChatMessage", (message, html, data) => {
+  // Find elements with the "target-token" class
+  html.find(".target-name").each((i, el) => {
+    const tokenId = el.dataset.tokenId;
+    if (!tokenId) return;
+
+    // On mouseenter, highlight the token.
+    $(el).on("mouseenter", () => {
+      const token = canvas.tokens.get(tokenId);
+      if (token) toggleTokenHighlight(token, true);
+    });
+
+    // On mouseleave, remove the highlight.
+    $(el).on("mouseleave", () => {
+      const token = canvas.tokens.get(tokenId);
+      if (token) toggleTokenHighlight(token, false);
+    });
+  });
 });

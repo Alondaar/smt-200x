@@ -134,14 +134,14 @@
         <div class="flexrow" style="flex-basis: 100%;">
           <div class="align-center" style="border: 2px groove #eeede0;">
             <label for="system.init" class="resource-label">Dodge TN</label>
-            <div>
+            <div class="dodge-roll clickable">
               <h1>{{system.dodgetn}}%</h1>
             </div>
           </div>
 
           <div class="align-center" style="border: 2px groove #eeede0;">
             <label for="system.init" class="resource-label">Talk TN</label>
-            <div>
+            <div class="talk-roll clickable">
               <h1>{{system.talktn}}%</h1>
             </div>
           </div>
@@ -167,19 +167,20 @@
       <div class="flexcol grid-span-2">
         <div class='flexrow' style="justify-content: center; align-items: center;">
           <label class="resource-label flex0">Affinity&nbsp;</label>
-          <label for="system.badStatus" class="resource-label align-right">Status:&nbsp;</label>
-          <select name="system.badStatus">
-            {{#if (showTC)}}
-            {{selectOptions @root.config.badStatusList_TC selected=system.badStatus localize=true}}
-            {{else}}
-            {{selectOptions @root.config.badStatusList selected=system.badStatus localize=true}}
-            {{/if}}
-          </select>
-          <label for="system.isCursed" class="resource-label align-right">!CURSED!&nbsp;</label>
-          <input type="checkbox" name="system.isCursed" {{#if system.isCursed}}checked{{/if}} />
+          <!-- <label for="system.badStatus" class="resource-label align-right">Status:&nbsp;</label>
+                          <select name="system.badStatus">
+                            {{#if (showTC)}}
+                            {{selectOptions @root.config.badStatusList_TC selected=system.badStatus localize=true}}
+                            {{else}}
+                            {{selectOptions @root.config.badStatusList selected=system.badStatus localize=true}}
+                            {{/if}}
+                          </select>
+                          <label for="system.isCursed" class="resource-label align-right">!CURSED!&nbsp;</label>
+                          <input type="checkbox" name="system.isCursed" {{#if system.isCursed}}checked{{/if}} /> -->
         </div>
-        <div class='flexrow'>
-          <input type="text" name="system.affinityField" value="{{system.affinityField}}" />
+        <div class='flexrow' style="font-weight: bold">
+          {{system.displayAffinity}} {{#if system.displayAffinityBS}} / {{system.displayAffinityBS}}{{/if}}
+          <!-- <input type="text" name="system.affinityField" value="{{system.affinityField}}" /> -->
         </div>
 
         <textarea name="system.biography" rows="5" cols="40">{{system.biography}}</textarea>
@@ -251,6 +252,21 @@
   <section class="sheet-body">
     {{!-- Owned Features Tab --}}
     <div class="tab features" data-group="primary" data-tab="features">
+      <section class="main">
+        <div class="grid grid-4col">
+          <div class="flexrow flex-center flex-between align-center">
+            <i title="Toggles resetting this field to 0% after rolling a TN check."
+              class="fa-solid clickable {{#if system.resetModTN}}fa-arrows-spin{{else}}fa-xmark{{/if}} toggle-resetModTN"
+              style="margin: auto;"></i>
+            <span class="flex2" style="margin: auto;">TN Mod:</span>
+            <i class="fa-solid clickable fa-minus decrease-quickModTN" style="margin: auto;"></i>
+            <input type="text" name="system.quickModTN" value="{{system.quickModTN}}%" data-dtype="Number" disabled />
+            <i class="fa-solid clickable fa-plus increase-quickModTN" style="margin: auto;"></i>
+          </div>
+        </div>
+      </section>
+
+
       <section class="main">
         {{> "systems/smt-200x/templates/actor/parts/npc-features.hbs"}}
       </section>

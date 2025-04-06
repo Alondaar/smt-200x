@@ -91,79 +91,60 @@ export class SMTXItemSheet extends ItemSheet {
     );
 
 
-    html.on('change', 'select.quick-set-tn', (event) => {
+    html.on('click', '.remove-effect-link', (event) => {
       event.preventDefault();
-      const selectedTN = $(event.currentTarget).val();
-
-      switch (selectedTN) {
-        case "st":
-          this.item.update({ "system.tn": "@st.tn" })
-          break;
-        case "mg":
-          this.item.update({ "system.tn": "@mg.tn" })
-          break;
-        case "vt":
-          this.item.update({ "system.tn": "@vt.tn" })
-          break;
-        case "ag":
-          this.item.update({ "system.tn": "@ag.tn" })
-          break;
-        case "lk":
-          this.item.update({ "system.tn": "@lk.tn" })
-          break;
-        case "dodge":
-          this.item.update({ "system.tn": "@dodgetn" })
-          break;
-        case "talk":
-          this.item.update({ "system.tn": "@talktn" })
-          break;
-        default:
-          break;
-      }
+      this.item.update({ "system.inflictedEffect": "" });
     });
 
 
-    html.on('change', 'select.quick-set-pow', (event) => {
-      event.preventDefault();
-      const selectedTN = $(event.currentTarget).val();
 
-      switch (selectedTN) {
-        case "melee":
-          this.item.update({ "system.power": "@meleePower" });
-          this.item.update({ "system.powerDice": "(@powerDice.melee)d10x" });
-          break;
-        case "ranged":
-          this.item.update({ "system.power": "@rangedPower" });
-          this.item.update({ "system.powerDice": "(@powerDice.ranged)d10x" });
-          break;
-        case "spell":
-          this.item.update({ "system.power": "@spellPower" });
-          this.item.update({ "system.powerDice": "(@powerDice.spell)d10x" });
-          break;
-        default:
-          break;
-      }
+
+    // Setup the drop zone for effects
+    const dropZone = html.find(".effect-drop-zone");
+    dropZone.on("dragover", (event) => {
+      event.preventDefault();
+      // Set the drop effect to copy so the user knows it’s a valid drop target
+      event.originalEvent.dataTransfer.dropEffect = "copy";
+      dropZone.addClass("dragover");
     });
-
-
-    html.on('change', 'select.attack-type', (event) => {
+    dropZone.on("dragleave", (event) => {
       event.preventDefault();
-      const selectedTN = $(event.currentTarget).val();
+      dropZone.removeClass("dragover");
+    });
+    dropZone.on("drop", async (event) => {
+      event.preventDefault();
+      dropZone.removeClass("dragover");
 
-      switch (selectedTN) {
-        case "melee":
-          this.item.update({ "system.attackType": "melee" });
-          break;
-        case "ranged":
-          this.item.update({ "system.attackType": "ranged" });
-          break;
-        case "magic":
-          this.item.update({ "system.attackType": "magic" });
-          break;
-        default:
-          this.item.update({ "system.attackType": "none" });
-          break;
+      // Get the raw data from the event
+      let rawData = event.originalEvent.dataTransfer.getData("text/plain").trim();
+      let data;
+      try {
+        data = JSON.parse(rawData);
+      } catch (e) {
+        // If parsing fails, assume it's already a plain string.
+        data = rawData;
       }
+
+      // If the data is an object with a uuid property, extract it.
+      const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
+
+      // Validate the UUID format (should have at least 3 dot-separated parts)
+      if (!uuid || uuid.split(".").length < 3) {
+        ui.notifications.warn("Dropped item does not have a valid UUID.");
+        return;
+      }
+
+      // Load the effect document using Foundry's fromUuid helper.
+      const effectDoc = await fromUuid(uuid);
+      if (!effectDoc) {
+        ui.notifications.warn("Failed to load the effect document.");
+        return;
+      }
+
+      // Update the item with the linked effect UUID.
+      await this.item.update({ "system.inflictedEffect": uuid });
+      ui.notifications.info("Effect linked to this skill.");
+      this.render();
     });
   }
 }

@@ -193,49 +193,75 @@ export class SMTXActorSheet extends ActorSheet {
     html.on('click', '.pay-cost', (ev) => {
       const li = $(ev.currentTarget).parents('.item');
       const item = this.actor.items.get(li.data('itemId'));
-
       const rollData = this.actor.getRollData();
 
+      // Retrieve current resource values
       const currentHP = this.actor.system.hp.value;
       const currentMP = this.actor.system.mp.value;
       const currentFate = this.actor.system.fate.value;
 
+      // Calculate cost values using Roll formulas
       const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true }).total));
       const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true }).total));
       const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true }).total));
       const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true }).total));
 
+      // Handle ammo consumption if required.
       if (ammoCost > 0) {
-        if (item.system.wep == "x") {
+        if (item.system.wep === "x") {
           ui.notifications.info(`You do not have a weapon equipped.`);
-          return
+          return;
         }
-        if (item.system.wep == "a") {
-          if (this.actor.system.wepA.ammo - ammoCost >= 0)
-            this.actor.update({
-              "system.wepA.ammo": this.actor.system.wepA.ammo - ammoCost,
-            });
-          else
+        if (item.system.wep === "a") {
+          if (this.actor.system.wepA.ammo - ammoCost >= 0) {
+            this.actor.update({ "system.wepA.ammo": this.actor.system.wepA.ammo - ammoCost });
+          } else {
             ui.notifications.info(`You do not have enough ammo.`);
-        }
-        else {
-          if (this.actor.system.wepB.ammo - ammoCost >= 0)
-            this.actor.update({
-              "system.wepA.ammo": this.actor.system.wepB.ammo - ammoCost,
-            });
-          else
+            return;
+          }
+        } else {
+          if (this.actor.system.wepB.ammo - ammoCost >= 0) {
+            this.actor.update({ "system.wepB.ammo": this.actor.system.wepB.ammo - ammoCost });
+          } else {
             ui.notifications.info(`You do not have enough ammo.`);
+            return;
+          }
         }
       }
 
-      if (/*currentHP - hpCost >= 0 &&*/ currentMP - mpCost >= 0 && currentMP - fateCost >= 0)
+      // Check that the actor can pay the cost (adjust as needed for HP, if required)
+      if (currentMP - mpCost >= 0 && currentFate - fateCost >= 0) {
+        // Update the actor's resources.
         this.actor.update({
           "system.hp.value": currentHP - hpCost,
           "system.mp.value": currentMP - mpCost,
           "system.fate.value": currentFate - fateCost
         });
-      else
+
+        // Build a list of cost items that are greater than 0.
+        const costs = [];
+        if (hpCost > 0) costs.push(`HP: ${hpCost}`);
+        if (mpCost > 0) costs.push(`MP: ${mpCost}`);
+        if (fateCost > 0) costs.push(`Fate: ${fateCost}`);
+        if (ammoCost > 0) costs.push(`Ammo: ${ammoCost}`);
+
+        // Join the costs with commas
+        const costText = costs.join(', ');
+
+        // Create a chat message displaying the costs paid in a slim, comma-separated format.
+        const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+        const rollMode = game.settings.get("core", "rollMode");
+        const flavor = `<strong>Paid for ${item.name}</strong>`;
+
+        ChatMessage.create({
+          speaker: speaker,
+          rollMode: rollMode,
+          flavor: flavor,
+          content: `<div class="pay-cost-message">${costText}</div>`
+        });
+      } else {
         ui.notifications.info(`You are unable to pay the cost for that skill.`);
+      }
     });
 
 
@@ -381,6 +407,32 @@ export class SMTXActorSheet extends ActorSheet {
 
       } else if (ev.button === 0) {
         await item.rollSplitD100(true);
+      }
+    });
+
+    html.on('mousedown', '.roll-tn-2', async (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      if (!item) return;
+      if (ev.button === 2) {
+        ev.preventDefault();
+        await item.rollSplitD100(false, 2);
+
+      } else if (ev.button === 0) {
+        await item.rollSplitD100(true, 2);
+      }
+    });
+
+    html.on('mousedown', '.roll-tn-3', async (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+      if (!item) return;
+      if (ev.button === 2) {
+        ev.preventDefault();
+        await item.rollSplitD100(false, 3);
+
+      } else if (ev.button === 0) {
+        await item.rollSplitD100(true, 3);
       }
     });
 
@@ -571,6 +623,78 @@ export class SMTXActorSheet extends ActorSheet {
       event.preventDefault();
       this.actor.rollSplitD100(this.actor.system.stats.lk.tn, "Luck")
     });
+
+
+    html.on('click', '.increase-quickModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.quickModTN": this.actor.system.quickModTN + 20 })
+    });
+
+    html.on('click', '.decrease-quickModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.quickModTN": this.actor.system.quickModTN - 20 })
+    });
+
+    html.on('click', '.toggle-resetModTN', async (event) => {
+      event.preventDefault();
+      this.actor.update({ "system.resetModTN": !this.actor.system.resetModTN })
+    });
+
+    html.on('click', '.custom-power-roll', async (event) => {
+      event.preventDefault();
+      this.actor.rollPower();
+    });
+
+
+
+
+    // Listen for a drop event anywhere on the actor sheet.
+    html.on("drop", async (event) => {
+      event.preventDefault();
+      // Get the raw data from the event.
+      const rawData = event.originalEvent.dataTransfer.getData("text/plain").trim();
+      if (!rawData) return //ui.notifications.warn("No effect data found on drop.");
+
+      let data;
+      try {
+        data = JSON.parse(rawData);
+      } catch (err) {
+        data = rawData;
+      }
+
+      if (data.status) {
+        this.actor.applyBS(data.status);
+        return
+      }
+
+
+
+      const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
+      if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
+        return //ui.notifications.warn("Dropped item is not a valid effect.");
+      }
+
+      // Load the effect document.
+      const effectDoc = await fromUuid(uuid);
+      if (!effectDoc) return ui.notifications.warn("Failed to load the effect document.");
+
+      if (effectDoc.effects.size < 1) {
+        return ui.notifications.warn("No active effects found on this effect document.");
+      }
+      // Grab the first active effect document.
+      const activeEffect = effectDoc.effects.contents[0];
+      // Duplicate its data (and remove the _id so that a new one is generated).
+      let effectData = foundry.utils.duplicate(activeEffect.toObject());
+      delete effectData._id;
+
+      await this.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      ui.notifications.info(`Applied effect: ${effectDoc.name}`);
+    });
+
+
+
+
+
 
 
 

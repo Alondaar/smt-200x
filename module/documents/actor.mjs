@@ -27,6 +27,8 @@ export class SMTXActor extends Actor {
     super.prepareEmbeddedDocuments();
 
     this._applyEquippedItems();
+
+    this._applyBadStatusEffects();
   }
 
 
@@ -41,64 +43,26 @@ export class SMTXActor extends Actor {
     this._calculateBuffEffects(systemData);
     this._clampStats(systemData);
 
-    switch (systemData.badStatus) {
-      case "FLY":
-        for (let [key, stat] of Object.entries(systemData.stats)) {
-          if (key == "ag") continue;
-          systemData.stats[key].value = 1;
-        }
-        break;
-      case "FREEZE":
-        systemData.affinityFinal.strike = systemData.affinityFinal.strike == "weak" ? "weak" : "normal"
-        systemData.affinityFinal.gun = systemData.affinityFinal.gun == "weak" ? "weak" : "normal"
-        break;
-      case "STONE":
-        systemData.affinityFinal = {
-          "strike": "normal",
-          "gun": "normal",
-          "fire": "resist",
-          "ice": "resist",
-          "elec": "resist",
-          "force": "resist",
-          "expel": "resist",
-          "death": "resist",
-          "mind": "resist",
-          "nerve": "resist",
-          "curse": "resist",
-          "almighty": "normal",
-          "magic": "normal"
-        };
-        break;
-      default:
-        break;
-    }
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    Object.keys(systemData.affinityOverride).forEach(affinityType => {
+      systemData.affinityFinal[affinityType] = systemData.affinityOverride[affinityType];
+    });
 
     this._setDerivedBSAffinities(systemData);
+    this._displayAffinity(systemData);
+    this._displayAffinityBS(systemData);
     this._calculateCombatStats(systemData);
     this._calculateResources(systemData);
     this._clampValues(systemData);
-
-
-    if (game.user.isGM || (game.user.id === this.isOwner)) {
-      const statusMapping = {
-        "DEAD": "dead",
-        "STONE": "paralysis",
-        "FLY": "fly",
-        "PARALYZE": "stun",
-        "CHARM": "blind",
-        "POISON": "poison",
-        "CLOSE": "silence",
-        "BIND": "restrain",
-        "FREEZE": "frozen",
-        "SLEEP": "sleep",
-        "PANIC": "fear",
-        "SHOCK": "shock",
-        "HAPPY": "deaf"
-      };
-
-      this.toggleStatusEffect("curse", { active: this.system.isCursed });
-    }
-
+    this._prepareNpcData(systemData)
 
     // Notify all items after final actor data is set
     this.items.forEach(item => {
@@ -129,6 +93,9 @@ export class SMTXActor extends Actor {
     systemData.talktn = 0;
     systemData.affinityFinal = foundry.utils.deepClone(systemData.affinity);
     systemData.affinityBSFinal = foundry.utils.deepClone(systemData.affinityBS);
+
+    systemData.affinityOverride = {};
+    systemData.affinityBSOverride = {};
   }
 
 
@@ -233,6 +200,43 @@ export class SMTXActor extends Actor {
 
 
 
+  _applyBadStatusEffects() {
+    const systemData = this.system;
+    switch (systemData.badStatus) {
+      case "FLY":
+        for (let [key, stat] of Object.entries(systemData.stats)) {
+          if (key === "ag") continue;
+          systemData.stats[key].value = 1;
+        }
+        break;
+      case "FREEZE":
+        systemData.affinityFinal.strike = systemData.affinityFinal.strike === "weak" ? "weak" : "normal";
+        systemData.affinityFinal.gun = systemData.affinityFinal.gun === "weak" ? "weak" : "normal";
+        break;
+      case "STONE":
+        systemData.affinityFinal = {
+          "strike": "normal",
+          "gun": "normal",
+          "fire": "resist",
+          "ice": "resist",
+          "elec": "resist",
+          "force": "resist",
+          "expel": "resist",
+          "death": "resist",
+          "mind": "resist",
+          "nerve": "resist",
+          "curse": "resist",
+          "almighty": "normal",
+          "magic": "normal"
+        };
+        break;
+      default:
+        break;
+    }
+  }
+
+
+
   _setDerivedBSAffinities(systemData) {
     // Define the mapping: each BS type is associated with a primary affinity type.
     const bsMapping = {
@@ -253,9 +257,10 @@ export class SMTXActor extends Actor {
     // Loop over each BS type in the mapping.
     for (let bsType in bsMapping) {
       // Conditionally skip processing SHOCK if the setting is false.
-      if (bsType === "SHOCK" && !game.settings.get("smt-200x", "showTCheaders")) {
+      if (bsType === "SHOCK" && !game.settings.get("smt-200x", "showTCheaders"))
         continue;
-      }
+      if (bsType === "FLY") // Turns out you can't be immune to it
+        continue;
 
       const primaryType = bsMapping[bsType];
       const primaryAffinity = systemData.affinityFinal[primaryType] || "normal";
@@ -264,6 +269,78 @@ export class SMTXActor extends Actor {
         systemData.affinityBSFinal[bsType] = "null";
       }
     }
+  }
+
+
+
+  _displayAffinity(systemData) {
+    // Define the group order (all in lowercase for consistency)
+    const groupOrder = ["repel", "drain", "null", "resist", "weak"];
+    // Object to hold arrays of affinity types keyed by their effect value
+    const groups = {};
+
+    // Iterate over each affinity type in the input object.
+    for (let type in systemData.affinityFinal) {
+      const value = systemData.affinityFinal[type];
+      if (value === "normal") continue; // Skip normal values
+
+      // Initialize the group if it doesn't exist
+      if (!groups[value]) groups[value] = [];
+      groups[value].push(type);
+    }
+
+    // Build the final output string in the desired group order.
+    const outputGroups = groupOrder.reduce((acc, effectValue) => {
+      if (groups[effectValue] && groups[effectValue].length) {
+        // Capitalize the effect label (e.g., "resist" -> "Resist")
+        const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
+        // Capitalize each affinity type and join them with " / "
+        const typesStr = groups[effectValue]
+          .map(type => type.charAt(0).toUpperCase() + type.slice(1))
+          .join(", ");
+        acc.push(`${effectLabel} ${typesStr}`);
+      }
+      return acc;
+    }, []);
+
+    // Join groups with "; " to create the final condensed string.
+    systemData.displayAffinity = outputGroups.join("; ");
+  }
+
+
+
+  _displayAffinityBS(systemData) {
+    // Define the group order (all in lowercase for consistency)
+    const groupOrder = ["null", "resist", "weak"];
+    // Object to hold arrays of affinity types keyed by their effect value
+    const groups = {};
+
+    // Iterate over each affinity type in the input object.
+    for (let type in systemData.affinityBSFinal) {
+      const value = systemData.affinityBSFinal[type];
+      if (value === "normal") continue; // Skip normal values
+
+      // Initialize the group if it doesn't exist
+      if (!groups[value]) groups[value] = [];
+      groups[value].push(type);
+    }
+
+    // Build the final output string in the desired group order.
+    const outputGroups = groupOrder.reduce((acc, effectValue) => {
+      if (groups[effectValue] && groups[effectValue].length) {
+        // Capitalize the effect label (e.g., "resist" -> "Resist")
+        const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
+        // Capitalize each affinity type and join them with " / "
+        const typesStr = groups[effectValue]
+          .map(type => type.charAt(0) + type.slice(1).toLowerCase())
+          .join(", ");
+        acc.push(`${effectLabel} ${typesStr}`);
+      }
+      return acc;
+    }, []);
+
+    // Join groups with "; " to create the final condensed string.
+    systemData.displayAffinityBS = outputGroups.join("; ");
   }
 
 
@@ -295,13 +372,13 @@ export class SMTXActor extends Actor {
     systemData.spellPower += systemData.stats.mg.value + systemData.attributes.level +
       (game.settings.get("smt-200x", "taruOnly") ? systemData.sumTaru : systemData.sumMaka);
 
-    // Compute TN values
+    // Compute TN values // TODO, split this into a tnmod field too for better chat-auditing
     for (let [key, stat] of Object.entries(systemData.stats)) {
-      systemData.stats[key].tn += (stat.value * 5) + systemData.attributes.level + systemData.sumSuku;
+      systemData.stats[key].tn += (stat.value * 5) + systemData.attributes.level + systemData.sumSuku + systemData.quickModTN;
     }
 
-    systemData.dodgetn += 10 + systemData.stats.ag.value + systemData.sumSuku;
-    systemData.talktn += 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku;
+    systemData.dodgetn += 10 + systemData.stats.ag.value + systemData.sumSuku + systemData.quickModTN;
+    systemData.talktn += 20 + (systemData.stats.lk.value * 2) + systemData.sumSuku + systemData.quickModTN;
   }
 
 
@@ -313,7 +390,7 @@ export class SMTXActor extends Actor {
 
     systemData.hp.max = (hpFormula) * systemData.hp.mult;
     systemData.mp.max = (mpFormula) * systemData.mp.mult;
-    systemData.fate.max = fateFormula;
+    systemData.fate.max = fateFormula + (systemData.fate?.maxMod ? systemData.fate.maxMod : 0);
 
     if (systemData.isBoss) {
       systemData.hp.max *= 5;
@@ -340,17 +417,14 @@ export class SMTXActor extends Actor {
 
 
 
-  _prepareCharacterData(actorData) {
-    if (actorData.type !== 'character') return;
-    const systemData = actorData.system;
+  _prepareCharacterData(systemData) {
+    if (this.type !== 'character') return;
   }
 
 
 
-  _prepareNpcData(actorData) {
-    if (actorData.type !== 'npc') return;
-    const systemData = actorData.system;
-
+  _prepareNpcData(systemData) {
+    if (this.type !== 'npc') return;
     systemData.wepA.hit = systemData.stats.ag.value;
     systemData.wepA.power = systemData.meleePower;
     systemData.wepA.type = "Demon";
@@ -381,11 +455,6 @@ export class SMTXActor extends Actor {
     // Copy the system data (core stats) into the roll data
     const data = foundry.utils.deepClone(this.system);
 
-    // Loop through stats, and add their TNs to sheet output
-    /*for (let [key, stat] of Object.entries(data.stats)) {
-      data.stats[key].tn = (stat.value * 5) + data.attributes.level + (data.sumSuku || 0);
-    }*/
-
     // Copy stats to the top level for shorthand usage in rolls
     if (data.stats) {
       for (let [key, value] of Object.entries(data.stats)) {
@@ -403,7 +472,7 @@ export class SMTXActor extends Actor {
 
 
 
-  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false) {
+  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false, lifedrain = 0, manadrain = 0, attackerTokenID = null, attackerActorID = null) {
     // Save the actor's original HP
     const oldHP = this.system.hp.value;
 
@@ -549,11 +618,19 @@ export class SMTXActor extends Actor {
       extraNote = ` (${finalAmount - damageApplied} Overkill)`;
     }
 
+    if (lifedrain > 0) {
+      extraNote += `<br>${Math.floor(damageApplied * lifedrain)} Life Drained`;
+    }
+
+    if (manadrain > 0) {
+      extraNote += `<br>${Math.floor(damageApplied * manadrain)} Mana Drained`;
+    }
+
     // 10. Build chat feedback content and include an "Undo" button.
     let chatContent = `
     <div class="flexrow damage-line">
       <span class="damage-text">
-        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} damage${extraNote}.
+        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} damage${extraNote}
         ${fateUsed > 0 ? `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>` : ''}
         ${defenseBonus !== 0 ? `<br><em>Defense Bonus: ${defenseBonus}</em>` : ''}
       </span>
@@ -643,9 +720,9 @@ export class SMTXActor extends Actor {
     const incomingPriorityBS = priority[status];
 
     if (incomingPriorityBS < currentPriorityBS)
-      this.update({
-        "system.badStatus": status
-      });
+      this.toggleStatusEffect(status, { active: true })
+    else if (incomingPriorityBS != currentPriorityBS)
+      ui.notifications.info(`Current Status ${this.system.badStatus} > ${status} in priority.`);
   }
 
 
@@ -811,6 +888,10 @@ export class SMTXActor extends Actor {
       </details>
     `,
     });
+
+    if (this.system.resetModTN) {
+      await this.update({ "system.quickModTN": 0 });
+    }
   }
 
 
@@ -821,7 +902,8 @@ export class SMTXActor extends Actor {
 * @private
 */
   async rollPower(formula = "0", defAffinity = "almighty", skipDialog = false) {
-    let rollName = "Melee"
+    let rollName = ""
+    if (event.target.classList.value.includes("melee-power-roll")) rollName = "Melee"
     if (event.target.classList.value.includes("ranged-power-roll")) rollName = "Ranged"
     if (event.target.classList.value.includes("spell-power-roll")) rollName = "Spell"
 
@@ -870,6 +952,10 @@ export class SMTXActor extends Actor {
           content: `
                 <form>
                     <div class="form-group">
+                        <label for="extraModifier">Power Modifier:</label>
+                        <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
+                    </div>
+                    <div class="form-group">
                         <label for="affinity">Affinity:</label>
                        ${affinityContent}
                     </div>
@@ -884,10 +970,6 @@ export class SMTXActor extends Actor {
                     <div class="form-group">
                         <label for="critMult">Critical Multiplier:</label>
                         <input type="number" id="critMult" name="critMult" value="${overrides.critMult}" />
-                    </div>
-                    <div class="form-group">
-                        <label for="extraModifier">Additional Modifier:</label>
-                        <input type="text" id="extraModifier" name="extraModifier" value="${overrides.extraModifier}" />
                     </div>
                     <div class="form-group">
                         <label for="baseMult">Base Multiplier (Charge/Focus):</label>

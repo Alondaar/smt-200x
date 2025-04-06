@@ -1,3 +1,26 @@
+<!-- <div class="grid grid-4col">
+  {{#each effects.temporary.effects as |effect|}}
+  <div class="item flexrow" data-effect-id="{{effect.id}}" data-parent-id="{{effect.parent.id}}">
+    <div class='item-name flexrow'>
+      <img class="item-image flex0" src="{{effect.img}}" width='24' height='24' />
+      &nbsp;
+      <span>{{effect.name}}</span>
+    </div>
+    <div class="item-controls effect-controls flexrow">
+      <a class="effect-control" data-action="toggle" title="{{localize 'SMT_X.Effect.Toggle'}}">
+        <i class="fas {{#if effect.disabled}}fa-check{{else}}fa-times{{/if}}"></i>
+      </a>
+      <a class="effect-control" data-action="edit" title="{{localize 'DOCUMENT.Update' type=" Effect"}}">
+        <i class="fas fa-edit"></i>
+      </a>
+      <a class="effect-control" data-action="delete" title="{{localize 'DOCUMENT.Delete' type=" Effect"}}">
+        <i class="fas fa-trash"></i>
+      </a>
+    </div>
+  </div>
+  {{/each}}
+</div> -->
+
 <ol class='items-list'>
   <li class='item flexrow items-header'>
     <div class='item-name flex3'>Actions / Skills</div>
@@ -14,7 +37,7 @@
     <div class='item-prop'>Power</div>
     <div class='item-prop'>Affinity</div>
     {{/if}}
-    <div class='item-controls'>
+    <div class='item-controls flex0'>
       <a class='item-control item-create' title='Create item' data-type='feature'>
         <i class='fas fa-plus'></i>
       </a>
@@ -32,26 +55,42 @@
         <span class="pip-row">
           {{range 1 item.system.uses.max item.system.uses.value}}
         </span>
-        <span>{{item.name}}</span>
+        <span style="font-weight: bold;">{{item.name}}</span>
       </h4>
     </div>
     <div class='item-prop'>{{item.system.type}}</div>
     <div class='item-control item-prop clickable pay-cost'>{{item.system.cost}}</div>
     <div class='item-prop'>{{item.system.target}}</div>
-    {{#ifEq system.aux.showTCheaders false}}
+    {{#if showTC}}
+    {{else}}
     <div class='item-prop clickable weapon-rotate'>{{localize (lookup @root.config.weaponChoices item.system.wep)}}
     </div>
-    {{/ifEq}}
-    <div class="item-prop clickable roll-tn">
-      {{#ifNumber item.system.calcTN}}
-      {{item.system.calcTN}}%
+    {{/if}}
+    {{#ifNumber item.system.calcTN}}
+    <div class="item-prop">
+      <span class="clickable roll-tn" style="padding: 0 4px;">
+        {{item.system.displayTN}}
+      </span>
+      {{#if item.system.disableMultiaction}}
       {{else}}
-      {{item.system.calcTN}}
-      {{/ifNumber}}
+      <span class="clickable roll-tn-2" style="padding: 0 4px;">
+        <i
+          class=" fa-solid fa-circle-2 {{#ifOver item.system.calcTN 99}}{{else}}smtx-multi-action-disabled{{/ifOver}}"></i>
+      </span>
+      <span class="clickable roll-tn-3 {{#ifOver item.system.calcTN 199}}{{else}}smtx-multi-action-disabled{{/ifOver}}"
+        style="padding: 0 4px;">
+        <i class="fa-solid fa-circle-3"></i>
+      </span>
+      {{/if}}
     </div>
+    {{else}}
+    <div class="item-prop clickable roll-tn">
+      {{item.system.displayTN}}
+    </div>
+    {{/ifNumber}}
     <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
     <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>
-    <div class='item-controls'>
+    <div class='item-controls flex0'>
       <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=' feature'}}'>
         <i class='fas fa-edit'></i>
       </a>

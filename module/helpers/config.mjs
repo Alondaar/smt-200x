@@ -9,7 +9,7 @@ SMT_X.stats = {
   mg: 'SMT_X.Stat.mg.long',
   vt: 'SMT_X.Stat.vt.long',
   ag: 'SMT_X.Stat.ag.long',
-  lk: 'SMT_X.Stat.lk.long',
+  lk: 'SMT_X.Stat.lk.long'
 };
 
 SMT_X.statAbbreviations = {
@@ -17,7 +17,7 @@ SMT_X.statAbbreviations = {
   mg: 'SMT_X.Stat.mg.abbr',
   vt: 'SMT_X.Stat.vt.abbr',
   ag: 'SMT_X.Stat.ag.abbr',
-  lk: 'SMT_X.Stat.lk.abbr',
+  lk: 'SMT_X.Stat.lk.abbr'
 };
 
 SMT_X.weaponChoices = {
@@ -32,6 +32,33 @@ SMT_X.attackTypes = {
   ranged: 'Ranged Attack',
   magic: 'Magic Attack'
 }
+
+SMT_X.tns = {
+  auto: 'Auto',
+  st: 'SMT_X.Stat.st.long',
+  mg: 'SMT_X.Stat.mg.long',
+  vt: 'SMT_X.Stat.vt.long',
+  ag: 'SMT_X.Stat.ag.long',
+  lk: 'SMT_X.Stat.lk.long',
+  dodge: 'Dodge',
+  talk: 'Talk',
+  fifty: '50%'
+};
+
+SMT_X.powers = {
+  none: 'None',
+  melee: 'Melee',
+  ranged: 'Ranged',
+  spell: 'Spell'
+};
+
+SMT_X.powerDice = {
+  none: 'Zero',
+  match: 'Match',
+  melee: 'Melee',
+  ranged: 'Ranged',
+  spell: 'Spell',
+};
 
 SMT_X.affinities = {
   strike: 'SMT_X.Affinity.strike',

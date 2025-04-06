@@ -54,6 +54,8 @@ Hooks.once('init', function () {
     label: 'SMT_X.SheetLabels.Item',
   });
 
+
+
   console.log('SMT 200X | Initializing socket listener');
   game.socket.on("system.smt-200x", async (data) => {
     if (!game.user.isGM) return; // Only the GM processes these requests.
@@ -93,6 +95,199 @@ Hooks.once('init', function () {
       label: "Poisoned"
     },
   ]);*/
+
+  // Overrides the statuses
+  CONFIG.statusEffects = [
+    {
+      id: "DEAD",
+      img: "icons/svg/skull.svg",
+      name: "Dead",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "DEAD",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 65,
+      }]
+    },
+    {
+      id: "STONE",
+      img: "icons/commodities/treasure/totem-wood-face-brown.webp",
+      name: "Petrified",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "STONE",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 64,
+      }]
+    },
+    {
+      id: "FLY",
+      img: "icons/creatures/invertebrates/bee-simple-green.webp",
+      name: "Fly",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "FLY",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 63,
+      }]
+    },
+    {
+      id: "PARALYZE",
+      img: "icons/skills/wounds/injury-pain-body-orange.webp",
+      name: "Stunned",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "PARALYZE",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 62,
+      }]
+    },
+    {
+      id: "CHARM",
+      img: "icons/magic/control/hypnosis-mesmerism-eye.webp",
+      name: "Charmed",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "CHARM",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 61,
+      }]
+    },
+    {
+      id: "POISON",
+      img: "icons/skills/toxins/cauldron-bubbles-overflow-green.webp",
+      name: "Poisoned",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "POISON",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 60,
+      }]
+    },
+    {
+      id: "CLOSE",
+      img: "icons/magic/unholy/strike-body-life-soul-purple.webp",
+      name: "Muted",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "CLOSE",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 59,
+      }]
+    },
+    {
+      id: "BIND",
+      img: "icons/magic/control/debuff-chains-shackle-movement-red.webp",
+      name: "Restrained",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "BIND",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 58,
+      }]
+    },
+    {
+      id: "FREEZE",
+      img: "icons/magic/water/barrier-ice-crystal-wall-faceted.webp",
+      name: "Frozen",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "FREEZE",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 57,
+      }]
+    },
+    {
+      id: "SLEEP",
+      img: "icons/magic/control/sleep-bubble-purple.webp",
+      name: "Asleep",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "SLEEP",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 56,
+      }]
+    },
+    {
+      id: "PANIC",
+      img: "icons/magic/control/fear-fright-white.webp",
+      name: "Panicked",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "PANIC",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 55,
+      }]
+    },
+    {
+      id: "SHOCK",
+      img: "icons/magic/lightning/bolts-forked-large-orange.webp",
+      name: "Shocked",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "SHOCK",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 54,
+      }]
+    },
+    {
+      id: "HAPPY",
+      img: "icons/skills/social/peace-luck-insult.webp",
+      name: "Happy",
+      flags: { type: "BS" },
+      changes: [{
+        key: "system.badStatus",
+        value: "HAPPY",
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 53,
+      }]
+    },
+    {
+      id: "CURSE",
+      img: "icons/magic/perception/eye-tendrils-web-purple.webp",
+      name: "Cursed",
+      changes: [{
+        key: "system.isCursed",
+        value: true,
+        mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+        priority: 50,
+      }]
+    }
+  ];
+
+  /*interface ActiveEffectData {
+    _id: string;
+    name: string;
+    img: string;
+    changes: EffectChangeData[];
+    disabled: boolean;
+    duration: EffectDurationData;
+    description: string;
+    origin: string;
+    tint: string;
+    transfer: boolean;
+    statuses: Set<string>;
+    flags: object;
+  }*/
+
+  /*interface EffectChangeData {
+    key: string;
+    value: string;
+    mode: number;
+    priority: number;
+  }*/
 
 
 
@@ -476,6 +671,14 @@ Handlebars.registerHelper("ifNumber", function (value, options) {
   return isNumber
     ? options.fn(this)
     : options.inverse(this);
+});
+
+Handlebars.registerHelper('ifOver', function (value, threshold, options) {
+  if (value > threshold) {
+    return options.fn(this);
+  } else {
+    return options.inverse(this);
+  }
 });
 
 Handlebars.registerHelper("showTC", function () {
@@ -866,3 +1069,118 @@ class BuffEffectsWidget extends Application {
     await token.actor.update(updates);
   }
 }
+
+
+
+
+Hooks.once("canvasReady", () => {
+  const canvasEl = canvas.app.view;
+
+  // Allow drops on the canvas.
+  canvasEl.addEventListener("dragover", (event) => {
+    event.preventDefault();
+  });
+
+  canvasEl.addEventListener("drop", async (event) => {
+    event.preventDefault();
+
+    // Get the canvas's bounding rectangle.
+    const rect = canvas.app.view.getBoundingClientRect();
+    // Get drop position in screen (client) coordinates.
+    let dropX = event.clientX - rect.left;
+    let dropY = event.clientY - rect.top;
+
+    // Convert these screen coordinates into canvas (world) coordinates.
+    const dropPoint = canvas.app.stage.toLocal(new PIXI.Point(dropX, dropY));
+
+    // Loop through tokens to see if the drop point is over any token.
+    for (let token of canvas.tokens.placeables) {
+      if (
+        dropPoint.x >= token.x &&
+        dropPoint.x <= token.x + token.w &&
+        dropPoint.y >= token.y &&
+        dropPoint.y <= token.y + token.h
+      ) {
+        console.log("Drop detected on token:", token.name);
+
+        const rawData = event.dataTransfer.getData("text/plain").trim();
+        if (!rawData) return //ui.notifications.warn("No effect data found on drop.");
+
+        let data;
+        try {
+          data = JSON.parse(rawData);
+        } catch (err) {
+          data = rawData;
+        }
+
+        if (data.status) {
+          token.actor.applyBS(data.status);
+          return
+        }
+
+        const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
+        if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
+          return //ui.notifications.warn("Dropped item is not a valid effect.");
+        }
+
+        // Load the effect document.
+        const effectDoc = await fromUuid(uuid);
+        if (!effectDoc) return ui.notifications.warn("Failed to load the effect document.");
+
+        if (effectDoc.effects.size < 1) {
+          return ui.notifications.warn("No active effects found on this effect document.");
+        }
+        // Grab the first active effect document.
+        const activeEffect = effectDoc.effects.contents[0];
+        // Duplicate its data (and remove the _id so that a new one is generated).
+        let effectData = foundry.utils.duplicate(activeEffect.toObject());
+        delete effectData._id;
+
+        await token.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+        ui.notifications.info(`Applied effect: ${effectDoc.name} to ${token.document.name}`);
+        break;
+      }
+    }
+  });
+});
+
+
+
+
+Hooks.on("renderChatMessage", (message, html, data) => {
+  html.find(".draggable-effect").each((i, el) => {
+    el.addEventListener("dragstart", (ev) => {
+      const uuid = ev.currentTarget.dataset.uuid;
+      // console.log("Drag started with UUID:", uuid);
+      if (uuid) {
+        ev.dataTransfer.setData("text/plain", JSON.stringify({ uuid: uuid }));
+      }
+    });
+  });
+
+  html.find(".draggable-status").each((i, el) => {
+    el.addEventListener("dragstart", (ev) => {
+      const effectID = ev.currentTarget.dataset.status;
+      ev.dataTransfer.setData("text/plain", JSON.stringify({ status: effectID }));
+    });
+  });
+});
+
+
+
+
+Hooks.on("preCreateActiveEffect", async (effect, options, userId) => {
+  // Check if the new effect has a BS flag
+  if (effect.flags?.type === "BS") {
+    const actor = effect.parent;
+    // Find any other active effects on the actor with the BS flag (excluding the Curse effect)
+    const conflictingEffects = actor.effects.filter(e =>
+      e.id !== effect.id &&
+      e.flags?.type === "BS"
+    );
+    // Remove any conflicting BS effects
+    if (conflictingEffects.length > 0) {
+      await actor.deleteEmbeddedDocuments("ActiveEffect", conflictingEffects.map(e => e.id));
+    }
+  }
+});
