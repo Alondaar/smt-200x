@@ -20,13 +20,7 @@
       "thumbnail": "systems/smt-200x/assets/anvil-impact.png"
     }
   ],
-  "dependencies": [
-    {
-      "id": "smt-200x-kyane-sheet",
-      "optional": true
-    }
-  ],
-  "version": "0.875",
+  "version": "0.876",
   "compatibility": {
     "minimum": 12,
     "verified": "12.331"
@@ -56,7 +50,7 @@
   "packFolders": [],
   "socket": true,
   "manifest": "https://github.com/Alondaar/smt-200x/raw/main/system.json",
-  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-026.zip",
+  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-027.zip",
   "background": "systems/smt-200x/assets/anvil-impact.png",
   "gridDistance": 2,
   "gridUnits": "m",
