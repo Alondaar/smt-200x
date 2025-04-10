@@ -1079,7 +1079,10 @@ export class SMTXItem extends Item {
           <strong>${result.tokenName}:</strong>
           <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
         ? "SMT_X.CharAffinity_TC."
-        : "SMT_X.CharAffinity.") + result.affinityStrength)})</span>
+        : "SMT_X.CharAffinity.") + result.affinityStrength)} 
+           ${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+          ? "SMT_X.Affinity_TC."
+          : "SMT_X.Affinity.") + systemData.affinity)})</span>
           <span>${result.badStatus != "NONE"
           ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
             ? "SMT_X.AffinityBS_TC."
