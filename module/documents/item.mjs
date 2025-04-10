@@ -826,10 +826,11 @@ export class SMTXItem extends Item {
     const messageContainer = $(event.currentTarget).closest(".message-content");
 
     // --- 1. Determine Outcome for This Split ---
-    const rollDescElem = document.querySelector(`.roll-results-container .roll-result-desc[data-split-index="${splitIndex}"]`);
+    const rollDescElem = messageContainer.find(`.roll-result-desc[data-split-index="${splitIndex}"]`);
     let outcome = "Success";
     if (rollDescElem) {
-      const text = rollDescElem.textContent.toLowerCase();
+      console.log(rollDescElem[0].innerText)
+      const text = rollDescElem[0].innerText.toLowerCase();
       if (text.includes("critical")) outcome = "Critical";
     }
     const baseEffect = (outcome === "Critical") ? 2 : 1;
