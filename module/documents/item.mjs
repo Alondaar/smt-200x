@@ -84,11 +84,19 @@ export class SMTXItem extends Item {
 
     // Condense Power modifier, set up template for X Booster effect
     const modPowerRoll = new Roll(`(${systemData.modPower}) + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
-    const modPower = Math.floor((modPowerRoll.total - (modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0))) /** (rollData.booster[systemData.affinity] ?? 1)*/);
+    let booster = 1; // Flat multiplier (x2 per rules) to the Skill's Power Mod
+    if (rollData.booster)
+      if (rollData.booster[systemData.affinity])
+        booster = rollData.booster[systemData.affinity];
+    const modPower = Math.floor((modPowerRoll.total - (modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0))) * booster);
 
     // Condense Power base, set up template for X Boost effect TODO
     const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
-    const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * systemData.powerBoost);
+    let boost = systemData.powerBoost; // Flat multiplier (x1.5 per rules) to the Skill's Final Power
+    if (rollData.boost)
+      if (rollData.boost[systemData.affinity])
+        boost = rollData.boost[systemData.affinity];
+    const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * boost);
 
     systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + (staticPower ? Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1)) : "");
     systemData.calcPower = systemData.calcPower == "0" || systemData.calcPower == 0 ? "-" : systemData.calcPower;
