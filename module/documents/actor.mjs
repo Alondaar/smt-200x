@@ -238,6 +238,8 @@ export class SMTXActor extends Actor {
 
 
   _setDerivedBSAffinities(systemData) {
+    // TODO: Clamp these to just Normal, Weak, Resist, Null
+    // Factor in "Null BS" and similar
     // Define the mapping: each BS type is associated with a primary affinity type.
     const bsMapping = {
       "STONE": "death",
