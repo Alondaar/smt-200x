@@ -186,6 +186,11 @@
         </div>
 
         <div class="flexcol">
+          <label for="system.affectsHP" class="resource-label">Affects HP</label>
+          <input type="checkbox" name="system.affectsHP" {{#if system.affectsHP}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
           <label for="system.affectsMP" class="resource-label">Affects MP</label>
           <input type="checkbox" name="system.affectsMP" {{#if system.affectsMP}}checked{{/if}} />
         </div>
@@ -219,6 +224,13 @@
           <label for="system.hpCut" class="resource-label" title="Reduce a target's current HP by this percentage">HP
             Cut</label>
           <input type="text" name="system.hpCut" value="{{system.hpCut}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.hpSet" class="resource-label"
+            title="Set a target's HP to this value. Blank for no effect; Use -1 to set to Full HP">HP
+            Set</label>
+          <input type="text" name="system.hpSet" value="{{system.hpSet}}" data-dtype="Number" />
         </div>
       </div>
 
