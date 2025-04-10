@@ -634,7 +634,8 @@ export class SMTXActor extends Actor {
         ${fateUsed > 0 ? `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>` : ''}
         ${defenseBonus !== 0 ? `<br><em>Defense Bonus: ${defenseBonus}</em>` : ''}
       </span>
-      <button class="flex0 undo-damage height: 32px; width: 32px;" 
+      ${game.user.isGM ?
+        `<button class="flex0 undo-damage height: 32px; width: 32px;" 
               data-actor-id="${this.id}" 
               data-token-id="${this.token ? this.token.id : ''}" 
               data-damage="${damageApplied}" 
@@ -642,7 +643,7 @@ export class SMTXActor extends Actor {
               style="margin-left: auto;">
         <i class="fas fa-undo"></i>
       </button>
-    </div>
+    </div>` : ``}
     `;
 
     ChatMessage.create({
