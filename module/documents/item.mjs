@@ -1063,7 +1063,7 @@ export class SMTXItem extends Item {
       }))).filter(result => result.badStatus.toUpperCase() !== "DEAD");
 
     // --- 6. Log the Damage Roll Results ---
-    let logMessage = `${diceHtml} ${buffContent}`;
+    let logMessage = `${baseDamage > 0 ? diceHtml : ``} ${buffContent}`;
     damageResults.forEach(result => {
       let currentToken = canvas.tokens.get(result.tokenId);
       logMessage += `<div class="flexcol target-row" data-token-id="${result.tokenId}" style="margin: 10px 0px">
@@ -1078,6 +1078,7 @@ export class SMTXItem extends Item {
             : "SMT_X.AffinityBS.") + result.badStatus)
           : ""}</span>
          </div>
+         ${baseDamage > 0 ? `
   <div class="flexrow"><span class="flex3"><strong>Inc. Dmg:</strong> ${result.finalDamage}</span>
     <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
       data-token-id="${result.tokenId}"
@@ -1090,12 +1091,19 @@ export class SMTXItem extends Item {
       data-lifedrain="${systemData.lifeDrain}"
       data-manadrain="${systemData.manaDrain}"
     >DMG</button>
-    </div>
+    </div>` : ``}
     ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
-          ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity})</div>`
+          ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (Roll: ${result.ailmentRoll})</div>`
           : ""}  
     ${(systemData.hpCut > 0)
-          ? `<div>Current HP cut by ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)})</div>`
+          ? `<div class="flexrow"><span class="flex3">HP cut to ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)})</span>
+            <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
+              data-token-id="${result.tokenId}"
+              data-effective-damage="${currentToken.actor.system.hp.value - Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)}"
+              data-affinity="almighty"
+              data-ignore-defense="true"
+            >CUT</button>
+          </div>`
           : ""}  
 </div><hr>`;
     });
@@ -1107,9 +1115,6 @@ export class SMTXItem extends Item {
       flavor: `${item.name} Effect (${splitIndex + 1})`,
       content: logMessage
     });
-
-    // --- 7. Remove automatic damage application ---
-    // Damage will now be applied when the user clicks the "Apply Damage" button.
   }
 }
 
