@@ -837,7 +837,6 @@ export class SMTXItem extends Item {
     const rollDescElem = messageContainer.find(`.roll-result-desc[data-split-index="${splitIndex}"]`);
     let outcome = "Success";
     if (rollDescElem) {
-      console.log(rollDescElem[0].innerText)
       const text = rollDescElem[0].innerText.toLowerCase();
       if (text.includes("critical")) outcome = "Critical";
     }
