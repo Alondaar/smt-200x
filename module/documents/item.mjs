@@ -930,6 +930,41 @@ export class SMTXItem extends Item {
       <button class="apply-buffs-hostile smtx-roll-button">Apply to Hostiles</button>
     </div>` : ""}`;
 
+    // Define your priority mapping. Higher numeric values mean a "stronger" or overriding effect.
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    // Helper: Chooses the affinity with the higher priority.
+    // Returns `override` if its priority is greater than `specific`; otherwise returns `specific`.
+    function chooseAffinity(specific, override) {
+      return affinityPriority[override.toLowerCase()] > affinityPriority[specific.toLowerCase()]
+        ? override
+        : specific;
+    }
+
+    // Helper: Returns the multiplier corresponding to an affinity.
+    function multiplierForAffinity(affinity) {
+      switch (affinity.toLowerCase()) {
+        case "weak":
+          return 2;
+        case "resist":
+          return 0.5;
+        case "null":
+        case "repel":
+          return 0;
+        case "drain":
+          return -1;
+        default:
+          return 1;
+      }
+    }
+
     // --- 5. Compute Damage per Target (Dodge Only) ---
     const damageResults = (await Promise.all(finalEffects
       .filter(target => target.finalEffect !== 0)
@@ -938,133 +973,63 @@ export class SMTXItem extends Item {
         const tokenName = token ? token.document.name : target.tokenId;
         // Calculate damage based solely on the dodge multiplier.
         const effectiveDamage = baseDamage * target.finalEffect;
-        // Retrieve the target's overall affinity toward the incoming attack.
-        const affinityStrength = token && token.actor && token.actor.system.affinityFinal
+
+        // --- Attack Affinity Calculation ---
+        // Retrieve the specific affinity for the attack element (e.g. "fire", "ice", etc.)
+        const baseAffinity = (token && token.actor && token.actor.system.affinityFinal)
           ? token.actor.system.affinityFinal[systemData.affinity]
           : "normal";
-        const badStatus = token && token.actor ? token.actor.system.badStatus : "NONE";
+        const magicAffinity = (token && token.actor && token.actor.system.affinityFinal)
+          ? token.actor.system.affinityFinal.magic
+          : "normal";
+        const finalAffinity = chooseAffinity(baseAffinity, magicAffinity);
+        const finalAffinityMultiplier = multiplierForAffinity(finalAffinity);
 
-        // Determine the basic affinity multiplier.
-        let affinityMultiplier = 1;
-        switch (affinityStrength.toLowerCase()) {
-          case "weak":
-            affinityMultiplier = 2;
-            break;
-          case "resist":
-            affinityMultiplier = 0.5;
-            break;
-          case "null":
-          case "repel":
-            affinityMultiplier = 0;
-            break;
-          case "drain":
-            affinityMultiplier = -1;
-            break;
-          default:
-            affinityMultiplier = 1;
-        }
+        // --- BS (Bad Status) Affinity Calculation ---
+        const specificBS = (token && token.actor && token.actor.system.affinityBSFinal)
+          ? token.actor.system.affinityBSFinal[systemData.appliesBadStatus]
+          : "normal";
+        const genericBS = (token && token.actor && token.actor.system.affinityBSFinal)
+          ? token.actor.system.affinityBSFinal.BS
+          : "normal";
+        const finalBSAffinity = chooseAffinity(specificBS, genericBS);
+        const finalBSAffinityMultiplier = multiplierForAffinity(finalBSAffinity);
 
-        // TODO It seems that Magic doesn't stack with other aff
-        // --- Compute Magic Multiplier ---
-        let magicMultiplier = 1;
-        const magicX = !["strike", "gun", "almighty"].includes(systemData.affinity.toLowerCase());
-        const magicTC = ["fire", "ice", "elec", "force"].includes(systemData.affinity.toLowerCase());
-        if (game.settings.get("smt-200x", "showTCheaders") ? magicTC : magicX) {
-          const magicAffinity = token && token.actor && token.actor.system.affinityFinal && token.actor.system.affinityFinal.magic
-            ? token.actor.system.affinityFinal.magic
-            : "normal";
-          switch (magicAffinity.toLowerCase()) {
-            case "weak":
-              magicMultiplier = 2;
-              break;
-            case "resist":
-              magicMultiplier = 0.5;
-              break;
-            case "null":
-            case "repel":
-              magicMultiplier = 0;
-              break;
-            case "drain":
-              magicMultiplier = -1;
-              break;
-            default:
-              magicMultiplier = 1;
-          }
-        }
+        // --- Final Damage Calculation ---
+        const finalDamage = effectiveDamage * finalAffinityMultiplier;
 
-        // --- Compute Bad Status (BS) Affinity Multiplier ---
-        let bsAffinityMultiplier = 1;
-        let bsAffinityStr = "normal";
-        if (token && token.actor && token.actor.system.affinityBSFinal) {
-          if (token.actor.system.affinityBSFinal[systemData.appliesBadStatus]) {
-            bsAffinityStr = token.actor.system.affinityBSFinal[systemData.appliesBadStatus];
-          }
-          switch (bsAffinityStr.toLowerCase()) {
-            case "weak":
-              bsAffinityMultiplier = 2;
-              break;
-            case "resist":
-              bsAffinityMultiplier = 0.5;
-              break;
-            case "null":
-            case "repel":
-            case "drain":
-              bsAffinityMultiplier = 0;
-              break;
-            default:
-              bsAffinityMultiplier = 1;
-          }
-          if (token.actor.system.affinityBSFinal.BS) {
-            bsAffinityStr = token.actor.system.affinityBSFinal.BS;
-            switch (bsAffinityStr.toLowerCase()) {
-              case "weak":
-                bsAffinityMultiplier *= 2;
-                break;
-              case "resist":
-                bsAffinityMultiplier *= 0.5;
-                break;
-              case "null":
-              case "repel":
-              case "drain":
-                bsAffinityMultiplier *= 0;
-                break;
-              default:
-                bsAffinityMultiplier *= 1;
-            }
-          }
-        }
-
-        // Compute the final damage.
-        const finalDamage = effectiveDamage * affinityMultiplier * magicMultiplier;
-
-        // --- Compute Ailment Chance ---
+        // --- Ailment Chance Calculation ---
         let ailmentChance = 0;
         let ailmentRollResult = null;
         let rawChance = 0;
-        if (systemData.appliesBadStatus && systemData.badStatusChance && ((1 * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect) > 0)) {
-          rawChance = systemData.badStatusChance * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect;
-          if (rawChance < 0) rawChance = 0;
-          if (rawChance < 5) rawChance = 5;
-          if (rawChance > 95) rawChance = 95;
+        if (systemData.appliesBadStatus && systemData.badStatusChance && (effectiveDamage * finalAffinityMultiplier * finalBSAffinityMultiplier > 0)) {
+          rawChance = systemData.badStatusChance * finalAffinityMultiplier * finalBSAffinityMultiplier * target.finalEffect;
+          // Clamp rawChance to between 5 and 95.
+          rawChance = Math.min(95, Math.max(5, rawChance));
           ailmentChance = rawChance;
           let rollForAilment = new Roll("1d100");
           await rollForAilment.evaluate();
           ailmentRollResult = rollForAilment.total;
         }
+
         return {
           tokenId: target.tokenId,
           tokenName,
           effectiveDamage,
           multiplier: target.finalEffect,
-          affinityStrength,
-          badStatus,
-          affinityMultiplier,
-          magicMultiplier,
-          bsAffinityMultiplier,
+          // Report the chosen affinity values and multipliers.
+          baseAffinity,
+          magicAffinity,
+          finalAffinity,
+          finalAffinityMultiplier,
+          badStatus: token && token.actor ? token.actor.system.badStatus : "NONE",
           finalDamage,
           ailmentChance,
           ailmentRoll: ailmentRollResult,
-          bsAffinity: bsAffinityStr,
+          specificBS,
+          genericBS,
+          finalBSAffinity,
+          finalBSAffinityMultiplier,
           rawBSchance: rawChance
         };
       }))).filter(result => result.badStatus.toUpperCase() !== "DEAD");
