@@ -1083,7 +1083,18 @@ export class SMTXItem extends Item {
               data-ignore-defense="true"
             >CUT</button>
           </div>`
-          : ""}  
+          : ""}
+    ${(systemData.hpSet)
+          ? `<div class="flexrow"><span class="flex3">HP set to ${systemData.hpSet == -1 ? `Full` : systemData.hpSet} !!</span>
+            <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
+              data-token-id="${result.tokenId}"
+              data-mult="${systemData.hpSet == -1 ? -1 : 1}"
+              data-effective-damage="${systemData.hpSet == -1 ? currentToken.actor.system.hp.max : currentToken.actor.system.hp.value - systemData.hpSet}"
+              data-affinity="almighty"
+              data-ignore-defense="true"
+            >SET</button>
+          </div>`
+          : ""}
 </div><hr>`;
     });
 
@@ -1454,6 +1465,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const tokenId = button.data("token-id");
     const effectiveDamage = Number(button.data("effective-damage"));
     const affinity = button.data("affinity");
+    const mult = button.data("mult") ?? 1;
     const ignoreDefense = button.data("ignore-defense");
     const halfDefense = button.data("half-defense");
     const critical = button.data("critical") === "true" || button.data("critical") === true;
@@ -1465,7 +1477,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     if (!token || !token.actor) return;
     await token.actor.applyDamage(
       effectiveDamage,
-      1,
+      mult,
       affinity,
       ignoreDefense,
       halfDefense,

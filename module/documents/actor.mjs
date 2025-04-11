@@ -683,7 +683,7 @@ export class SMTXActor extends Actor {
       finalAmount = Math.max(Math.floor((damage - defense) * affinityMod), 0);
     }
 
-    if (affinityMod < 0) {
+    if (affinityMod < 0 || mult < 0) {
       // For drain, call applyHeal instead and exit.
       this.applyHeal(amount, affectsMP);
       return;
