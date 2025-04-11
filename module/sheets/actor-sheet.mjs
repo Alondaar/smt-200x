@@ -278,6 +278,43 @@ export class SMTXActorSheet extends ActorSheet {
     });
 
 
+
+    // Ensure the expanded state container exists on the sheet instance
+    if (!this.expandedFeatures) {
+      this.expandedFeatures = {};
+    }
+
+    // Your other listeners...
+    // Example listener for the toggle event:
+    html.on('click', '.toggle-details', (ev) => {
+      // Find the closest main feature row
+      const $mainItem = $(ev.currentTarget).closest('li.item');
+      // The details row is assumed to be immediately after the main row.
+      const $details = $mainItem.next('li.item-details');
+      // Get the item ID for later state management.
+      const itemId = $mainItem.data('itemId');
+
+      // Toggle the details with slide animation, and update state after animation completes.
+      $details.slideToggle(200, () => {
+        // Now update the expanded state based on the actual visibility
+        this.expandedFeatures[itemId] = $details.is(':visible');
+      });
+    });
+
+    // After all listeners are attached, restore any already expanded detail rows.
+    html.find('li.item').each((i, li) => {
+      const $li = $(li);
+      const itemId = $li.data('itemId');
+      // Check if this feature was previously expanded
+      if (this.expandedFeatures[itemId]) {
+        // Find the corresponding details row and show it
+        const $details = $li.next('li.item-details');
+        $details.show();
+      }
+    });
+
+
+
     // Handle pip clicks
     html.on('click', '.pip', (ev) => {
       const li = $(ev.currentTarget).parents('.item');
