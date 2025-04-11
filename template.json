@@ -369,6 +369,7 @@
       "mpCost": "0",
       "fateCost": "0",
       "hideCritDamage": true,
+      "affectsHP": true,
       "affectsMP": false,
       "actionPattern": "-",
       "reloads": false,
@@ -379,6 +380,7 @@
       "lifeDrain": 0,
       "manaDrain": 0,
       "hpCut": 0,
+      "hpSet": "",
       "buffs": {
         "sukukaja": false,
         "sukunda": false,
@@ -430,6 +432,7 @@
       "fateCost": "0",
       "ammoCost": "0",
       "hideCritDamage": false,
+      "affectsHP": true,
       "affectsMP": false,
       "actionPattern": "-",
       "appliesBadStatus": "NONE",

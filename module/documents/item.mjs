@@ -84,11 +84,19 @@ export class SMTXItem extends Item {
 
     // Condense Power modifier, set up template for X Booster effect
     const modPowerRoll = new Roll(`(${systemData.modPower}) + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
-    const modPower = Math.floor((modPowerRoll.total - (modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0))) /** (rollData.booster[systemData.affinity] ?? 1)*/);
+    let booster = 1; // Flat multiplier (x2 per rules) to the Skill's Power Mod
+    if (rollData.booster)
+      if (rollData.booster[systemData.affinity])
+        booster = rollData.booster[systemData.affinity];
+    const modPower = Math.floor((modPowerRoll.total - (modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0))) * booster);
 
     // Condense Power base, set up template for X Boost effect TODO
     const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
-    const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * systemData.powerBoost);
+    let boost = systemData.powerBoost; // Flat multiplier (x1.5 per rules) to the Skill's Final Power
+    if (rollData.boost)
+      if (rollData.boost[systemData.affinity])
+        boost = rollData.boost[systemData.affinity];
+    const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * boost);
 
     systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + (staticPower ? Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1)) : "");
     systemData.calcPower = systemData.calcPower == "0" || systemData.calcPower == 0 ? "-" : systemData.calcPower;
@@ -826,10 +834,10 @@ export class SMTXItem extends Item {
     const messageContainer = $(event.currentTarget).closest(".message-content");
 
     // --- 1. Determine Outcome for This Split ---
-    const rollDescElem = document.querySelector(`.roll-results-container .roll-result-desc[data-split-index="${splitIndex}"]`);
+    const rollDescElem = messageContainer.find(`.roll-result-desc[data-split-index="${splitIndex}"]`);
     let outcome = "Success";
     if (rollDescElem) {
-      const text = rollDescElem.textContent.toLowerCase();
+      const text = rollDescElem[0].innerText.toLowerCase();
       if (text.includes("critical")) outcome = "Critical";
     }
     const baseEffect = (outcome === "Critical") ? 2 : 1;
@@ -922,123 +930,90 @@ export class SMTXItem extends Item {
       <button class="apply-buffs-hostile smtx-roll-button">Apply to Hostiles</button>
     </div>` : ""}`;
 
+    // Define your priority mapping. Higher numeric values mean a "stronger" or overriding effect.
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    // Helper: Chooses the affinity with the higher priority.
+    // Returns `override` if its priority is greater than `specific`; otherwise returns `specific`.
+    function chooseAffinity(specific, override) {
+      return affinityPriority[override.toLowerCase()] > affinityPriority[specific.toLowerCase()]
+        ? override
+        : specific;
+    }
+
+    // Helper: Returns the multiplier corresponding to an affinity.
+    function multiplierForAffinity(affinity) {
+      switch (affinity.toLowerCase()) {
+        case "weak":
+          return 2;
+        case "resist":
+          return 0.5;
+        case "null":
+        case "repel":
+          return 0;
+        case "drain":
+          return -1;
+        default:
+          return 1;
+      }
+    }
+
     // --- 5. Compute Damage per Target (Dodge Only) ---
     const damageResults = (await Promise.all(finalEffects
       .filter(target => target.finalEffect !== 0)
       .map(async target => {
         const token = canvas.tokens.get(target.tokenId);
         const tokenName = token ? token.document.name : target.tokenId;
-        // Calculate damage based solely on the dodge multiplier.
         const effectiveDamage = baseDamage * target.finalEffect;
-        // Retrieve the target's overall affinity toward the incoming attack.
-        const affinityStrength = token && token.actor && token.actor.system.affinityFinal
-          ? token.actor.system.affinityFinal[systemData.affinity]
+
+        // --- Attack Affinity Calculation ---
+        const attackType = systemData.affinity.toLowerCase();
+        const baseAffinity = (token && token.actor && token.actor.system.affinityFinal)
+          ? token.actor.system.affinityFinal[systemData.affinity] || "normal"
           : "normal";
-        const badStatus = token && token.actor ? token.actor.system.badStatus : "NONE";
 
-        // Determine the basic affinity multiplier.
-        let affinityMultiplier = 1;
-        switch (affinityStrength.toLowerCase()) {
-          case "weak":
-            affinityMultiplier = 2;
-            break;
-          case "resist":
-            affinityMultiplier = 0.5;
-            break;
-          case "null":
-          case "repel":
-            affinityMultiplier = 0;
-            break;
-          case "drain":
-            affinityMultiplier = -1;
-            break;
-          default:
-            affinityMultiplier = 1;
-        }
 
-        // TODO It seems that Magic doesn't stack with other aff
-        // --- Compute Magic Multiplier ---
-        let magicMultiplier = 1;
-        const magicX = !["strike", "gun", "almighty"].includes(systemData.affinity.toLowerCase());
-        const magicTC = ["fire", "ice", "elec", "force"].includes(systemData.affinity.toLowerCase());
+
+        // Determine if Magic applies for this attack type.
+        const magicX = !["strike", "gun", "almighty"].includes(attackType);
+        const magicTC = ["fire", "ice", "elec", "force"].includes(attackType);
+        let finalAffinity = baseAffinity;
         if (game.settings.get("smt-200x", "showTCheaders") ? magicTC : magicX) {
-          const magicAffinity = token && token.actor && token.actor.system.affinityFinal && token.actor.system.affinityFinal.magic
-            ? token.actor.system.affinityFinal.magic
+          // Retrieve the token's magic affinity.
+          const magicAffinity = (token && token.actor && token.actor.system.affinityFinal)
+            ? token.actor.system.affinityFinal.magic || "normal"
             : "normal";
-          switch (magicAffinity.toLowerCase()) {
-            case "weak":
-              magicMultiplier = 2;
-              break;
-            case "resist":
-              magicMultiplier = 0.5;
-              break;
-            case "null":
-            case "repel":
-              magicMultiplier = 0;
-              break;
-            case "drain":
-              magicMultiplier = -1;
-              break;
-            default:
-              magicMultiplier = 1;
-          }
+          finalAffinity = chooseAffinity(baseAffinity, magicAffinity);
         }
+        const finalAffinityMultiplier = multiplierForAffinity(finalAffinity);
 
-        // --- Compute Bad Status (BS) Affinity Multiplier ---
-        let bsAffinityMultiplier = 1;
-        let bsAffinityStr = "normal";
-        if (token && token.actor && token.actor.system.affinityBSFinal) {
-          if (token.actor.system.affinityBSFinal[systemData.appliesBadStatus]) {
-            bsAffinityStr = token.actor.system.affinityBSFinal[systemData.appliesBadStatus];
-          }
-          switch (bsAffinityStr.toLowerCase()) {
-            case "weak":
-              bsAffinityMultiplier = 2;
-              break;
-            case "resist":
-              bsAffinityMultiplier = 0.5;
-              break;
-            case "null":
-            case "repel":
-            case "drain":
-              bsAffinityMultiplier = 0;
-              break;
-            default:
-              bsAffinityMultiplier = 1;
-          }
-          if (token.actor.system.affinityBSFinal.BS) {
-            bsAffinityStr = token.actor.system.affinityBSFinal.BS;
-            switch (bsAffinityStr.toLowerCase()) {
-              case "weak":
-                bsAffinityMultiplier *= 2;
-                break;
-              case "resist":
-                bsAffinityMultiplier *= 0.5;
-                break;
-              case "null":
-              case "repel":
-              case "drain":
-                bsAffinityMultiplier *= 0;
-                break;
-              default:
-                bsAffinityMultiplier *= 1;
-            }
-          }
-        }
+        // --- BS (Bad Status) Affinity Calculation ---
+        const specificBS = (token && token.actor && token.actor.system.affinityBSFinal)
+          ? token.actor.system.affinityBSFinal[systemData.appliesBadStatus] || "normal"
+          : "normal";
+        const genericBS = (token && token.actor && token.actor.system.affinityBSFinal)
+          ? token.actor.system.affinityBSFinal.BS || "normal"
+          : "normal";
+        const finalBSAffinity = chooseAffinity(specificBS, genericBS);
+        const finalBSAffinityMultiplier = multiplierForAffinity(finalBSAffinity);
 
-        // Compute the final damage.
-        const finalDamage = effectiveDamage * affinityMultiplier * magicMultiplier;
+        // --- Final Damage Calculation ---
+        const finalDamage = effectiveDamage * finalAffinityMultiplier;
 
-        // --- Compute Ailment Chance ---
+        // --- Ailment Chance Calculation ---
         let ailmentChance = 0;
         let ailmentRollResult = null;
         let rawChance = 0;
-        if (systemData.appliesBadStatus && systemData.badStatusChance && ((1 * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect) > 0)) {
-          rawChance = systemData.badStatusChance * affinityMultiplier * bsAffinityMultiplier * magicMultiplier * target.finalEffect;
-          if (rawChance < 0) rawChance = 0;
-          if (rawChance < 5) rawChance = 5;
-          if (rawChance > 95) rawChance = 95;
-          ailmentChance = rawChance;
+        if (systemData.appliesBadStatus && systemData.badStatusChance && (effectiveDamage * finalAffinityMultiplier * finalBSAffinityMultiplier > 0)) {
+          rawChance = systemData.badStatusChance * finalAffinityMultiplier * finalBSAffinityMultiplier * target.finalEffect;
+          ailmentChance = Math.min(95, Math.max(5, rawChance));
           let rollForAilment = new Roll("1d100");
           await rollForAilment.evaluate();
           ailmentRollResult = rollForAilment.total;
@@ -1048,21 +1023,23 @@ export class SMTXItem extends Item {
           tokenName,
           effectiveDamage,
           multiplier: target.finalEffect,
-          affinityStrength,
-          badStatus,
-          affinityMultiplier,
-          magicMultiplier,
-          bsAffinityMultiplier,
+          baseAffinity,
+          finalAffinity,
+          finalAffinityMultiplier,
+          badStatus: token && token.actor ? token.actor.system.badStatus : "NONE",
           finalDamage,
           ailmentChance,
           ailmentRoll: ailmentRollResult,
-          bsAffinity: bsAffinityStr,
+          specificBS,
+          genericBS,
+          finalBSAffinity,
+          finalBSAffinityMultiplier,
           rawBSchance: rawChance
         };
       }))).filter(result => result.badStatus.toUpperCase() !== "DEAD");
 
     // --- 6. Log the Damage Roll Results ---
-    let logMessage = `${diceHtml} ${buffContent}`;
+    let logMessage = `${baseDamage > 0 ? diceHtml : ``} ${buffContent}`;
     damageResults.forEach(result => {
       let currentToken = canvas.tokens.get(result.tokenId);
       logMessage += `<div class="flexcol target-row" data-token-id="${result.tokenId}" style="margin: 10px 0px">
@@ -1070,13 +1047,17 @@ export class SMTXItem extends Item {
           <strong>${result.tokenName}:</strong>
           <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
         ? "SMT_X.CharAffinity_TC."
-        : "SMT_X.CharAffinity.") + result.affinityStrength)})</span>
+        : "SMT_X.CharAffinity.") + result.finalAffinity)} 
+           ${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+          ? "SMT_X.Affinity_TC."
+          : "SMT_X.Affinity.") + systemData.affinity)})</span>
           <span>${result.badStatus != "NONE"
           ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
             ? "SMT_X.AffinityBS_TC."
             : "SMT_X.AffinityBS.") + result.badStatus)
           : ""}</span>
          </div>
+         ${baseDamage > 0 ? `
   <div class="flexrow"><span class="flex3"><strong>Inc. Dmg:</strong> ${result.finalDamage}</span>
     <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
       data-token-id="${result.tokenId}"
@@ -1089,13 +1070,31 @@ export class SMTXItem extends Item {
       data-lifedrain="${systemData.lifeDrain}"
       data-manadrain="${systemData.manaDrain}"
     >DMG</button>
-    </div>
+    </div>` : ``}
     ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
-          ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (${result.bsAffinity})</div>`
+          ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (Roll: ${result.ailmentRoll})</div>`
           : ""}  
     ${(systemData.hpCut > 0)
-          ? `<div>Current HP cut by ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)})</div>`
-          : ""}  
+          ? `<div class="flexrow"><span class="flex3">HP cut to ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)})</span>
+            <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
+              data-token-id="${result.tokenId}"
+              data-effective-damage="${currentToken.actor.system.hp.value - Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)}"
+              data-affinity="almighty"
+              data-ignore-defense="true"
+            >CUT</button>
+          </div>`
+          : ""}
+    ${(systemData.hpSet)
+          ? `<div class="flexrow"><span class="flex3">HP set to ${systemData.hpSet == -1 ? `Full` : systemData.hpSet} !!</span>
+            <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
+              data-token-id="${result.tokenId}"
+              data-mult="${systemData.hpSet == -1 ? -1 : 1}"
+              data-effective-damage="${systemData.hpSet == -1 ? currentToken.actor.system.hp.max : currentToken.actor.system.hp.value - systemData.hpSet}"
+              data-affinity="almighty"
+              data-ignore-defense="true"
+            >SET</button>
+          </div>`
+          : ""}
 </div><hr>`;
     });
 
@@ -1106,9 +1105,6 @@ export class SMTXItem extends Item {
       flavor: `${item.name} Effect (${splitIndex + 1})`,
       content: logMessage
     });
-
-    // --- 7. Remove automatic damage application ---
-    // Damage will now be applied when the user clicks the "Apply Damage" button.
   }
 }
 
@@ -1469,6 +1465,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const tokenId = button.data("token-id");
     const effectiveDamage = Number(button.data("effective-damage"));
     const affinity = button.data("affinity");
+    const mult = button.data("mult") ?? 1;
     const ignoreDefense = button.data("ignore-defense");
     const halfDefense = button.data("half-defense");
     const critical = button.data("critical") === "true" || button.data("critical") === true;
@@ -1480,7 +1477,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     if (!token || !token.actor) return;
     await token.actor.applyDamage(
       effectiveDamage,
-      1,
+      mult,
       affinity,
       ignoreDefense,
       halfDefense,

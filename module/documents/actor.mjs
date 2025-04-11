@@ -238,6 +238,8 @@ export class SMTXActor extends Actor {
 
 
   _setDerivedBSAffinities(systemData) {
+    // TODO: Clamp these to just Normal, Weak, Resist, Null
+    // Factor in "Null BS" and similar
     // Define the mapping: each BS type is associated with a primary affinity type.
     const bsMapping = {
       "STONE": "death",
@@ -274,27 +276,37 @@ export class SMTXActor extends Actor {
 
 
   _displayAffinity(systemData) {
-    // Define the group order (all in lowercase for consistency)
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    // Filter affinities if a special "magic" key exists.
+    const filteredAffinity = this._filterAffinitiesBySpecial(systemData.affinityFinal, "magic", affinityPriority);
+
+    // Define the group order (from highest to lowest priority)
     const groupOrder = ["repel", "drain", "null", "resist", "weak"];
-    // Object to hold arrays of affinity types keyed by their effect value
     const groups = {};
 
-    // Iterate over each affinity type in the input object.
-    for (let type in systemData.affinityFinal) {
-      const value = systemData.affinityFinal[type];
-      if (value === "normal") continue; // Skip normal values
+    // Build groups based on the filtered affinities
+    for (let type in filteredAffinity) {
+      const value = filteredAffinity[type];
+      if (value === "normal") continue; // Skip normal entries
 
-      // Initialize the group if it doesn't exist
       if (!groups[value]) groups[value] = [];
       groups[value].push(type);
     }
 
-    // Build the final output string in the desired group order.
+    // Construct the display string by grouping entries in the order specified
     const outputGroups = groupOrder.reduce((acc, effectValue) => {
       if (groups[effectValue] && groups[effectValue].length) {
-        // Capitalize the effect label (e.g., "resist" -> "Resist")
+        // Capitalize the effect label (e.g., "resist" → "Resist")
         const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
-        // Capitalize each affinity type and join them with " / "
+        // Capitalize each affinity type and join them with commas
         const typesStr = groups[effectValue]
           .map(type => type.charAt(0).toUpperCase() + type.slice(1))
           .join(", ");
@@ -303,44 +315,76 @@ export class SMTXActor extends Actor {
       return acc;
     }, []);
 
-    // Join groups with "; " to create the final condensed string.
     systemData.displayAffinity = outputGroups.join("; ");
   }
 
 
 
   _displayAffinityBS(systemData) {
-    // Define the group order (all in lowercase for consistency)
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    // Filter affinities if a special "bs" key exists.
+    const filteredAffinityBS = this._filterAffinitiesBySpecial(systemData.affinityBSFinal, "bs", affinityPriority);
+
+    // Define the group order (adjust order if needed)
     const groupOrder = ["null", "resist", "weak"];
-    // Object to hold arrays of affinity types keyed by their effect value
     const groups = {};
 
-    // Iterate over each affinity type in the input object.
-    for (let type in systemData.affinityBSFinal) {
-      const value = systemData.affinityBSFinal[type];
-      if (value === "normal") continue; // Skip normal values
+    // Build groups based on the filtered BS affinities
+    for (let type in filteredAffinityBS) {
+      const value = filteredAffinityBS[type];
+      if (value === "normal") continue;
 
-      // Initialize the group if it doesn't exist
       if (!groups[value]) groups[value] = [];
       groups[value].push(type);
     }
 
-    // Build the final output string in the desired group order.
+    // Build the output string
     const outputGroups = groupOrder.reduce((acc, effectValue) => {
       if (groups[effectValue] && groups[effectValue].length) {
-        // Capitalize the effect label (e.g., "resist" -> "Resist")
+        // Capitalize the effect label (e.g., "resist" → "Resist")
         const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
-        // Capitalize each affinity type and join them with " / "
+        // Capitalize each BS type (first letter uppercase, rest lowercase)
         const typesStr = groups[effectValue]
-          .map(type => type.charAt(0) + type.slice(1).toLowerCase())
+          .map(type => type.charAt(0).toUpperCase() + type.slice(1).toLowerCase())
           .join(", ");
         acc.push(`${effectLabel} ${typesStr}`);
       }
       return acc;
     }, []);
 
-    // Join groups with "; " to create the final condensed string.
     systemData.displayAffinityBS = outputGroups.join("; ");
+  }
+
+
+
+  _filterAffinitiesBySpecial(affinities, specialKey, priorityMap) {
+    // If there is no special key or if it is "normal", return the original map.
+    if (!affinities.hasOwnProperty(specialKey) || affinities[specialKey] === "normal") {
+      return affinities;
+    }
+    const threshold = priorityMap[affinities[specialKey]];
+    const filtered = {};
+
+    for (const type in affinities) {
+      // Always include the special key in the output.
+      if (type === specialKey) {
+        filtered[type] = affinities[type];
+      } else {
+        // Only include types that have a strictly higher priority than the special one.
+        if (priorityMap[affinities[type]] > threshold) {
+          filtered[type] = affinities[type];
+        }
+      }
+    }
+    return filtered;
   }
 
 
@@ -481,6 +525,7 @@ export class SMTXActor extends Actor {
     if (affinity === "strike" || affinity === "gun") {
       defense = this.system.phydef;
     }
+
     // 2. Prompt for Fate Points, an Affinity Override, and Additional Defense Modifier.
     let fatePoints = 0, defenseBonus = 0, affinityOverride = "";
     if (this.type === 'character' || game.settings.get("smt-200x", "fateForNPCs") || this.system.allowFate) {
@@ -555,37 +600,80 @@ export class SMTXActor extends Actor {
       fateUsed = fatePoints;
     }
 
+    // --- Begin Affinity Calculation ---
+    // Define a priority mapping (higher number means a higher override priority).
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    // Helper: Chooses the affinity with the higher priority.
+    function chooseAffinity(specific, override) {
+      return affinityPriority[override.toLowerCase()] > affinityPriority[specific.toLowerCase()]
+        ? override
+        : specific;
+    }
+
+    // Helper: Returns the multiplier corresponding to an affinity.
+    function multiplierForAffinity(aff) {
+      switch (aff.toLowerCase()) {
+        case "weak":
+          return 2;
+        case "resist":
+          return 0.5;
+        case "null":
+        case "repel":
+          return 0;
+        case "drain":
+          return -1;
+        default:
+          return 1;
+      }
+    }
+
     // 6. Determine effective affinity rating.
-    // Use the override if provided; otherwise, use the actor's affinity rating from affinityFinal.
-    const effectiveAffinity = affinityOverride !== "" ? affinityOverride : (this.system.affinityFinal[affinity] || "normal");
+    // Instead of just taking the actor's affinity, compare the base affinity with Magic.
+    const attackType = affinity.toLowerCase();
+    const baseAffinity = this.system.affinityFinal[affinity] || "normal";
+    let computedAffinity = baseAffinity;
+
+    // Toggle logic for which damage types "Magic" applies to.
+    // When "showTCheaders" is enabled, only apply Magic for TC types (fire, ice, elec, force).
+    // Otherwise, apply Magic for all attack types except strike, gun, and almighty.
+    const magicX = !["strike", "gun", "almighty"].includes(attackType);
+    const magicTC = ["fire", "ice", "elec", "force"].includes(attackType);
+    if (game.settings.get("smt-200x", "showTCheaders") ? magicTC : magicX) {
+      const magicAffinity = this.system.affinityFinal.magic || "normal";
+      computedAffinity = chooseAffinity(baseAffinity, magicAffinity);
+    }
+    // Use the override from the dialog if provided.
+    const effectiveAffinity = affinityOverride !== "" ? affinityOverride : computedAffinity;
     const targetAffinity = effectiveAffinity.toLowerCase();
 
-    // 7. Adjust damage based on the affinity modifier.
-    let affinityMod = 1;
+    // 7. Adjust damage based on the effective affinity modifier.
+    let affinityMod = multiplierForAffinity(targetAffinity);
     let affinityNote = "Normal (x1)";
     switch (targetAffinity) {
       case "weak":
-        affinityMod = 2;
         affinityNote = "Weak (x2)";
         break;
       case "resist":
-        affinityMod = 0.5;
         affinityNote = "Resist (x0.5)";
         break;
       case "null":
-        affinityMod = 0;
         affinityNote = "Null (0 damage)";
         break;
       case "drain":
-        affinityMod = -1;
         affinityNote = "Drain (heals target)";
         break;
       case "repel":
-        affinityMod = 0;
         affinityNote = "Repel (damage returned)";
         break;
       default:
-        affinityMod = 1;
         affinityNote = "Normal (x1)";
         break;
     }
@@ -595,11 +683,12 @@ export class SMTXActor extends Actor {
       finalAmount = Math.max(Math.floor((damage - defense) * affinityMod), 0);
     }
 
-    if (affinityMod < 0) {
+    if (affinityMod < 0 || mult < 0) {
       // For drain, call applyHeal instead and exit.
       this.applyHeal(amount, affectsMP);
       return;
     }
+    // --- End Affinity Calculation ---
 
     // 8. Update the actor's HP or MP.
     const currentHP = this.system.hp.value;
@@ -634,16 +723,17 @@ export class SMTXActor extends Actor {
         ${fateUsed > 0 ? `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>` : ''}
         ${defenseBonus !== 0 ? `<br><em>Defense Bonus: ${defenseBonus}</em>` : ''}
       </span>
-      <button class="flex0 undo-damage height: 32px; width: 32px;" 
+      ${game.user.isGM ?
+        `<button class="flex0 undo-damage height: 32px; width: 32px;" 
               data-actor-id="${this.id}" 
               data-token-id="${this.token ? this.token.id : ''}" 
               data-damage="${damageApplied}" 
               data-old-hp="${currentHP}"
               style="margin-left: auto;">
-        <i class="fas fa-undo"></i>
-      </button>
-    </div>
-    `;
+          <i class="fas fa-undo"></i>
+        </button>`
+        : ``}
+    </div>`;
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
