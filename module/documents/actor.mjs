@@ -525,6 +525,7 @@ export class SMTXActor extends Actor {
     if (affinity === "strike" || affinity === "gun") {
       defense = this.system.phydef;
     }
+
     // 2. Prompt for Fate Points, an Affinity Override, and Additional Defense Modifier.
     let fatePoints = 0, defenseBonus = 0, affinityOverride = "";
     if (this.type === 'character' || game.settings.get("smt-200x", "fateForNPCs") || this.system.allowFate) {
@@ -599,37 +600,80 @@ export class SMTXActor extends Actor {
       fateUsed = fatePoints;
     }
 
+    // --- Begin Affinity Calculation ---
+    // Define a priority mapping (higher number means a higher override priority).
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    // Helper: Chooses the affinity with the higher priority.
+    function chooseAffinity(specific, override) {
+      return affinityPriority[override.toLowerCase()] > affinityPriority[specific.toLowerCase()]
+        ? override
+        : specific;
+    }
+
+    // Helper: Returns the multiplier corresponding to an affinity.
+    function multiplierForAffinity(aff) {
+      switch (aff.toLowerCase()) {
+        case "weak":
+          return 2;
+        case "resist":
+          return 0.5;
+        case "null":
+        case "repel":
+          return 0;
+        case "drain":
+          return -1;
+        default:
+          return 1;
+      }
+    }
+
     // 6. Determine effective affinity rating.
-    // Use the override if provided; otherwise, use the actor's affinity rating from affinityFinal.
-    const effectiveAffinity = affinityOverride !== "" ? affinityOverride : (this.system.affinityFinal[affinity] || "normal");
+    // Instead of just taking the actor's affinity, compare the base affinity with Magic.
+    const attackType = affinity.toLowerCase();
+    const baseAffinity = this.system.affinityFinal[affinity] || "normal";
+    let computedAffinity = baseAffinity;
+
+    // Toggle logic for which damage types "Magic" applies to.
+    // When "showTCheaders" is enabled, only apply Magic for TC types (fire, ice, elec, force).
+    // Otherwise, apply Magic for all attack types except strike, gun, and almighty.
+    const magicX = !["strike", "gun", "almighty"].includes(attackType);
+    const magicTC = ["fire", "ice", "elec", "force"].includes(attackType);
+    if (game.settings.get("smt-200x", "showTCheaders") ? magicTC : magicX) {
+      const magicAffinity = this.system.affinityFinal.magic || "normal";
+      computedAffinity = chooseAffinity(baseAffinity, magicAffinity);
+    }
+    // Use the override from the dialog if provided.
+    const effectiveAffinity = affinityOverride !== "" ? affinityOverride : computedAffinity;
     const targetAffinity = effectiveAffinity.toLowerCase();
 
-    // 7. Adjust damage based on the affinity modifier.
-    let affinityMod = 1;
+    // 7. Adjust damage based on the effective affinity modifier.
+    let affinityMod = multiplierForAffinity(targetAffinity);
     let affinityNote = "Normal (x1)";
     switch (targetAffinity) {
       case "weak":
-        affinityMod = 2;
         affinityNote = "Weak (x2)";
         break;
       case "resist":
-        affinityMod = 0.5;
         affinityNote = "Resist (x0.5)";
         break;
       case "null":
-        affinityMod = 0;
         affinityNote = "Null (0 damage)";
         break;
       case "drain":
-        affinityMod = -1;
         affinityNote = "Drain (heals target)";
         break;
       case "repel":
-        affinityMod = 0;
         affinityNote = "Repel (damage returned)";
         break;
       default:
-        affinityMod = 1;
         affinityNote = "Normal (x1)";
         break;
     }
@@ -644,6 +688,7 @@ export class SMTXActor extends Actor {
       this.applyHeal(amount, affectsMP);
       return;
     }
+    // --- End Affinity Calculation ---
 
     // 8. Update the actor's HP or MP.
     const currentHP = this.system.hp.value;
@@ -685,10 +730,10 @@ export class SMTXActor extends Actor {
               data-damage="${damageApplied}" 
               data-old-hp="${currentHP}"
               style="margin-left: auto;">
-        <i class="fas fa-undo"></i>
-      </button>
-    </div>` : ``}
-    `;
+          <i class="fas fa-undo"></i>
+        </button>`
+        : ``}
+    </div>`;
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this }),
