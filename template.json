@@ -432,6 +432,7 @@
       "fateCost": "0",
       "ammoCost": "0",
       "hideCritDamage": false,
+      "affectsHP": true,
       "affectsMP": false,
       "actionPattern": "-",
       "appliesBadStatus": "NONE",
