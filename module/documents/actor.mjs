@@ -276,27 +276,37 @@ export class SMTXActor extends Actor {
 
 
   _displayAffinity(systemData) {
-    // Define the group order (all in lowercase for consistency)
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    // Filter affinities if a special "magic" key exists.
+    const filteredAffinity = this._filterAffinitiesBySpecial(systemData.affinityFinal, "magic", affinityPriority);
+
+    // Define the group order (from highest to lowest priority)
     const groupOrder = ["repel", "drain", "null", "resist", "weak"];
-    // Object to hold arrays of affinity types keyed by their effect value
     const groups = {};
 
-    // Iterate over each affinity type in the input object.
-    for (let type in systemData.affinityFinal) {
-      const value = systemData.affinityFinal[type];
-      if (value === "normal") continue; // Skip normal values
+    // Build groups based on the filtered affinities
+    for (let type in filteredAffinity) {
+      const value = filteredAffinity[type];
+      if (value === "normal") continue; // Skip normal entries
 
-      // Initialize the group if it doesn't exist
       if (!groups[value]) groups[value] = [];
       groups[value].push(type);
     }
 
-    // Build the final output string in the desired group order.
+    // Construct the display string by grouping entries in the order specified
     const outputGroups = groupOrder.reduce((acc, effectValue) => {
       if (groups[effectValue] && groups[effectValue].length) {
-        // Capitalize the effect label (e.g., "resist" -> "Resist")
+        // Capitalize the effect label (e.g., "resist" → "Resist")
         const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
-        // Capitalize each affinity type and join them with " / "
+        // Capitalize each affinity type and join them with commas
         const typesStr = groups[effectValue]
           .map(type => type.charAt(0).toUpperCase() + type.slice(1))
           .join(", ");
@@ -305,44 +315,76 @@ export class SMTXActor extends Actor {
       return acc;
     }, []);
 
-    // Join groups with "; " to create the final condensed string.
     systemData.displayAffinity = outputGroups.join("; ");
   }
 
 
 
   _displayAffinityBS(systemData) {
-    // Define the group order (all in lowercase for consistency)
+    const affinityPriority = {
+      normal: 0,
+      weak: 1,
+      resist: 2,
+      null: 3,
+      drain: 4,
+      repel: 5
+    };
+
+    // Filter affinities if a special "bs" key exists.
+    const filteredAffinityBS = this._filterAffinitiesBySpecial(systemData.affinityBSFinal, "bs", affinityPriority);
+
+    // Define the group order (adjust order if needed)
     const groupOrder = ["null", "resist", "weak"];
-    // Object to hold arrays of affinity types keyed by their effect value
     const groups = {};
 
-    // Iterate over each affinity type in the input object.
-    for (let type in systemData.affinityBSFinal) {
-      const value = systemData.affinityBSFinal[type];
-      if (value === "normal") continue; // Skip normal values
+    // Build groups based on the filtered BS affinities
+    for (let type in filteredAffinityBS) {
+      const value = filteredAffinityBS[type];
+      if (value === "normal") continue;
 
-      // Initialize the group if it doesn't exist
       if (!groups[value]) groups[value] = [];
       groups[value].push(type);
     }
 
-    // Build the final output string in the desired group order.
+    // Build the output string
     const outputGroups = groupOrder.reduce((acc, effectValue) => {
       if (groups[effectValue] && groups[effectValue].length) {
-        // Capitalize the effect label (e.g., "resist" -> "Resist")
+        // Capitalize the effect label (e.g., "resist" → "Resist")
         const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
-        // Capitalize each affinity type and join them with " / "
+        // Capitalize each BS type (first letter uppercase, rest lowercase)
         const typesStr = groups[effectValue]
-          .map(type => type.charAt(0) + type.slice(1).toLowerCase())
+          .map(type => type.charAt(0).toUpperCase() + type.slice(1).toLowerCase())
           .join(", ");
         acc.push(`${effectLabel} ${typesStr}`);
       }
       return acc;
     }, []);
 
-    // Join groups with "; " to create the final condensed string.
     systemData.displayAffinityBS = outputGroups.join("; ");
+  }
+
+
+
+  _filterAffinitiesBySpecial(affinities, specialKey, priorityMap) {
+    // If there is no special key or if it is "normal", return the original map.
+    if (!affinities.hasOwnProperty(specialKey) || affinities[specialKey] === "normal") {
+      return affinities;
+    }
+    const threshold = priorityMap[affinities[specialKey]];
+    const filtered = {};
+
+    for (const type in affinities) {
+      // Always include the special key in the output.
+      if (type === specialKey) {
+        filtered[type] = affinities[type];
+      } else {
+        // Only include types that have a strictly higher priority than the special one.
+        if (priorityMap[affinities[type]] > threshold) {
+          filtered[type] = affinities[type];
+        }
+      }
+    }
+    return filtered;
   }
 
 
