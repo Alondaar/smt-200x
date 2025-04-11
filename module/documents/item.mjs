@@ -971,26 +971,35 @@ export class SMTXItem extends Item {
       .map(async target => {
         const token = canvas.tokens.get(target.tokenId);
         const tokenName = token ? token.document.name : target.tokenId;
-        // Calculate damage based solely on the dodge multiplier.
         const effectiveDamage = baseDamage * target.finalEffect;
 
         // --- Attack Affinity Calculation ---
-        // Retrieve the specific affinity for the attack element (e.g. "fire", "ice", etc.)
+        const attackType = systemData.affinity.toLowerCase();
         const baseAffinity = (token && token.actor && token.actor.system.affinityFinal)
-          ? token.actor.system.affinityFinal[systemData.affinity]
+          ? token.actor.system.affinityFinal[systemData.affinity] || "normal"
           : "normal";
-        const magicAffinity = (token && token.actor && token.actor.system.affinityFinal)
-          ? token.actor.system.affinityFinal.magic
-          : "normal";
-        const finalAffinity = chooseAffinity(baseAffinity, magicAffinity);
+
+
+
+        // Determine if Magic applies for this attack type.
+        const magicX = !["strike", "gun", "almighty"].includes(attackType);
+        const magicTC = ["fire", "ice", "elec", "force"].includes(attackType);
+        let finalAffinity = baseAffinity;
+        if (game.settings.get("smt-200x", "showTCheaders") ? magicTC : magicX) {
+          // Retrieve the token's magic affinity.
+          const magicAffinity = (token && token.actor && token.actor.system.affinityFinal)
+            ? token.actor.system.affinityFinal.magic || "normal"
+            : "normal";
+          finalAffinity = chooseAffinity(baseAffinity, magicAffinity);
+        }
         const finalAffinityMultiplier = multiplierForAffinity(finalAffinity);
 
         // --- BS (Bad Status) Affinity Calculation ---
         const specificBS = (token && token.actor && token.actor.system.affinityBSFinal)
-          ? token.actor.system.affinityBSFinal[systemData.appliesBadStatus]
+          ? token.actor.system.affinityBSFinal[systemData.appliesBadStatus] || "normal"
           : "normal";
         const genericBS = (token && token.actor && token.actor.system.affinityBSFinal)
-          ? token.actor.system.affinityBSFinal.BS
+          ? token.actor.system.affinityBSFinal.BS || "normal"
           : "normal";
         const finalBSAffinity = chooseAffinity(specificBS, genericBS);
         const finalBSAffinityMultiplier = multiplierForAffinity(finalBSAffinity);
@@ -1004,22 +1013,17 @@ export class SMTXItem extends Item {
         let rawChance = 0;
         if (systemData.appliesBadStatus && systemData.badStatusChance && (effectiveDamage * finalAffinityMultiplier * finalBSAffinityMultiplier > 0)) {
           rawChance = systemData.badStatusChance * finalAffinityMultiplier * finalBSAffinityMultiplier * target.finalEffect;
-          // Clamp rawChance to between 5 and 95.
-          rawChance = Math.min(95, Math.max(5, rawChance));
-          ailmentChance = rawChance;
+          ailmentChance = Math.min(95, Math.max(5, rawChance));
           let rollForAilment = new Roll("1d100");
           await rollForAilment.evaluate();
           ailmentRollResult = rollForAilment.total;
         }
-
         return {
           tokenId: target.tokenId,
           tokenName,
           effectiveDamage,
           multiplier: target.finalEffect,
-          // Report the chosen affinity values and multipliers.
           baseAffinity,
-          magicAffinity,
           finalAffinity,
           finalAffinityMultiplier,
           badStatus: token && token.actor ? token.actor.system.badStatus : "NONE",
@@ -1043,7 +1047,7 @@ export class SMTXItem extends Item {
           <strong>${result.tokenName}:</strong>
           <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
         ? "SMT_X.CharAffinity_TC."
-        : "SMT_X.CharAffinity.") + result.affinityStrength)} 
+        : "SMT_X.CharAffinity.") + result.finalAffinity)} 
            ${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
           ? "SMT_X.Affinity_TC."
           : "SMT_X.Affinity.") + systemData.affinity)})</span>
