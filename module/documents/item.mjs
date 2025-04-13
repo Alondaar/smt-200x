@@ -56,7 +56,7 @@ export class SMTXItem extends Item {
       }
     }
 
-
+    // Set up base power
     let basePower = systemData.power;
     if (basePower == "") {
       basePower = 0;
@@ -68,43 +68,63 @@ export class SMTXItem extends Item {
         basePower = actorData.spellPower ?? "@spellPower";
     }
 
-
+    // Determine base dice and build displayDice string
     let baseDice = systemData.powerDice;
     let displayDice = "";
     if (baseDice == "") {
       const usedDice = systemData.basePowerDice == "match" ? systemData.basePower : systemData.basePowerDice;
       baseDice = actorData.powerDice[usedDice] ?? 0;
       baseDice += systemData.modPowerDice ? systemData.modPowerDice : 0;
-      displayDice = baseDice > 0 ? `${baseDice}D` : ``;
+      displayDice = baseDice > 0 ? `${baseDice}D` : "";
     } else {
-      const basePowerDiceRoll = new Roll(`${systemData.powerDice}` ?? "0", rollData).evaluateSync({ minimize: true });
-      displayDice = basePowerDiceRoll.dice.reduce((sum, die) => sum + die.number, 0);
-      displayDice = displayDice ? `${displayDice}D` : "";
+      try {
+        const basePowerDiceRoll = new Roll(`${systemData.powerDice}` || "0", rollData).evaluateSync({ minimize: true });
+        displayDice = basePowerDiceRoll.dice.reduce((sum, die) => sum + die.number, 0);
+        displayDice = displayDice ? `${displayDice}D` : "";
+      } catch (err) {
+        // Fallback: use raw value if the roll cannot be parsed.
+        displayDice = systemData.powerDice;
+      }
     }
 
-    // Condense Power modifier, set up template for X Booster effect
-    const modPowerRoll = new Roll(`(${systemData.modPower}) + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
-    let booster = 1; // Flat multiplier (x2 per rules) to the Skill's Power Mod
-    if (rollData.booster)
-      if (rollData.booster[systemData.affinity])
+    // Condense Power modifier with error handling
+    let modPower;
+    try {
+      // Default modPower to "0" if not provided
+      const modPowerRoll = new Roll(`(${systemData.modPower || "0"}) + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
+      let booster = 1;
+      if (rollData.booster && rollData.booster[systemData.affinity])
         booster = rollData.booster[systemData.affinity];
-    const modPower = Math.floor((modPowerRoll.total - (modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0))) * booster);
+      modPower = Math.floor((modPowerRoll.total - modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * booster);
+    } catch (err) {
+      modPower = Number(systemData.modPower) || 0;
+    }
 
-    // Condense Power base, set up template for X Boost effect TODO
-    const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
-    let boost = systemData.powerBoost; // Flat multiplier (x1.5 per rules) to the Skill's Final Power
-    if (rollData.boost)
-      if (rollData.boost[systemData.affinity])
-        boost = rollData.boost[systemData.affinity];
-    const staticPower = Math.floor((basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * boost);
+    // Condense Power base with error handling
+    let basePowerTotal;
+    try {
+      const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
+      basePowerTotal = basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0);
+    } catch (err) {
+      basePowerTotal = Number(basePower) || 0;
+    }
 
-    systemData.calcPower = displayDice + (displayDice && staticPower ? "+" : "") + (staticPower ? Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1)) : "");
-    systemData.calcPower = systemData.calcPower == "0" || systemData.calcPower == 0 ? "-" : systemData.calcPower;
-    const formatDice = baseDice != systemData.powerDice ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}` : baseDice;
-    systemData.formula = `${formatDice ?? 0} + ${staticPower ?? 0}`;
+    // Apply boost multiplier
+    let boost = systemData.powerBoost;
+    if (rollData.boost && rollData.boost[systemData.affinity])
+      boost = rollData.boost[systemData.affinity];
+    const staticPower = Math.floor(basePowerTotal * boost);
 
+    systemData.calcPower = displayDice +
+      (displayDice && staticPower ? "+" : "") +
+      (staticPower ? Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1)) : "");
+    systemData.calcPower = (systemData.calcPower === "0" || systemData.calcPower === 0) ? "-" : systemData.calcPower;
+    const formatDice = (baseDice != systemData.powerDice)
+      ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}`
+      : systemData.powerDice;
+    systemData.formula = `${formatDice || 0} + ${staticPower || 0}`;
 
-    // Compute TN
+    // Compute TN (this block already had try-catch)
     let baseTN = systemData.tn;
     if (baseTN == "") {
       switch (systemData.baseTN) {
@@ -112,34 +132,30 @@ export class SMTXItem extends Item {
           baseTN = "Auto";
           break;
         case "dodge":
-          baseTN = actorData.dodgetn;
+          baseTN = actorData.dodgetn ?? "@dodgetn";
           break;
         case "talk":
-          baseTN = actorData.talktn;
+          baseTN = actorData.talktn ?? "@talktn";
           break;
         case "fifty":
           baseTN = 50;
           break;
         default:
-          baseTN = actorData.stats[systemData.baseTN].tn;
+          baseTN = actorData.stats[systemData.baseTN].tn ?? `@${systemData.baseTN}.tn`;
           break;
       }
     }
-
-
     try {
-      let quickTN = 0; // For non-derived stat TNs
+      let quickTN = 0;
       if (systemData.tn != "" && !systemData.tn.includes(".tn"))
         quickTN = actorData.quickModTN;
-
-      const preCalcTN = new Roll(`(${baseTN}) + (${systemData.modTN}) + (${weaponTN}) + (${quickTN})`, rollData).evaluateSync();
+      const preCalcTN = new Roll(`(${baseTN}) + (${systemData.modTN || "0"}) + (${weaponTN}) + (${quickTN})`, rollData).evaluateSync();
       systemData.calcTN = isNaN(preCalcTN.total) ? baseTN : preCalcTN.total;
       if (actorData.badStatus == "PARALYZE" && systemData.attackType != "none")
-        systemData.calcTN = Math.min(systemData.calcTN, 25)
+        systemData.calcTN = Math.min(systemData.calcTN, 25);
     } catch (err) {
       systemData.calcTN = baseTN;
     }
-
     systemData.displayTN = isNaN(systemData.calcTN) ? systemData.calcTN : `${systemData.calcTN}%`;
   }
 
@@ -148,10 +164,19 @@ export class SMTXItem extends Item {
    */
   _prepareConsumable(rollData) {
     const systemData = this.system;
+    let evaluatedPower;
+    try {
+      const rollResult = new Roll(systemData.power, rollData).evaluateSync({ minimize: true });
+      evaluatedPower = rollResult.total;
+      if (isNaN(evaluatedPower)) {
+        throw new Error("Roll total is NaN");
+      }
+    } catch (err) {
+      evaluatedPower = systemData.power;
+    }
 
-    // Compute Power Formula
-    const preCalcPower = new Roll(systemData.power, rollData).evaluateSync({ minimize: true });
-    systemData.formula = `(${systemData.powerDice || 0}) + (${preCalcPower.total})`;
+    // Build the formula string using the powerDice and either the evaluated power or its raw string.
+    systemData.formula = `(${systemData.powerDice || 0}) + (${evaluatedPower})`;
   }
 
 
