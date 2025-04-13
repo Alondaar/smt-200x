@@ -27,10 +27,7 @@
       "Item": "SMTX Item Sheet"
     },
     "Item": {
-      "Spell": {
-        "SpellLVL": "Level {level} Spells",
-        "AddLVL": "Add LVL {level}"
-      }
+      "feature": "Feature"
     },
     "Effect": {
       "Source": "Source",
@@ -38,6 +35,22 @@
       "Temporary": "Temporary Effects",
       "Passive": "Passive Effects",
       "Inactive": "Inactive Effects"
+    },
+    "gems": {
+      "diamond": "Diamond",
+      "pearl": "Pearl",
+      "sapphire": "Sapphire",
+      "emerald": "Emerald",
+      "ruby": "Ruby",
+      "jade": "Jade",
+      "opal": "Opal",
+      "amethyst": "Amethyst",
+      "agate": "Agate",
+      "turquoise": "Turquoise",
+      "garnet": "Garnet",
+      "onyx": "Onyx",
+      "coral": "Coral",
+      "aquamarine": "Aquamarine"
     },
     "Affinity": {
       "strike": "Strike",

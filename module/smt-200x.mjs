@@ -695,8 +695,10 @@ Hooks.once('ready', function () {
   //Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 
   Hooks.on("hotbarDrop", (bar, data, slot) => {
-    createItemMacro(data, slot);
-    return false;
+    if (data.type == "Item") {
+      createItemMacro(data, slot);
+      return false;
+    }
   });
 
   // FRIENDLY
@@ -1219,3 +1221,161 @@ Hooks.on("preCreateActiveEffect", async (effect, options, userId) => {
     }
   }
 });
+
+
+
+
+Hooks.once("item-piles-ready", _onItemPilesReady);
+
+// Based on Nekohime's Item Piles integration for her system;
+async function _onItemPilesReady() {
+  await game.itempiles.API.addSystemIntegration({
+    VERSION: `${game.system.version}`,
+    ACTOR_CLASS_TYPE: "character",
+    ITEM_QUANTITY_ATTRIBUTE: "system.quantity",
+    ITEM_PRICE_ATTRIBUTE: "system.buy",
+    ITEM_FILTERS: [{ path: "type", filters: "feature" }, { path: "type", filters: "passive" }],
+    UNSTACKABLE_ITEM_TYPES: ["weapon", "armor"],
+    ITEM_SIMILARITIES: ["name", "type"],
+    CURRENCY_DECIMAL_DIGITS: 1,
+    CURRENCIES: [
+      {
+        name: "Macca",
+        primary: true,
+        type: "attribute",
+        img: "icons/commodities/currency/coin-yingyang.webp",
+        abbreviation: "{#}mc",
+        data: { path: "system.macca" },
+        exchangeRate: 1,
+      },
+    ],
+    SECONDARY_CURRENCIES: [
+      {
+        name: "Diamond",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.diamond,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.diamond")}`,
+        data: {
+          path: "system.gems.diamond"
+        }
+      },
+      {
+        name: "Pearl",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.pearl,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.pearl")}`,
+        data: {
+          path: "system.gems.pearl"
+        }
+      },
+      {
+        name: "Sapphire",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.sapphire,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.sapphire")}`,
+        data: {
+          path: "system.gems.sapphire"
+        }
+      },
+      {
+        name: "Emerald",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.emerald,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.emerald")}`,
+        data: {
+          path: "system.gems.emerald"
+        }
+      },
+      {
+        name: "Ruby",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.ruby,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.ruby")}`,
+        data: {
+          path: "system.gems.ruby"
+        }
+      },
+      {
+        name: "Jade",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.jade,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.jade")}`,
+        data: {
+          path: "system.gems.jade"
+        }
+      },
+      {
+        name: "Opal",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.opal,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.opal")}`,
+        data: {
+          path: "system.gems.opal"
+        }
+      },
+      {
+        name: "Amethyst",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.amethyst,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.amethyst")}`,
+        data: {
+          path: "system.gems.amethyst"
+        }
+      },
+      {
+        name: "Agate",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.agate,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.agate")}`,
+        data: {
+          path: "system.gems.agate"
+        }
+      },
+      {
+        name: "Turquoise",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.turquoise,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.turquoise")}`,
+        data: {
+          path: "system.gems.turquoise"
+        }
+      },
+      {
+        name: "Garnet",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.garnet,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.garnet")}`,
+        data: {
+          path: "system.gems.garnet"
+        }
+      },
+      {
+        name: "Onyx",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.onyx,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.onyx")}`,
+        data: {
+          path: "system.gems.onyx"
+        }
+      },
+      {
+        name: "Coral",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.coral,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.coral")}`,
+        data: {
+          path: "system.gems.coral"
+        }
+      },
+      {
+        name: "Aquamarine",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.aquamarine,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.aquamarine")}`,
+        data: {
+          path: "system.gems.aquamarine"
+        }
+      }
+    ],
+  });
+}
