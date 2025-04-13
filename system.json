@@ -20,7 +20,7 @@
       "thumbnail": "systems/smt-200x/assets/anvil-impact.png"
     }
   ],
-  "version": "0.881",
+  "version": "0.882",
   "compatibility": {
     "minimum": 12,
     "verified": "12.331"
@@ -45,12 +45,19 @@
       "system": "smt-200x",
       "type": "Macro",
       "path": "packs/system-macros.db"
+    },
+    {
+      "name": "system-effects",
+      "label": "System Effects",
+      "system": "smt-200x",
+      "type": "Item",
+      "path": "packs/system-effects.db"
     }
   ],
   "packFolders": [],
   "socket": true,
   "manifest": "https://github.com/Alondaar/smt-200x/raw/main/system.json",
-  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-029.zip",
+  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-030.zip",
   "background": "systems/smt-200x/assets/anvil-impact.png",
   "gridDistance": 2,
   "gridUnits": "m",

@@ -206,7 +206,23 @@
         "initFormula": "floor((@system.ag.value + @system.attributes.level)/2)",
         "race": "",
         "alignment": "",
-        "macca": "0",
+        "macca": 0,
+        "gems": {
+          "diamond": 0,
+          "pearl": 0,
+          "sapphire": 0,
+          "emerald": 0,
+          "ruby": 0,
+          "jade": 0,
+          "opal": 0,
+          "amethyst": 0,
+          "agate": 0,
+          "turquoise": 0,
+          "garnet": 0,
+          "onyx": 0,
+          "coral": 0,
+          "aquamarine": 0
+        },
         "favoredStat": "None"
       }
     },

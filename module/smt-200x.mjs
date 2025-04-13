@@ -81,7 +81,6 @@ Hooks.once('init', function () {
   });
 
 
-
   // Extend the built-in status effects with your custom conditions.
   /*CONFIG.statusEffects = CONFIG.statusEffects.concat([
     {
@@ -695,8 +694,10 @@ Hooks.once('ready', function () {
   //Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 
   Hooks.on("hotbarDrop", (bar, data, slot) => {
-    createItemMacro(data, slot);
-    return false;
+    if (data.type == "Item") {
+      createItemMacro(data, slot);
+      return false;
+    }
   });
 
   // FRIENDLY
@@ -710,6 +711,132 @@ Hooks.once('ready', function () {
     game.hostileEffectsWidget = new BuffEffectsWidget({ mode: "hostile" });
   }
   game.hostileEffectsWidget.render(true);
+
+
+
+  game.socket.on("system.smt-200x", async (data) => {
+    console.log("[SMT-200x] Socket message received:", data);
+
+    // Check if this is the message intended for this user.
+    if (data.action === "openRecoveryDialog" && game.user.id === data.targetUserId) {
+      console.log("[SMT-200x] Opening Recovery Dialog for user:", game.user.id);
+
+      // Optional: Temporarily show a simple alert to verify execution.
+      // ui.notifications.info("Recovery Dialog should open now.");
+
+      // Create the dialog.
+      let d = new Dialog({
+        title: "Recovery Service",
+        content: `
+          <form>
+            <div style="margin-bottom: 5px;"><strong>Recovery Service</strong></div>
+            <div class="form-group">
+              <label>HP Recovery (1 Macca per 1 HP):</label>
+              <input type="number" id="hpInput" value="0" min="0" max="${data.missingHP}" />
+              <button type="button" id="buyMaxHP">Fill to Max HP</button>
+            </div>
+            <div class="form-group">
+              <label>MP Recovery (4 Macca per 1 MP):</label>
+              <input type="number" id="mpInput" value="0" min="0" max="${data.missingMP}" />
+              <button type="button" id="buyMaxMP">Fill to Max MP</button>
+            </div>
+            <div style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px; display: flex; justify-content: space-between;">
+              <span>Held Macca: <strong>${data.currentMacca}</strong></span>
+              <span>Total Cost: <strong><span id="totalCost">0</span> Macca</strong></span>
+            </div>
+          </form>
+        `,
+        buttons: {
+          heal: {
+            icon: '<i class="fas fa-heart"></i>',
+            label: "Heal",
+            callback: async (html) => {
+              const hpVal = Number(html.find("#hpInput").val());
+              const mpVal = Number(html.find("#mpInput").val());
+              console.log("[SMT-200x] Sending processRecovery with hpVal:", hpVal, " mpVal:", mpVal);
+              // Send results back to GM
+              game.socket.emit("system.smt-200x", {
+                action: "processRecovery",
+                tokenId: data.tokenId,
+                hpVal,
+                mpVal,
+                userId: game.user.id
+              });
+            }
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: "Cancel"
+          }
+        },
+        default: "heal",
+        render: (html) => {
+          const updateCost = () => {
+            const hpAmt = Number(html.find("#hpInput").val());
+            const mpAmt = Number(html.find("#mpInput").val());
+            const cost = hpAmt * 1 + mpAmt * 4;
+            html.find("#totalCost").text(cost);
+          };
+
+          html.find("#hpInput").on("input", updateCost);
+          html.find("#mpInput").on("input", updateCost);
+          html.find("#buyMaxHP").on("click", (ev) => {
+            ev.preventDefault();
+            const maxHPRecovery = Math.min(data.missingHP, data.currentMacca);
+            html.find("#hpInput").val(maxHPRecovery);
+            updateCost();
+          });
+          html.find("#buyMaxMP").on("click", (ev) => {
+            ev.preventDefault();
+            const maxMPRecovery = Math.min(data.missingMP, Math.floor(data.currentMacca / 4));
+            html.find("#mpInput").val(maxMPRecovery);
+            updateCost();
+          });
+        }
+      });
+
+      // Render the dialog.
+      d.render(true);
+      console.log("[SMT-200x] Dialog rendered.");
+    }
+    // GM-Side: Process healing when response comes back.
+    else if (data.action === "processRecovery" && game.user.isGM) {
+      console.log("[SMT-200x] Processing recovery data on GM side:", data);
+      let token = canvas.tokens.get(data.tokenId);
+      if (!token) return ui.notifications.warn("Token not found.");
+      let actor = token.actor;
+
+      const currentHP = actor.system.hp.value;
+      const maxHP = actor.system.hp.max;
+      const currentMP = actor.system.mp.value;
+      const maxMP = actor.system.mp.max;
+      const currentMacca = actor.system.macca || 0;
+      const cost = Number(data.hpVal) * 1 + Number(data.mpVal) * 4;
+
+      if (cost > currentMacca) {
+        return ui.notifications.warn("Not enough Macca!");
+      }
+
+      const newHP = Math.min(maxHP, currentHP + Number(data.hpVal));
+      const newMP = Math.min(maxMP, currentMP + Number(data.mpVal));
+
+      await actor.update({
+        "system.hp.value": newHP,
+        "system.mp.value": newMP,
+        "system.macca": currentMacca - cost
+      });
+
+      let report = `<p><strong>Recovery Report</strong></p>`;
+      report += `<p>Macca Spent: ${cost}</p>`;
+      if (newHP - currentHP > 0) report += `<p>HP Recovered: ${newHP - currentHP}</p>`;
+      if (newMP - currentMP > 0) report += `<p>MP Recovered: ${newMP - currentMP}</p>`;
+
+      ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: actor }),
+        content: report
+      });
+    }
+  });
 });
 
 
@@ -1219,3 +1346,161 @@ Hooks.on("preCreateActiveEffect", async (effect, options, userId) => {
     }
   }
 });
+
+
+
+
+Hooks.once("item-piles-ready", _onItemPilesReady);
+
+// Based on Nekohime's Item Piles integration for her system;
+async function _onItemPilesReady() {
+  await game.itempiles.API.addSystemIntegration({
+    VERSION: `${game.system.version}`,
+    ACTOR_CLASS_TYPE: "character",
+    ITEM_QUANTITY_ATTRIBUTE: "system.quantity",
+    ITEM_PRICE_ATTRIBUTE: "system.buy",
+    ITEM_FILTERS: [{ path: "type", filters: "feature" }, { path: "type", filters: "passive" }],
+    UNSTACKABLE_ITEM_TYPES: ["weapon", "armor"],
+    ITEM_SIMILARITIES: ["name", "type"],
+    CURRENCY_DECIMAL_DIGITS: 1,
+    CURRENCIES: [
+      {
+        name: "Macca",
+        primary: true,
+        type: "attribute",
+        img: "icons/commodities/currency/coin-yingyang.webp",
+        abbreviation: "{#}mc",
+        data: { path: "system.macca" },
+        exchangeRate: 1,
+      },
+    ],
+    SECONDARY_CURRENCIES: [
+      {
+        name: "Diamond",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.diamond,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.diamond")}`,
+        data: {
+          path: "system.gems.diamond"
+        }
+      },
+      {
+        name: "Pearl",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.pearl,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.pearl")}`,
+        data: {
+          path: "system.gems.pearl"
+        }
+      },
+      {
+        name: "Sapphire",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.sapphire,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.sapphire")}`,
+        data: {
+          path: "system.gems.sapphire"
+        }
+      },
+      {
+        name: "Emerald",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.emerald,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.emerald")}`,
+        data: {
+          path: "system.gems.emerald"
+        }
+      },
+      {
+        name: "Ruby",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.ruby,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.ruby")}`,
+        data: {
+          path: "system.gems.ruby"
+        }
+      },
+      {
+        name: "Jade",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.jade,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.jade")}`,
+        data: {
+          path: "system.gems.jade"
+        }
+      },
+      {
+        name: "Opal",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.opal,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.opal")}`,
+        data: {
+          path: "system.gems.opal"
+        }
+      },
+      {
+        name: "Amethyst",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.amethyst,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.amethyst")}`,
+        data: {
+          path: "system.gems.amethyst"
+        }
+      },
+      {
+        name: "Agate",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.agate,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.agate")}`,
+        data: {
+          path: "system.gems.agate"
+        }
+      },
+      {
+        name: "Turquoise",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.turquoise,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.turquoise")}`,
+        data: {
+          path: "system.gems.turquoise"
+        }
+      },
+      {
+        name: "Garnet",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.garnet,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.garnet")}`,
+        data: {
+          path: "system.gems.garnet"
+        }
+      },
+      {
+        name: "Onyx",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.onyx,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.onyx")}`,
+        data: {
+          path: "system.gems.onyx"
+        }
+      },
+      {
+        name: "Coral",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.coral,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.coral")}`,
+        data: {
+          path: "system.gems.coral"
+        }
+      },
+      {
+        name: "Aquamarine",
+        type: "attribute",
+        img: CONFIG.SMT_X.gemIcons.aquamarine,
+        abbreviation: `{#} ${game.i18n.localize("SMT_X.gems.aquamarine")}`,
+        data: {
+          path: "system.gems.aquamarine"
+        }
+      }
+    ],
+  });
+}
