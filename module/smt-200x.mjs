@@ -1148,6 +1148,7 @@ Hooks.once("canvasReady", () => {
         }
 
         if (data.status) {
+          // TODO: Check actor's Null affinity for that BS?
           token.actor.applyBS(data.status);
           return
         }
