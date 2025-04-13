@@ -337,8 +337,8 @@
 }
 
 .smt-200x .items-list .item-controls {
-  /*display: flex;
-  flex: 0 0 80px;*/
+  display: flex;
+  flex: 0 0 40px;
   justify-content: flex-end;
 }
 
@@ -431,6 +431,8 @@
   display: flex;
   gap: 4px;
   min-height: 20px;
+  margin-top: auto;
+  margin-bottom: auto;
   margin-right: 6px;
 }
 

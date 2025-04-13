@@ -692,7 +692,12 @@ Handlebars.registerHelper("showTC", function () {
 
 Hooks.once('ready', function () {
   // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
-  Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
+  //Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
+
+  Hooks.on("hotbarDrop", (bar, data, slot) => {
+    createItemMacro(data, slot);
+    return false;
+  });
 
   // FRIENDLY
   if (!game.friendlyEffectsWidget) {
@@ -733,17 +738,23 @@ Hooks.on("updateToken", (tokenDocument, changeData, options, userId) => {
  * @returns {Promise}
  */
 async function createItemMacro(data, slot) {
-  // First, determine if this is a valid owned item.
+  // First, determine if this is a valid owned Item.
   if (data.type !== 'Item') return;
   if (!data.uuid.includes('Actor.') && !data.uuid.includes('Token.')) {
     return ui.notifications.warn(
       'You can only create macro buttons for owned Items'
     );
   }
-  // If it is, retrieve it based on the uuid.
+  // Retrieve the Item from the drop data.
   const item = await Item.fromDropData(data);
 
+  // Only allow macros for Items of type 'feature'
+  if (item.type !== 'feature') {
+    return ui.notifications.warn("Macros can only be created for Feature type items.");
+  }
+
   // Create the macro command using the uuid.
+  // The command will now launch our custom rollItemMacro function.
   const command = `game.smt200x.rollItemMacro("${data.uuid}");`;
   let macro = game.macros.find(
     (m) => m.name === item.name && m.command === command
@@ -776,7 +787,7 @@ function rollItemMacro(itemUuid) {
   };
   // Load the item from the uuid.
   Item.fromDropData(dropData).then((item) => {
-    // Determine if the item loaded and if it's an owned item.
+    // Ensure the item exists and is owned.
     if (!item || !item.parent) {
       const itemName = item?.name ?? itemUuid;
       return ui.notifications.warn(
@@ -784,8 +795,31 @@ function rollItemMacro(itemUuid) {
       );
     }
 
-    // Trigger the item roll
-    item.roll();
+    // Create a dialog to choose which roll to execute.
+    new Dialog({
+      title: item.name,
+      content: `<p>Choose an action:</p>`,
+      buttons: {
+        check: {
+          icon: '<i class="fas fa-dice"></i>',
+          label: "Roll Check",
+          callback: () => {
+            // For a check roll, you could invoke the method for a check.
+            // Based on your sheet code, that might be something like rollSplitD100(true)
+            item.rollSplitD100(true);
+          }
+        },
+        power: {
+          icon: '<i class="fas fa-bolt"></i>',
+          label: "Roll Power",
+          callback: () => {
+            // For a power roll, invoke the power roll
+            item.rollPower(true);
+          }
+        }
+      },
+      default: "check"
+    }).render(true);
   });
 }
 
@@ -1114,6 +1148,7 @@ Hooks.once("canvasReady", () => {
         }
 
         if (data.status) {
+          // TODO: Check actor's Null affinity for that BS?
           token.actor.applyBS(data.status);
           return
         }

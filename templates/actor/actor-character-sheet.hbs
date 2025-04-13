@@ -207,9 +207,9 @@
   {{!-- Sheet Tab Navigation --}}
   <nav class="sheet-tabs tabs" data-group="primary">
     {{!-- Default tab is specified in actor-sheet.mjs --}}
-    <a class="item" data-tab="features">Features</a>
+    <a class="item" data-tab="features">Actions</a>
     <a class="item" data-tab="items">Items</a>
-    <a class="item" data-tab="description">Description</a>
+    <a class="item" data-tab="description">About</a>
     <a class="item" data-tab="effects">Options</a>
   </nav>
 
@@ -340,38 +340,40 @@
             <input type="text" name="system.contacts" class="grid-span-3" value="{{system.contacts}}" />
           </div>
 
-          <div class="grid grid-12col">
+          <div class="flexcol">
+            <label for="system.alignment" class="resource-label">Alignment</label>
+            <input type="text" name="system.alignment" value="{{system.alignment}}" />
+          </div>
+
+          <div class="grid grid-4col">
             <label for="system.law" class="resource-label">Law</label>
             <input type="text" name="system.law" value="{{system.law}}" data-dtype="Number" />
-            <label for="system.chaos" class="resource-label">Chaos</label>
-            <input type="text" name="system.chaos" value="{{system.chaos}}" data-dtype="Number" />
+            <input type="text" name="system.light" value="{{system.light}}" data-dtype="Number" />
+            <label for="system.light" class="resource-label">Light</label>
+
             <label for="system.neutral" class="resource-label">Neutral</label>
             <input type="text" name="system.neutral" value="{{system.neutral}}" data-dtype="Number" />
-            <label for="system.light" class="resource-label">Light</label>
-            <input type="text" name="system.light" value="{{system.light}}" data-dtype="Number" />
-            <label for="system.dark" class="resource-label">Dark</label>
-            <input type="text" name="system.dark" value="{{system.dark}}" data-dtype="Number" />
-            <label for="system.heeho" class="resource-label">Hee-ho</label>
             <input type="text" name="system.heeho" value="{{system.heeho}}" data-dtype="Number" />
+            <label for="system.heeho" class="resource-label">Hee-ho</label>
+
+            <label for="system.chaos" class="resource-label">Chaos</label>
+            <input type="text" name="system.chaos" value="{{system.chaos}}" data-dtype="Number" />
+            <input type="text" name="system.dark" value="{{system.dark}}" data-dtype="Number" />
+            <label for="system.dark" class="resource-label">Dark</label>
           </div>
 
           <div class="flexrow">
-            <div class="flexcol">
-              <label for="system.alignment" class="resource-label">Alignment</label>
-              <input type="text" name="system.alignment" value="{{system.alignment}}" />
-            </div>
-
             <div class="flexcol">
               <label for="system.macca" class="resource-label">Held Macca</label>
               <input type="text" name="system.macca" value="{{system.macca}}" data-dtype="Number" />
             </div>
           </div>
         </div>
-        <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" style="height: 300px" />
+        <div>
+          {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
+          {{editor enrichedBiography target="system.biography" engine="prosemirror" button=true editable=editable}}
+        </div>
       </div>
-      <hr>
-      {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
-      {{editor enrichedBiography target="system.biography" engine="prosemirror" button=true editable=editable}}
     </div>
 
 

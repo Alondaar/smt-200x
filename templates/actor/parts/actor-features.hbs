@@ -1,40 +1,13 @@
-<!-- <div class="grid grid-4col">
-  {{#each effects.temporary.effects as |effect|}}
-  <div class="item flexrow" data-effect-id="{{effect.id}}" data-parent-id="{{effect.parent.id}}">
-    <div class='item-name flexrow'>
-      <img class="item-image flex0" src="{{effect.img}}" width='24' height='24' />
-      &nbsp;
-      <span>{{effect.name}}</span>
-    </div>
-    <div class="item-controls effect-controls flexrow">
-      <a class="effect-control" data-action="toggle" title="{{localize 'SMT_X.Effect.Toggle'}}">
-        <i class="fas {{#if effect.disabled}}fa-check{{else}}fa-times{{/if}}"></i>
-      </a>
-      <a class="effect-control" data-action="edit" title="{{localize 'DOCUMENT.Update' type=" Effect"}}">
-        <i class="fas fa-edit"></i>
-      </a>
-      <a class="effect-control" data-action="delete" title="{{localize 'DOCUMENT.Delete' type=" Effect"}}">
-        <i class="fas fa-trash"></i>
-      </a>
-    </div>
-  </div>
-  {{/each}}
-</div> -->
-
 <ol class='items-list'>
   <li class='item flexrow items-header'>
     <div class='item-name flex3'>Actions / Skills</div>
-    <div class='item-prop'>Type</div>
     <div class='item-prop'>Cost</div>
     <div class='item-prop'>Target</div>
-    {{#if system.aux.showTCheaders}}
     <div class='item-prop'>TN</div>
     <div class='item-prop'>Power</div>
+    {{#if system.aux.showTCheaders}}
     <div class='item-prop'>Element</div>
     {{else}}
-    <div class='item-prop'>Wep</div>
-    <div class='item-prop'>TN</div>
-    <div class='item-prop'>Power</div>
     <div class='item-prop'>Affinity</div>
     {{/if}}
     <div class='item-controls flex0'>
@@ -44,63 +17,62 @@
     </div>
   </li>
   {{#each features as |item id|}}
-  <li class='item flexrow' class='align-items: center;' data-item-id='{{item._id}}'>
-    <div class='item-name flex3'>
-      <div class='item-image'>
-        <a class='rollable' data-roll-type='item'>
-          <img src='{{item.img}}' title='{{item.name}}' width='24' height='24' />
-        </a>
-      </div>
-      <h4 class="flexrow">
-        <span class="pip-row">
-          {{range 1 item.system.uses.max item.system.uses.value}}
-        </span>
-        <span style="font-weight: bold;">{{item.name}}</span>
-      </h4>
+  <!-- Main Feature Row -->
+  <li class='item flexrow' data-item-id='{{item._id}}'>
+    <div class='item-main flexrow flex2'>
+      <img class="rollable flex0" style="margin-right: 6px;" data-roll-type='item' src='{{item.img}}'
+        title='{{item.name}}' width='24' height='24' />
+      <span class="pip-row flex0">
+        {{range 1 item.system.uses.max item.system.uses.value}}
+      </span>
+      <span class="clickable toggle-details" style="font-weight:bold; margin: auto;">{{item.name}}</span>
     </div>
-    <div class='item-prop'>{{item.system.type}}</div>
-    <div class='item-control item-prop clickable pay-cost'>{{item.system.cost}}</div>
+    <div class='item-prop cost-prop'>{{item.system.cost}}</div>
     <div class='item-prop'>{{item.system.target}}</div>
     {{#if showTC}}
+    <!-- Additional TC-related columns go here -->
     {{else}}
-    <div class='item-prop clickable weapon-rotate'>{{localize (lookup @root.config.weaponChoices item.system.wep)}}
-    </div>
-    {{/if}}
-    {{#ifNumber item.system.calcTN}}
-    <div class="item-prop">
-      <span class="clickable roll-tn" style="padding: 0 4px;">
-        {{item.system.displayTN}}
-      </span>
-      {{#if item.system.disableMultiaction}}
-      {{else}}
+    <div class='item-prop tn-prop'>
+      {{#ifNumber item.system.calcTN}}
+      <span class="clickable roll-tn" style="padding: 0 4px;">{{item.system.displayTN}}</span>
+      {{#unless item.system.disableMultiaction}}
       <span class="clickable roll-tn-2" style="padding: 0 4px;">
         <i
-          class=" fa-solid fa-circle-2 {{#ifOver item.system.calcTN 99}}{{else}}smtx-multi-action-disabled{{/ifOver}}"></i>
+          class="fa-solid fa-circle-2 {{#ifOver item.system.calcTN 99}}{{else}}smtx-multi-action-disabled{{/ifOver}}"></i>
       </span>
       <span class="clickable roll-tn-3 {{#ifOver item.system.calcTN 199}}{{else}}smtx-multi-action-disabled{{/ifOver}}"
         style="padding: 0 4px;">
         <i class="fa-solid fa-circle-3"></i>
       </span>
-      {{/if}}
+      {{/unless}}
+      {{else}}
+      <span class="clickable roll-tn">{{item.system.displayTN}}</span>
+      {{/ifNumber}}
     </div>
-    {{else}}
-    <div class="item-prop clickable roll-tn">
-      {{item.system.displayTN}}
-    </div>
-    {{/ifNumber}}
     <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
     <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>
-    <div class='item-controls flex0'>
-      <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=' feature'}}'>
+    {{/if}}
+    <div class='item-controls flexrow flex0'>
+      <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=" feature"}}'>
         <i class='fas fa-edit'></i>
       </a>
-      <a class='item-control item-delete' title='{{localize "DOCUMENT.Delete" type=' feature'}}'>
+      <a class='item-control item-delete' title='{{localize "DOCUMENT.Delete" type=" feature"}}'>
         <i class='fas fa-trash'></i>
       </a>
     </div>
   </li>
-  <div class='item-prop'
-    style="text-align:left; padding:4px; border-bottom: 1px solid #c9c7b8 ;margin-bottom: 4px; justify-content: left;">
-    {{item.system.shortEffect}}</div>
+  <!-- Hidden Details Row -->
+  <li class="item item-details" data-item-id='{{item._id}}' style="display:none; margin-left: 2em;">
+    <div class="grid grid-4col">
+      <div>
+        <span style="font-weight: bold;">Type:</span>&nbsp;<span>{{item.system.type}}</span>
+      </div>
+      <div class='clickable weapon-rotate'><span style="font-weight: bold;">
+          Using Weapon:</span>&nbsp; {{localize (lookup @root.config.weaponChoices
+        item.system.wep)}}
+      </div>
+    </div>
+    <div class='flex3' style="text-align: left;">{{item.system.shortEffect}}</div>
+  </li>
   {{/each}}
 </ol>
