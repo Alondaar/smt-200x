@@ -705,6 +705,11 @@ export class SMTXActorSheet extends ActorSheet {
       }
 
 
+      console.log(data);
+
+      if (data.type && data.type == "Item") {
+        return //ui.notifications.warn("This is an item dragged from a compendium, not an effect dragged from a used skill")
+      }
 
       const uuid = (typeof data === "object" && data.uuid) ? data.uuid : data;
       if (!uuid || !uuid.includes("Compendium") || uuid.split(".").length < 4) {
