@@ -4,3 +4,11 @@ packs/system-macros/LOG.old
 packs/system-macros/LOG
 packs/system-macros/CURRENT
 packs/system-macros/*.log
+
+
+packs/system-effects/
+packs/system-effects/MANIFEST*
+packs/system-effects/LOG.old
+packs/system-effects/LOG
+packs/system-effects/CURRENT
+packs/system-effects/*.log
