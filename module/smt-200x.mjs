@@ -71,7 +71,6 @@ Hooks.once('init', function () {
   console.log('SMT 200X | Initializing socket listener for buff widget updates');
   game.socket.on("system.smt-200x", async (data) => {
     if (data.action === "updateBuffWidgets") {
-      // Optionally, you could check data.effects if you want to update game settings directly.
       if (data.mode === "friendly" && game.friendlyEffectsWidget) {
         game.friendlyEffectsWidget.render();
       } else if (data.mode === "hostile" && game.hostileEffectsWidget) {
@@ -1027,25 +1026,21 @@ class BuffEffectsWidget extends Application {
       await this.savePosition();
     });
 
-    // Example: reset button
     html.on("click", ".reset-button", async (ev) => {
       ev.preventDefault();
       await this._resetAllEffects();
     });
 
-    // Example: Dekaja
     html.on("click", ".dekaja-button", async (ev) => {
       ev.preventDefault();
       await this._dekaja();
     });
 
-    // Example: Dekunda
     html.on("click", ".dekunda-button", async (ev) => {
       ev.preventDefault();
       await this._dekunda();
     });
 
-    // Example: numeric inputs
     html.find("input[data-category]").on("change", this._onInputChange.bind(this));
   }
 
@@ -1062,6 +1057,7 @@ class BuffEffectsWidget extends Application {
 
     // Example: If you do Tug of War logic
     data.useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
+    data.taruOnly = game.settings.get("smt-200x", "taruOnly");
 
     // Example: Summaries
     data.effects.taruTotal = data.effects.tarukaja.amount - data.effects.tarunda.amount;

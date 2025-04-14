@@ -22,6 +22,7 @@
             value="{{effects.tarunda.count}}" />
     </div>
 
+    {{#ifEq taruOnly false}}
     <div class="flexrow flex-group-center">
         <span class="buff-label flex3">Mag Pow</span>
         <input class="buff-input" type="text" data-category="makakaja" data-field="amount"
@@ -36,6 +37,7 @@
         <input class="buff-input" type="number" data-category="makunda" data-field="count"
             value="{{effects.makunda.count}}" />
     </div>
+    {{/ifEq}}
 
     <div class="flexrow flex-group-center">
         <span class="buff-label flex3">Def</span>
@@ -80,11 +82,13 @@
             value="{{effects.tarukaja.amount}}" />
     </div>
 
+    {{#ifEq taruOnly false}}
     <div class="flexrow flex-group-center">
         <span class="buff-label">Mag Pow</span>
         <input class="buff-input" type="text" data-category="makakaja" data-field="amount"
             value="{{effects.makakaja.amount}}" />
     </div>
+    {{/ifEq}}
 
     <div class="flexrow flex-group-center">
         <span class="buff-label">Def</span>
