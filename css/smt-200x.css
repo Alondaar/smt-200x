@@ -586,7 +586,15 @@
   font-weight: bold;
 }
 
-
 .smtx-multi-action-disabled {
   opacity: 0.5 !important;
+}
+
+/* For the Buff Widget fields*/
+.green-tint {
+  background-color: rgba(0, 255, 0, 0.2) !important;
+}
+
+.red-tint {
+  background-color: rgba(255, 0, 0, 0.2) !important;
 }
