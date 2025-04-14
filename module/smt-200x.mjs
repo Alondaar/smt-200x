@@ -1125,20 +1125,32 @@ class BuffEffectsWidget extends Application {
   async _dekaja() {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
+    let tugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
 
-    if (effects.tarukaja.amount > 0) {
+    if (tugOfWar) {
+      if (effects.tarukaja.amount > 0) {
+        effects.tarukaja.amount = 0;
+        effects.tarukaja.count = 0;
+      }
+      if (effects.makakaja.amount > 0) {
+        effects.makakaja.amount = 0;
+        effects.makakaja.count = 0;
+      }
+      if (effects.rakukaja.amount > 0) {
+        effects.rakukaja.amount = 0;
+        effects.rakukaja.count = 0;
+      }
+      if (effects.sukukaja.amount > 0) {
+        effects.sukukaja.amount = 0;
+        effects.sukukaja.count = 0;
+      }
+    } else {
       effects.tarukaja.amount = 0;
       effects.tarukaja.count = 0;
-    }
-    if (effects.makakaja.amount > 0) {
       effects.makakaja.amount = 0;
       effects.makakaja.count = 0;
-    }
-    if (effects.rakukaja.amount > 0) {
       effects.rakukaja.amount = 0;
       effects.rakukaja.count = 0;
-    }
-    if (effects.sukukaja.amount > 0) {
       effects.sukukaja.amount = 0;
       effects.sukukaja.count = 0;
     }
@@ -1173,22 +1185,14 @@ class BuffEffectsWidget extends Application {
         effects.sukukaja.count = 0;
       }
     } else {
-      if (effects.tarunda.amount > 0) {
-        effects.tarunda.amount = 0;
-        effects.tarunda.count = 0;
-      }
-      if (effects.makunda.amount > 0) {
-        effects.makunda.amount = 0;
-        effects.makunda.count = 0;
-      }
-      if (effects.rakunda.amount > 0) {
-        effects.rakunda.amount = 0;
-        effects.rakunda.count = 0;
-      }
-      if (effects.sukunda.amount > 0) {
-        effects.sukunda.amount = 0;
-        effects.sukunda.count = 0;
-      }
+      effects.tarunda.amount = 0;
+      effects.tarunda.count = 0;
+      effects.makunda.amount = 0;
+      effects.makunda.count = 0;
+      effects.rakunda.amount = 0;
+      effects.rakunda.count = 0;
+      effects.sukunda.amount = 0;
+      effects.sukunda.count = 0;
     }
 
 
