@@ -1538,6 +1538,19 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
     const tugOfWarMin = game.settings.get("smt-200x", "tugOfWarMin");
     const tugOfWarMax = game.settings.get("smt-200x", "tugOfWarMax");
+    const noMakakaja = game.settings.get("smt-200x", "taruOnly");
+
+    // Just divert Maka to Taru
+    if (noMakakaja) {
+      if (applyBuffsTo.makakaja) {
+        applyBuffsTo.tarukaja = true
+        applyBuffsTo.makakaja = false
+      }
+      if (applyBuffsTo.makunda) {
+        applyBuffsTo.tarunda = true
+        applyBuffsTo.makunda = false
+      }
+    }
 
     if (useTugOfWar) {
       // Tug of War Buffs
