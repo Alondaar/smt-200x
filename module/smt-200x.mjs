@@ -1128,22 +1128,14 @@ class BuffEffectsWidget extends Application {
     let tugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
 
     if (tugOfWar) {
-      if (effects.tarukaja.amount > 0) {
+      if (effects.tarukaja.amount > 0)
         effects.tarukaja.amount = 0;
-        effects.tarukaja.count = 0;
-      }
-      if (effects.makakaja.amount > 0) {
+      if (effects.makakaja.amount > 0)
         effects.makakaja.amount = 0;
-        effects.makakaja.count = 0;
-      }
-      if (effects.rakukaja.amount > 0) {
+      if (effects.rakukaja.amount > 0)
         effects.rakukaja.amount = 0;
-        effects.rakukaja.count = 0;
-      }
-      if (effects.sukukaja.amount > 0) {
+      if (effects.sukukaja.amount > 0)
         effects.sukukaja.amount = 0;
-        effects.sukukaja.count = 0;
-      }
     } else {
       effects.tarukaja.amount = 0;
       effects.tarukaja.count = 0;
@@ -1168,22 +1160,14 @@ class BuffEffectsWidget extends Application {
     let tugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
 
     if (tugOfWar) {
-      if (effects.tarukaja.amount < 0) {
+      if (effects.tarukaja.amount < 0)
         effects.tarukaja.amount = 0;
-        effects.tarukaja.count = 0;
-      }
-      if (effects.makakaja.amount < 0) {
+      if (effects.makakaja.amount < 0)
         effects.makakaja.amount = 0;
-        effects.makakaja.count = 0;
-      }
-      if (effects.rakukaja.amount < 0) {
+      if (effects.rakukaja.amount < 0)
         effects.rakukaja.amount = 0;
-        effects.rakukaja.count = 0;
-      }
-      if (effects.sukukaja.amount < 0) {
+      if (effects.sukukaja.amount < 0)
         effects.sukukaja.amount = 0;
-        effects.sukukaja.count = 0;
-      }
     } else {
       effects.tarunda.amount = 0;
       effects.tarunda.count = 0;
