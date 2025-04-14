@@ -806,13 +806,10 @@ export class SMTXActor extends Actor {
       "NONE": 999
     };
 
-
     if (removeStatus != "NONE") {
-      console.log(removeStatus)
       this.toggleStatusEffect(removeStatus, { active: false })
       return;
     }
-
 
     const currentPriorityBS = priority[this.system.badStatus];
     const incomingPriorityBS = priority[status];
