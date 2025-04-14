@@ -399,7 +399,7 @@ Hooks.once('init', function () {
     default: false
   });
 
-  game.settings.register("smt-200x", "pierceResist", {
+  /*game.settings.register("smt-200x", "pierceResist", {
     name: "Pierce treats Resist/Strong as:",
     hint: "Tells the game how an attack with Pierce enabled treats certain Affinities.",
     scope: "world",
@@ -467,7 +467,7 @@ Hooks.once('init', function () {
       repel: "Repel"
     },
     default: "repel"
-  });
+  });*/
 
   game.settings.register("smt-200x", "showFloatingDamage", {
     name: "Show Floating Damage Text",
@@ -1057,6 +1057,8 @@ class BuffEffectsWidget extends Application {
 
     // Example: If you do Tug of War logic
     data.useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
+    data.tugMax = game.settings.get("smt-200x", "tugOfWarMax");
+    data.tugMin = game.settings.get("smt-200x", "tugOfWarMin");
     data.taruOnly = game.settings.get("smt-200x", "taruOnly");
 
     // Example: Summaries

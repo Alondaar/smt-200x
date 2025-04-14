@@ -8,7 +8,7 @@
     </div>
 
     <div class="flexrow flex-group-center">
-        <span class="buff-label flex3">Phy Pow</span>
+        <span class="buff-label flex3">{{#if taruOnly}}Pow{{else}}Phy Pow{{/if}}</span>
         <input class="buff-input" type="text" data-category="tarukaja" data-field="amount"
             value="{{effects.tarukaja.amount}}" />
         <input class="buff-input" type="number" data-category="tarukaja" data-field="count"
@@ -77,7 +77,11 @@
 
     {{#if useTugOfWar}}
     <div class="flexrow flex-group-center">
-        <span class="buff-label">Phy Pow</span>
+        <span class="flex">Min/Max: {{tugMin}} ~ {{tugMax}}</span>
+    </div>
+
+    <div class="flexrow flex-group-center">
+        <span class="buff-label">{{#if taruOnly}}Pow{{else}}Phy Pow{{/if}}</span>
         <input class="buff-input" type="text" data-category="tarukaja" data-field="amount"
             value="{{effects.tarukaja.amount}}" />
     </div>
