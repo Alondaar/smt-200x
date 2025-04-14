@@ -1088,23 +1088,35 @@ class BuffEffectsWidget extends Application {
     const input = event.currentTarget;
     const category = input.dataset.category;
     const field = input.dataset.field;
-    let newValue = Number(input.value ?? 0);
-    if (isNaN(newValue)) newValue = 0;
+    const inputStr = input.value.trim();
+
+    // Extract numeric part (removing any + or - signs at the beginning)
+    let parsedValue = parseFloat(inputStr.replace(/^[+-]/, ''));
+    if (isNaN(parsedValue)) parsedValue = 0;
 
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
     if (!effects[category]) return;
 
-    // Basic assignment
-    effects[category][field] = Math.abs(newValue);
-    if (newValue == 0)
-      effects[category].count = 0;
+    const currentValue = Number(effects[category][field]) || 0;
 
-    // Save & update tokens
+    if (inputStr.startsWith('+')) {
+      effects[category][field] = currentValue + parsedValue;
+      if (field != "count")
+        effects[category].count += 1;
+    } else if (inputStr.startsWith('-')) {
+      effects[category][field] = currentValue - parsedValue;
+    } else {
+      effects[category][field] = parsedValue;
+    }
+
+    if (effects[category][field] === 0) {
+      effects[category].count = 0;
+    }
+
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
 
-    // Re-render locally
     this.render();
   }
 
