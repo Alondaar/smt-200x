@@ -384,16 +384,21 @@
         {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
       </section>
 
-      <hr>
-
+      <!-- <hr>
       <section class="main">
-        <div class="grid grid-6col">
+        <div class="flexrow">
+          {{#each system.affinity as |aff key|}}
           <div class="flexcol">
-            <label for="system.hp.mult" class="resource-label">HP Multiplier</label>
-            <input type="text" name="system.hp.mult" value="{{system.hp.mult}}" data-dtype="Number" />
+            <div class="affinity-icon-wrapper">
+              <img src="{{lookup @root.config.affinityIcons key}}" alt="{{key}}" height="26" />
+            </div>
+            <select name="system.affinity.{{key}}">
+              {{selectOptions @root.config.charAffinityAbbr selected=aff localize=true}}
+            </select>
           </div>
+          {{/each}}
         </div>
-      </section>
+      </section> -->
 
       <hr>
 

@@ -79,9 +79,18 @@ SMT_X.charAffinityIcons = {
   normal: "-",
   resist: "fa-shield-halved",
   weak: "fa-burst",
-  null: "fa-shield",
+  null: `<i class="fa-solid fa-shield"></i>`,
   drain: "fa-shield-heart",
   repel: "fa-shield-virus"
+};
+
+SMT_X.charAffinityAbbr = {
+  normal: "SMT_X.CharAffinityShort.normal",
+  resist: "SMT_X.CharAffinityShort.resist",
+  weak: "SMT_X.CharAffinityShort.weak",
+  null: "SMT_X.CharAffinityShort.null",
+  drain: "SMT_X.CharAffinityShort.drain",
+  repel: "SMT_X.CharAffinityShort.repel"
 };
 
 SMT_X.affinities = {
