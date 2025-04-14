@@ -1164,11 +1164,10 @@ class BuffEffectsWidget extends Application {
     const disposition = (this.mode === "friendly") ? 1 : -1;
     const tokens = scene.tokens.filter(t => t.disposition === disposition);
 
-    // Example: updates to actor data
+
     for (let token of tokens) {
       let updates = {};
 
-      // e.g. tarukaja => taru
       updates["system.buffs.taru"] = effects.tarukaja.amount;
       updates["system.buffs.maka"] = effects.makakaja.amount;
       updates["system.buffs.raku"] = effects.rakukaja.amount;
