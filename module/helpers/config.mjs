@@ -139,6 +139,25 @@ SMT_X.badStatusList = {
   BS: "SMT_X.AffinityBS.BS"
 }
 
+SMT_X.badStatusChoices = {
+  NONE: "SMT_X.AffinityBS.NONE",
+  DEAD: "SMT_X.AffinityBS.DEAD",
+  STONE: "SMT_X.AffinityBS.STONE",
+  FLY: "SMT_X.AffinityBS.FLY",
+  PARALYZE: "SMT_X.AffinityBS.PARALYZE",
+  CHARM: "SMT_X.AffinityBS.CHARM",
+  POISON: "SMT_X.AffinityBS.POISON",
+  CLOSE: "SMT_X.AffinityBS.CLOSE",
+  BIND: "SMT_X.AffinityBS.BIND",
+  FREEZE: "SMT_X.AffinityBS.FREEZE",
+  SLEEP: "SMT_X.AffinityBS.SLEEP",
+  PANIC: "SMT_X.AffinityBS.PANIC",
+  SHOCK: "SMT_X.AffinityBS.SHOCK",
+  HAPPY: "SMT_X.AffinityBS.HAPPY",
+  hpCut: "HP Cut",
+  hpSet: "HP Set"
+}
+
 SMT_X.gems = {
   diamond: "SMT.gems.diamond",
   pearl: "SMT.gems.pearl",
@@ -222,4 +241,22 @@ SMT_X.badStatusList_TC = {
   SHOCK: "SMT_X.AffinityBS_TC.SHOCK",
   HAPPY: "SMT_X.AffinityBS_TC.HAPPY",
   BS: "SMT_X.AffinityBS_TC.BS"
+}
+
+SMT_X.badStatusChoices_TC = {
+  NONE: "SMT_X.AffinityBS_TC.NONE",
+  DEAD: "SMT_X.AffinityBS_TC.DEAD",
+  STONE: "SMT_X.AffinityBS_TC.STONE",
+  FLY: "SMT_X.AffinityBS_TC.FLY",
+  PARALYZE: "SMT_X.AffinityBS_TC.PARALYZE",
+  CHARM: "SMT_X.AffinityBS_TC.CHARM",
+  POISON: "SMT_X.AffinityBS_TC.POISON",
+  CLOSE: "SMT_X.AffinityBS_TC.CLOSE",
+  BIND: "SMT_X.AffinityBS_TC.BIND",
+  FREEZE: "SMT_X.AffinityBS_TC.FREEZE",
+  SLEEP: "SMT_X.AffinityBS_TC.SLEEP",
+  PANIC: "SMT_X.AffinityBS_TC.PANIC",
+  SHOCK: "SMT_X.AffinityBS_TC.SHOCK",
+  hpCut: "HP Cut",
+  hpSet: "HP Set"
 }
