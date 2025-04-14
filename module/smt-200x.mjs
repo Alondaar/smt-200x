@@ -81,19 +81,6 @@ Hooks.once('init', function () {
   });
 
 
-  // Extend the built-in status effects with your custom conditions.
-  /*CONFIG.statusEffects = CONFIG.statusEffects.concat([
-    {
-      id: "DEAD",
-      img: "icons/svg/skull.svg",
-      label: "Dead"
-    },
-    {
-      id: "POISON",
-      img: "icons/svg/acid.svg",
-      label: "Poisoned"
-    },
-  ]);*/
 
   // Overrides the statuses
   CONFIG.statusEffects = [
