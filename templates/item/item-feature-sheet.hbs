@@ -219,19 +219,6 @@
             title="The % of MP restored from the effective damage dealt to a target">Mana drain</label>
           <input type="text" name="system.manaDrain" value="{{system.manaDrain}}" data-dtype="Number" />
         </div>
-
-        <div class="flexcol">
-          <label for="system.hpCut" class="resource-label" title="Reduce a target's current HP by this percentage">HP
-            Cut</label>
-          <input type="text" name="system.hpCut" value="{{system.hpCut}}" data-dtype="Number" />
-        </div>
-
-        <div class="flexcol">
-          <label for="system.hpSet" class="resource-label"
-            title="Set a target's HP to this value. Blank for no effect; Use -1 to set to Full HP">HP
-            Set</label>
-          <input type="text" name="system.hpSet" value="{{system.hpSet}}" data-dtype="Number" />
-        </div>
       </div>
 
       <br><br>
@@ -272,6 +259,22 @@
           <button class="remove-effect-link">Click to remove.</button>
         </div>
       </div>
+
+      {{#ifEq system.appliesBadStatus hpCut}}
+      <div class="flexcol">
+        <label for="system.hpCut" class="resource-label" title="Reduce a target's current HP by this percentage">HP
+          Cut</label>
+        <input type="text" name="system.hpCut" value="{{system.hpCut}}" data-dtype="Number" />
+      </div>
+      {{/ifEq}}
+      {{#ifEq system.appliesBadStatus hpSet}}
+      <div class="flexcol">
+        <label for="system.hpSet" class="resource-label"
+          title="Set a target's HP to this value. Blank for no effect; Use -1 to set to Full HP">HP
+          Set</label>
+        <input type="text" name="system.hpSet" value="{{system.hpSet}}" data-dtype="Number" />
+      </div>
+      {{/ifEq}}
 
       <br><br>
 

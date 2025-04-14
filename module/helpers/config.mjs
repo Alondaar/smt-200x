@@ -60,6 +60,30 @@ SMT_X.powerDice = {
   spell: 'Spell',
 };
 
+SMT_X.affinityIcons = {
+  strike: "icons/skills/melee/blade-tip-orange.webp",
+  gun: "icons/skills/ranged/cannon-barrel-firing-yellow.webp",
+  fire: "icons/magic/fire/projectile-fireball-smoke-strong-orange.webp",
+  ice: "icons/magic/water/barrier-ice-crystal-wall-faceted-light.webp",
+  elec: "icons/magic/lightning/bolt-strike-streak-yellow.webp",
+  force: "icons/magic/air/air-burst-spiral-teal-green.webp",
+  expel: "icons/magic/light/explosion-star-glow-orange.webp",
+  death: "icons/magic/death/skull-energy-light-purple.webp",
+  mind: "icons/skills/wounds/anatomy-organ-brain-pink-red.webp",
+  nerve: "icons/magic/control/debuff-chains-ropes-net-white.webp",
+  curse: "icons/magic/unholy/energy-smoke-pink.webp",
+  magic: "icons/magic/symbols/triangle-glowing-green.webp"
+};
+
+SMT_X.charAffinityIcons = {
+  normal: "-",
+  resist: "fa-shield-halved",
+  weak: "fa-burst",
+  null: "fa-shield",
+  drain: "fa-shield-heart",
+  repel: "fa-shield-virus"
+};
+
 SMT_X.affinities = {
   strike: 'SMT_X.Affinity.strike',
   gun: 'SMT_X.Affinity.gun',

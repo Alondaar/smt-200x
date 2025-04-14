@@ -83,6 +83,14 @@
       "drain": "Drain",
       "repel": "Repel"
     },
+    "CharAffinityShort": {
+      "normal": "-",
+      "resist": "Rs",
+      "weak": "Wk",
+      "null": "Nu",
+      "drain": "Dn",
+      "repel": "Rp"
+    },
     "AffinityBS": {
       "DEAD": "DEAD",
       "STONE": "STONE",
