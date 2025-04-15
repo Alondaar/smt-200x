@@ -866,7 +866,7 @@ export class SMTXActor extends Actor {
     const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true }).total));
     const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true }).total));
 
-    // Handle ammo consumption if required.
+    // Handle ammo consumption
     if (ammoCost > 0) {
       if (item.system.wep === "x")
         return ui.notifications.info(`You do not have a weapon equipped.`)
@@ -886,9 +886,8 @@ export class SMTXActor extends Actor {
       }
     }
 
-    // Check that the actor can pay the cost (adjust as needed for HP, if required)
+    // Check that the actor can pay the cost
     if (currentMP - mpCost >= 0 && currentFate - fateCost >= 0) {
-      // Update the actor's resources.
       this.update({
         "system.hp.value": currentHP - hpCost,
         "system.mp.value": currentMP - mpCost,
@@ -901,11 +900,8 @@ export class SMTXActor extends Actor {
       if (mpCost > 0) costs.push(`MP: ${mpCost}`);
       if (fateCost > 0) costs.push(`Fate: ${fateCost}`);
       if (ammoCost > 0) costs.push(`Ammo: ${ammoCost}`);
-
-      // Join the costs with commas
       const costText = costs.join(', ');
 
-      // Create a chat message displaying the costs paid in a slim, comma-separated format.
       const speaker = ChatMessage.getSpeaker({ actor: this.actor });
       const rollMode = game.settings.get("core", "rollMode");
       const flavor = `<strong>Paid for ${item.name}</strong>`;
