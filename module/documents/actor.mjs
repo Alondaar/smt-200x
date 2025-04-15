@@ -850,6 +850,79 @@ export class SMTXActor extends Actor {
 
 
 
+  payCost(itemID) {
+    const actorData = this.system;
+    const rollData = this.getRollData();
+    const item = this.items.get(itemID);
+
+    // Retrieve current resource values
+    const currentHP = actorData.hp.value;
+    const currentMP = actorData.mp.value;
+    const currentFate = actorData.fate.value;
+
+    // Calculate cost values using Roll formulas
+    const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true }).total));
+    const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true }).total));
+    const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true }).total));
+    const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true }).total));
+
+    // Handle ammo consumption if required.
+    if (ammoCost > 0) {
+      if (item.system.wep === "x")
+        return ui.notifications.info(`You do not have a weapon equipped.`)
+
+      if (item.system.wep === "a") {
+        if (actorData.wepA.ammo - ammoCost >= 0) {
+          this.update({ "system.wepA.ammo": actorData.wepA.ammo - ammoCost });
+        } else {
+          return ui.notifications.info(`You do not have enough ammo.`);
+        }
+      } else {
+        if (actorData.wepB.ammo - ammoCost >= 0) {
+          this.update({ "system.wepB.ammo": actorData.wepB.ammo - ammoCost });
+        } else {
+          return ui.notifications.info(`You do not have enough ammo.`);
+        }
+      }
+    }
+
+    // Check that the actor can pay the cost (adjust as needed for HP, if required)
+    if (currentMP - mpCost >= 0 && currentFate - fateCost >= 0) {
+      // Update the actor's resources.
+      this.update({
+        "system.hp.value": currentHP - hpCost,
+        "system.mp.value": currentMP - mpCost,
+        "system.fate.value": currentFate - fateCost
+      });
+
+      // Build a list of cost items that are greater than 0.
+      const costs = [];
+      if (hpCost > 0) costs.push(`HP: ${hpCost}`);
+      if (mpCost > 0) costs.push(`MP: ${mpCost}`);
+      if (fateCost > 0) costs.push(`Fate: ${fateCost}`);
+      if (ammoCost > 0) costs.push(`Ammo: ${ammoCost}`);
+
+      // Join the costs with commas
+      const costText = costs.join(', ');
+
+      // Create a chat message displaying the costs paid in a slim, comma-separated format.
+      const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+      const rollMode = game.settings.get("core", "rollMode");
+      const flavor = `<strong>Paid for ${item.name}</strong>`;
+
+      ChatMessage.create({
+        speaker: speaker,
+        rollMode: rollMode,
+        flavor: flavor,
+        content: `<div class="pay-cost-message">${costText}</div>`
+      });
+    } else {
+      ui.notifications.info(`You are unable to pay the cost for that skill.`);
+    }
+  }
+
+
+
   /**
 * Handle clickable rolls.
 * @param {Event} event   The originating click event
