@@ -638,8 +638,12 @@ Handlebars.registerHelper('range', function (start, end, options) {
 
   for (let i = start; i <= end; i++) {
     result += `
-  <div class="pip${i <= options ? " filled" : ""}" data-index="${i}"></div>
+  <span class="pip${i <= options ? " filled" : ""}" data-index="${i}"></span>
   `;
+  }
+
+  if (end >= start) {
+    result = `<div style="width: ${end * 14.5}px; margin-top: auto;>` + result + `</div>`
   }
 
   return new Handlebars.SafeString(result);

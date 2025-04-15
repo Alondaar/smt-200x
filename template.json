@@ -237,7 +237,7 @@
       "class1": "",
       "class2": "",
       "class3": "",
-      "master": "",
+      "linkedActor": "",
       "subActors": [],
       "inheritHP": false,
       "inheritMP": true,

@@ -428,8 +428,6 @@
 
 
 .pip-row {
-  display: flex;
-  gap: 4px;
   min-height: 20px;
   margin-top: auto;
   margin-bottom: auto;
@@ -438,17 +436,12 @@
 
 .pip {
   width: 13px;
-  /* Set square size */
   height: 13px;
   border: 2px solid #333;
-  /* Black border for unfilled pips */
   background-color: transparent;
   border-radius: 25%;
-  /* Unfilled pips are transparent */
-  display: inline-block;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  /* Smooth fill transition */
+  display: inline-block;
 }
 
 .pip.filled {
@@ -456,6 +449,7 @@
   /* Filled pips have black background */
 }
 
+/* this doesn't do anything */
 .pip:hover {
   color: orange;
 }
