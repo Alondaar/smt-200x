@@ -236,7 +236,13 @@
       "age": "",
       "class1": "",
       "class2": "",
-      "class3": ""
+      "class3": "",
+      "master": "",
+      "subActors": [],
+      "inheritHP": false,
+      "inheritMP": true,
+      "inheritFate": true,
+      "inheritCurrency": true
     },
     "npc": {
       "templates": [
