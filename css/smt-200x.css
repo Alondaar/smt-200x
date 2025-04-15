@@ -428,20 +428,23 @@
 
 
 .pip-row {
-  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
   margin-top: auto;
   margin-bottom: auto;
-  margin-right: 6px;
+  margin-right: 4px;
 }
 
 .pip {
   width: 13px;
   height: 13px;
+  /*margin-top: auto;
+  margin-bottom: auto;*/
+  margin-right: 2px;
   border: 2px solid #333;
   background-color: transparent;
   border-radius: 25%;
   cursor: pointer;
-  display: inline-block;
 }
 
 .pip.filled {

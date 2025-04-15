@@ -19,13 +19,16 @@
   {{#each features as |item id|}}
   <!-- Main Feature Row -->
   <li class='item flexrow' data-item-id='{{item._id}}'>
-    <div class='item-main flexrow flex2'>
-      <img class="rollable flex0" style="margin-top: auto; margin-right: 6px;" data-roll-type='item' src='{{item.img}}'
-        title='{{item.name}}' width='24' height='24' />
-      <span class="pip-row flex0">
+    <div class='flex2'
+      style="display: inline-flex; flex-wrap: wrap; align-items: center; margin-top: 4px; margin-bottom: 4px;">
+      <img class="rollable" style="margin-top: auto; margin-bottom: auto; margin-right: 6px;" data-roll-type='item'
+        src='{{item.img}}' title='{{item.name}}' width='24' height='24' />
+      <div class="pip-row" style="">
         {{range 1 item.system.uses.max item.system.uses.value}}
-      </span>
-      <span class="clickable toggle-details" style="font-weight:bold; margin: auto;">{{item.name}}</span>
+      </div>
+      <div class="clickable toggle-details" style="font-weight:bold; margin-top: auto; margin-bottom: auto;">
+        {{item.name}}
+      </div>
     </div>
     <div class='item-prop clickable pay-cost'>{{item.system.cost}}</div>
     <div class='item-prop'>{{item.system.target}}</div>

@@ -642,9 +642,9 @@ Handlebars.registerHelper('range', function (start, end, options) {
   `;
   }
 
-  if (end >= start) {
-    result = `<div style="width: ${end * 14.5}px; margin-top: auto;>` + result + `</div>`
-  }
+  /*if (end >= start) {
+    result = `<div style="width: ${end * 17.5}px; margin-top: auto;>` + result + `</div>`
+  }*/
 
   return new Handlebars.SafeString(result);
 });
