@@ -312,7 +312,7 @@ export class SMTXItem extends Item {
     const descriptionContent = `${item.system.shortEffect}`;
 
     let statusDisplay = ``;
-    if (systemData.appliesBadStatus != "NONE") {
+    if (systemData.appliesBadStatus != "NONE" && systemData.appliesBadStatus != "hpCut" && systemData.appliesBadStatus != "hpSet") {
       // Create a draggable HTML snippet that shows the effect's name.
       statusDisplay = `<div class="draggable-status flex-center align-center" draggable="true" data-status="${systemData.appliesBadStatus}" style="border: 1px dashed #888; padding: 4px; margin: auto; cursor:move; background-color:PeachPuff; font-weight: bold;" title="Drag this onto an Actor or Token to apply the effect.">
         ${systemData.badStatusChance}% ${systemData.appliesBadStatus}
@@ -1099,7 +1099,7 @@ export class SMTXItem extends Item {
     ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
           ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (Roll: ${result.ailmentRoll})</div>`
           : ""}  
-    ${(systemData.hpCut > 0)
+    ${(systemData.hpCut > 0 && systemData.appliesBadStatus == "hpCut")
           ? `<div class="flexrow"><span class="flex3">HP cut to ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)})</span>
             <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
               data-token-id="${result.tokenId}"
@@ -1109,7 +1109,7 @@ export class SMTXItem extends Item {
             >CUT</button>
           </div>`
           : ""}
-    ${(systemData.hpSet)
+    ${(systemData.hpSet && systemData.appliesBadStatus == "hpSet")
           ? `<div class="flexrow"><span class="flex3">HP set to ${systemData.hpSet == -1 ? `Full` : systemData.hpSet} !!</span>
             <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
               data-token-id="${result.tokenId}"
@@ -1538,6 +1538,19 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
     const tugOfWarMin = game.settings.get("smt-200x", "tugOfWarMin");
     const tugOfWarMax = game.settings.get("smt-200x", "tugOfWarMax");
+    const noMakakaja = game.settings.get("smt-200x", "taruOnly");
+
+    // Just divert Maka to Taru
+    if (noMakakaja) {
+      if (applyBuffsTo.makakaja) {
+        applyBuffsTo.tarukaja = true
+        applyBuffsTo.makakaja = false
+      }
+      if (applyBuffsTo.makunda) {
+        applyBuffsTo.tarunda = true
+        applyBuffsTo.makunda = false
+      }
+    }
 
     if (useTugOfWar) {
       // Tug of War Buffs

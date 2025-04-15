@@ -384,6 +384,22 @@
         {{> "systems/smt-200x/templates/actor/parts/actor-effects.hbs"}}
       </section>
 
+      <!-- <hr>
+      <section class="main">
+        <div class="flexrow">
+          {{#each system.affinity as |aff key|}}
+          <div class="flexcol">
+            <div class="affinity-icon-wrapper">
+              <img src="{{lookup @root.config.affinityIcons key}}" alt="{{key}}" height="26" />
+            </div>
+            <select name="system.affinity.{{key}}">
+              {{selectOptions @root.config.charAffinityAbbr selected=aff localize=true}}
+            </select>
+          </div>
+          {{/each}}
+        </div>
+      </section> -->
+
       <hr>
 
       <section class="main">

@@ -71,7 +71,6 @@ Hooks.once('init', function () {
   console.log('SMT 200X | Initializing socket listener for buff widget updates');
   game.socket.on("system.smt-200x", async (data) => {
     if (data.action === "updateBuffWidgets") {
-      // Optionally, you could check data.effects if you want to update game settings directly.
       if (data.mode === "friendly" && game.friendlyEffectsWidget) {
         game.friendlyEffectsWidget.render();
       } else if (data.mode === "hostile" && game.hostileEffectsWidget) {
@@ -81,19 +80,6 @@ Hooks.once('init', function () {
   });
 
 
-  // Extend the built-in status effects with your custom conditions.
-  /*CONFIG.statusEffects = CONFIG.statusEffects.concat([
-    {
-      id: "DEAD",
-      img: "icons/svg/skull.svg",
-      label: "Dead"
-    },
-    {
-      id: "POISON",
-      img: "icons/svg/acid.svg",
-      label: "Poisoned"
-    },
-  ]);*/
 
   // Overrides the statuses
   CONFIG.statusEffects = [
@@ -413,7 +399,7 @@ Hooks.once('init', function () {
     default: false
   });
 
-  game.settings.register("smt-200x", "pierceResist", {
+  /*game.settings.register("smt-200x", "pierceResist", {
     name: "Pierce treats Resist/Strong as:",
     hint: "Tells the game how an attack with Pierce enabled treats certain Affinities.",
     scope: "world",
@@ -481,7 +467,7 @@ Hooks.once('init', function () {
       repel: "Repel"
     },
     default: "repel"
-  });
+  });*/
 
   game.settings.register("smt-200x", "showFloatingDamage", {
     name: "Show Floating Damage Text",
@@ -652,9 +638,13 @@ Handlebars.registerHelper('range', function (start, end, options) {
 
   for (let i = start; i <= end; i++) {
     result += `
-  <div class="pip${i <= options ? " filled" : ""}" data-index="${i}"></div>
+  <span class="pip${i <= options ? " filled" : ""}" data-index="${i}"></span>
   `;
   }
+
+  /*if (end >= start) {
+    result = `<div style="width: ${end * 17.5}px; margin-top: auto;>` + result + `</div>`
+  }*/
 
   return new Handlebars.SafeString(result);
 });
@@ -682,6 +672,18 @@ Handlebars.registerHelper('ifOver', function (value, threshold, options) {
 
 Handlebars.registerHelper("showTC", function () {
   return game.settings.get("smt-200x", "showTCheaders");
+});
+
+// For the buff widget
+Handlebars.registerHelper('tint', function (value) {
+  const num = Number(value);
+  if (num > 0) {
+    return "green-tint";
+  } else if (num < 0) {
+    return "red-tint";
+  } else {
+    return ""; // No tint if the value is 0.
+  }
 });
 
 
@@ -1040,25 +1042,21 @@ class BuffEffectsWidget extends Application {
       await this.savePosition();
     });
 
-    // Example: reset button
     html.on("click", ".reset-button", async (ev) => {
       ev.preventDefault();
       await this._resetAllEffects();
     });
 
-    // Example: Dekaja
     html.on("click", ".dekaja-button", async (ev) => {
       ev.preventDefault();
       await this._dekaja();
     });
 
-    // Example: Dekunda
     html.on("click", ".dekunda-button", async (ev) => {
       ev.preventDefault();
       await this._dekunda();
     });
 
-    // Example: numeric inputs
     html.find("input[data-category]").on("change", this._onInputChange.bind(this));
   }
 
@@ -1075,6 +1073,9 @@ class BuffEffectsWidget extends Application {
 
     // Example: If you do Tug of War logic
     data.useTugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
+    data.tugMax = game.settings.get("smt-200x", "tugOfWarMax");
+    data.tugMin = game.settings.get("smt-200x", "tugOfWarMin");
+    data.taruOnly = game.settings.get("smt-200x", "taruOnly");
 
     // Example: Summaries
     data.effects.taruTotal = data.effects.tarukaja.amount - data.effects.tarunda.amount;
@@ -1091,23 +1092,35 @@ class BuffEffectsWidget extends Application {
     const input = event.currentTarget;
     const category = input.dataset.category;
     const field = input.dataset.field;
-    let newValue = Number(input.value ?? 0);
-    if (isNaN(newValue)) newValue = 0;
+    const inputStr = input.value.trim();
+
+    // Extract numeric part (removing any + or - signs at the beginning)
+    let parsedValue = parseFloat(inputStr.replace(/^[+-]/, ''));
+    if (isNaN(parsedValue)) parsedValue = 0;
 
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
     if (!effects[category]) return;
 
-    // Basic assignment
-    effects[category][field] = Math.abs(newValue);
-    if (newValue == 0)
-      effects[category].count = 0;
+    const currentValue = Number(effects[category][field]) || 0;
 
-    // Save & update tokens
+    if (inputStr.startsWith('+')) {
+      effects[category][field] = currentValue + parsedValue;
+      if (field != "count")
+        effects[category].count += 1;
+    } else if (inputStr.startsWith('-')) {
+      effects[category][field] = currentValue - parsedValue;
+    } else {
+      effects[category][field] = parsedValue;
+    }
+
+    if (effects[category][field] === 0) {
+      effects[category].count = 0;
+    }
+
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
 
-    // Re-render locally
     this.render();
   }
 
@@ -1116,20 +1129,24 @@ class BuffEffectsWidget extends Application {
   async _dekaja() {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
+    let tugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
 
-    if (effects.tarukaja.amount > 0) {
+    if (tugOfWar) {
+      if (effects.tarukaja.amount > 0)
+        effects.tarukaja.amount = 0;
+      if (effects.makakaja.amount > 0)
+        effects.makakaja.amount = 0;
+      if (effects.rakukaja.amount > 0)
+        effects.rakukaja.amount = 0;
+      if (effects.sukukaja.amount > 0)
+        effects.sukukaja.amount = 0;
+    } else {
       effects.tarukaja.amount = 0;
       effects.tarukaja.count = 0;
-    }
-    if (effects.makakaja.amount > 0) {
       effects.makakaja.amount = 0;
       effects.makakaja.count = 0;
-    }
-    if (effects.rakukaja.amount > 0) {
       effects.rakukaja.amount = 0;
       effects.rakukaja.count = 0;
-    }
-    if (effects.sukukaja.amount > 0) {
       effects.sukukaja.amount = 0;
       effects.sukukaja.count = 0;
     }
@@ -1144,23 +1161,28 @@ class BuffEffectsWidget extends Application {
   async _dekunda() {
     const settingKey = (this.mode === "friendly") ? "friendlyEffects" : "hostileEffects";
     let effects = game.settings.get("smt-200x", settingKey) || {};
+    let tugOfWar = game.settings.get("smt-200x", "tugOfWarBuffs");
 
-    if (effects.tarunda.amount > 0) {
+    if (tugOfWar) {
+      if (effects.tarukaja.amount < 0)
+        effects.tarukaja.amount = 0;
+      if (effects.makakaja.amount < 0)
+        effects.makakaja.amount = 0;
+      if (effects.rakukaja.amount < 0)
+        effects.rakukaja.amount = 0;
+      if (effects.sukukaja.amount < 0)
+        effects.sukukaja.amount = 0;
+    } else {
       effects.tarunda.amount = 0;
       effects.tarunda.count = 0;
-    }
-    if (effects.makunda.amount > 0) {
       effects.makunda.amount = 0;
       effects.makunda.count = 0;
-    }
-    if (effects.rakunda.amount > 0) {
       effects.rakunda.amount = 0;
       effects.rakunda.count = 0;
-    }
-    if (effects.sukunda.amount > 0) {
       effects.sukunda.amount = 0;
       effects.sukunda.count = 0;
     }
+
 
     await game.settings.set("smt-200x", settingKey, effects);
     await this._updateTokens(effects);
@@ -1177,11 +1199,10 @@ class BuffEffectsWidget extends Application {
     const disposition = (this.mode === "friendly") ? 1 : -1;
     const tokens = scene.tokens.filter(t => t.disposition === disposition);
 
-    // Example: updates to actor data
+
     for (let token of tokens) {
       let updates = {};
 
-      // e.g. tarukaja => taru
       updates["system.buffs.taru"] = effects.tarukaja.amount;
       updates["system.buffs.maka"] = effects.makakaja.amount;
       updates["system.buffs.raku"] = effects.rakukaja.amount;

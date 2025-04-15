@@ -8,20 +8,21 @@
     </div>
 
     <div class="flexrow flex-group-center">
-        <span class="buff-label flex3">Phy Pow</span>
+        <span class="buff-label flex3">{{#if taruOnly}}Pow{{else}}Phy Pow{{/if}}</span>
         <input class="buff-input" type="text" data-category="tarukaja" data-field="amount"
             value="{{effects.tarukaja.amount}}" />
         <input class="buff-input" type="number" data-category="tarukaja" data-field="count"
             value="{{effects.tarukaja.count}}" />
         <span class="buff-input">+</span>
-        <input class="buff-input" type="number" value="{{effects.taruTotal}}" disabled />
+        <input class="buff-input {{tint effects.taruTotal}}" type="number" value="{{effects.taruTotal}}" disabled />
         <span class="buff-input">-</span>
-        <input class="buff-input" type="number" data-category="tarunda" data-field="amount"
+        <input class="buff-input" type="text" data-category="tarunda" data-field="amount"
             value="{{effects.tarunda.amount}}" />
         <input class="buff-input" type="number" data-category="tarunda" data-field="count"
             value="{{effects.tarunda.count}}" />
     </div>
 
+    {{#ifEq taruOnly false}}
     <div class="flexrow flex-group-center">
         <span class="buff-label flex3">Mag Pow</span>
         <input class="buff-input" type="text" data-category="makakaja" data-field="amount"
@@ -29,13 +30,14 @@
         <input class="buff-input" type="number" data-category="makakaja" data-field="count"
             value="{{effects.makakaja.count}}" />
         <span class="buff-input">+</span>
-        <input class="buff-input" type="number" value="{{effects.makaTotal}}" disabled />
+        <input class="buff-input {{tint effects.makaTotal}}" type="number" value="{{effects.makaTotal}}" disabled />
         <span class="buff-input">-</span>
-        <input class="buff-input" type="number" data-category="makunda" data-field="amount"
+        <input class="buff-input" type="text" data-category="makunda" data-field="amount"
             value="{{effects.makunda.amount}}" />
         <input class="buff-input" type="number" data-category="makunda" data-field="count"
             value="{{effects.makunda.count}}" />
     </div>
+    {{/ifEq}}
 
     <div class="flexrow flex-group-center">
         <span class="buff-label flex3">Def</span>
@@ -44,9 +46,9 @@
         <input class="buff-input" type="number" data-category="rakukaja" data-field="count"
             value="{{effects.rakukaja.count}}" />
         <span class="buff-input">+</span>
-        <input class="buff-input" type="number" value="{{effects.rakuTotal}}" disabled />
+        <input class="buff-input {{tint effects.rakuTotal}}" type="number" value="{{effects.rakuTotal}}" disabled />
         <span class="buff-input">-</span>
-        <input class="buff-input" type="number" data-category="rakunda" data-field="amount"
+        <input class="buff-input" type="text" data-category="rakunda" data-field="amount"
             value="{{effects.rakunda.amount}}" />
         <input class="buff-input" type="number" data-category="rakunda" data-field="count"
             value="{{effects.rakunda.count}}" />
@@ -59,9 +61,9 @@
         <input class="buff-input" type="number" data-category="sukukaja" data-field="count"
             value="{{effects.sukukaja.count}}" />
         <span class="buff-input">+</span>
-        <input class="buff-input" type="number" value="{{effects.sukuTotal}}" disabled />
+        <input class="buff-input {{tint effects.sukuTotal}}" type="number" value="{{effects.sukuTotal}}" disabled />
         <span class="buff-input">-</span>
-        <input class="buff-input" type="number" data-category="sukunda" data-field="amount"
+        <input class="buff-input" type="text" data-category="sukunda" data-field="amount"
             value="{{effects.sukunda.amount}}" />
         <input class="buff-input" type="number" data-category="sukunda" data-field="count"
             value="{{effects.sukunda.count}}" />
@@ -75,27 +77,33 @@
 
     {{#if useTugOfWar}}
     <div class="flexrow flex-group-center">
-        <span class="buff-label">Phy Pow</span>
-        <input class="buff-input" type="text" data-category="tarukaja" data-field="amount"
-            value="{{effects.tarukaja.amount}}" />
+        <span class="flex">Min/Max: {{tugMin}} ~ {{tugMax}}</span>
     </div>
 
     <div class="flexrow flex-group-center">
-        <span class="buff-label">Mag Pow</span>
-        <input class="buff-input" type="text" data-category="makakaja" data-field="amount"
-            value="{{effects.makakaja.amount}}" />
+        <span class="buff-label">{{#if taruOnly}}Pow{{else}}Phy Pow{{/if}}</span>
+        <input class="buff-input {{tint effects.tarukaja.amount}}" type="text" data-category="tarukaja"
+            data-field="amount" value="{{effects.tarukaja.amount}}" />
     </div>
+
+    {{#ifEq taruOnly false}}
+    <div class="flexrow flex-group-center">
+        <span class="buff-label">Mag Pow</span>
+        <input class="buff-input {{tint effects.makakaja.amount}}" type="text" data-category="makakaja"
+            data-field="amount" value="{{effects.makakaja.amount}}" />
+    </div>
+    {{/ifEq}}
 
     <div class="flexrow flex-group-center">
         <span class="buff-label">Def</span>
-        <input class="buff-input" type="text" data-category="rakukaja" data-field="amount"
-            value="{{effects.rakukaja.amount}}" />
+        <input class="buff-input {{tint effects.rakukaja.amount}}" type="text" data-category="rakukaja"
+            data-field="amount" value="{{effects.rakukaja.amount}}" />
     </div>
 
     <div class="flexrow flex-group-center">
         <span class="buff-label">Acc</span>
-        <input class="buff-input" type="text" data-category="sukukaja" data-field="amount"
-            value="{{effects.sukukaja.amount}}" />
+        <input class="buff-input {{tint effects.sukukaja.amount}}" type="text" data-category="sukukaja"
+            data-field="amount" value="{{effects.sukukaja.amount}}" />
     </div>
     <hr>
     <div class="flexrow flex-group-center">

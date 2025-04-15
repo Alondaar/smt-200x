@@ -60,6 +60,39 @@ SMT_X.powerDice = {
   spell: 'Spell',
 };
 
+SMT_X.affinityIcons = {
+  strike: "icons/skills/melee/blade-tip-orange.webp",
+  gun: "icons/skills/ranged/cannon-barrel-firing-yellow.webp",
+  fire: "icons/magic/fire/projectile-fireball-smoke-strong-orange.webp",
+  ice: "icons/magic/water/barrier-ice-crystal-wall-faceted-light.webp",
+  elec: "icons/magic/lightning/bolt-strike-streak-yellow.webp",
+  force: "icons/magic/air/air-burst-spiral-teal-green.webp",
+  expel: "icons/magic/light/explosion-star-glow-orange.webp",
+  death: "icons/magic/death/skull-energy-light-purple.webp",
+  mind: "icons/skills/wounds/anatomy-organ-brain-pink-red.webp",
+  nerve: "icons/magic/control/debuff-chains-ropes-net-white.webp",
+  curse: "icons/magic/unholy/energy-smoke-pink.webp",
+  magic: "icons/magic/symbols/triangle-glowing-green.webp"
+};
+
+SMT_X.charAffinityIcons = {
+  normal: "-",
+  resist: "fa-shield-halved",
+  weak: "fa-burst",
+  null: `<i class="fa-solid fa-shield"></i>`,
+  drain: "fa-shield-heart",
+  repel: "fa-shield-virus"
+};
+
+SMT_X.charAffinityAbbr = {
+  normal: "SMT_X.CharAffinityShort.normal",
+  resist: "SMT_X.CharAffinityShort.resist",
+  weak: "SMT_X.CharAffinityShort.weak",
+  null: "SMT_X.CharAffinityShort.null",
+  drain: "SMT_X.CharAffinityShort.drain",
+  repel: "SMT_X.CharAffinityShort.repel"
+};
+
 SMT_X.affinities = {
   strike: 'SMT_X.Affinity.strike',
   gun: 'SMT_X.Affinity.gun',
@@ -104,6 +137,25 @@ SMT_X.badStatusList = {
   SHOCK: "SMT_X.AffinityBS.SHOCK",
   HAPPY: "SMT_X.AffinityBS.HAPPY",
   BS: "SMT_X.AffinityBS.BS"
+}
+
+SMT_X.badStatusChoices = {
+  NONE: "SMT_X.AffinityBS.NONE",
+  DEAD: "SMT_X.AffinityBS.DEAD",
+  STONE: "SMT_X.AffinityBS.STONE",
+  FLY: "SMT_X.AffinityBS.FLY",
+  PARALYZE: "SMT_X.AffinityBS.PARALYZE",
+  CHARM: "SMT_X.AffinityBS.CHARM",
+  POISON: "SMT_X.AffinityBS.POISON",
+  CLOSE: "SMT_X.AffinityBS.CLOSE",
+  BIND: "SMT_X.AffinityBS.BIND",
+  FREEZE: "SMT_X.AffinityBS.FREEZE",
+  SLEEP: "SMT_X.AffinityBS.SLEEP",
+  PANIC: "SMT_X.AffinityBS.PANIC",
+  SHOCK: "SMT_X.AffinityBS.SHOCK",
+  HAPPY: "SMT_X.AffinityBS.HAPPY",
+  hpCut: "HP Cut",
+  hpSet: "HP Set"
 }
 
 SMT_X.gems = {
@@ -189,4 +241,22 @@ SMT_X.badStatusList_TC = {
   SHOCK: "SMT_X.AffinityBS_TC.SHOCK",
   HAPPY: "SMT_X.AffinityBS_TC.HAPPY",
   BS: "SMT_X.AffinityBS_TC.BS"
+}
+
+SMT_X.badStatusChoices_TC = {
+  NONE: "SMT_X.AffinityBS_TC.NONE",
+  DEAD: "SMT_X.AffinityBS_TC.DEAD",
+  STONE: "SMT_X.AffinityBS_TC.STONE",
+  FLY: "SMT_X.AffinityBS_TC.FLY",
+  PARALYZE: "SMT_X.AffinityBS_TC.PARALYZE",
+  CHARM: "SMT_X.AffinityBS_TC.CHARM",
+  POISON: "SMT_X.AffinityBS_TC.POISON",
+  CLOSE: "SMT_X.AffinityBS_TC.CLOSE",
+  BIND: "SMT_X.AffinityBS_TC.BIND",
+  FREEZE: "SMT_X.AffinityBS_TC.FREEZE",
+  SLEEP: "SMT_X.AffinityBS_TC.SLEEP",
+  PANIC: "SMT_X.AffinityBS_TC.PANIC",
+  SHOCK: "SMT_X.AffinityBS_TC.SHOCK",
+  hpCut: "HP Cut",
+  hpSet: "HP Set"
 }

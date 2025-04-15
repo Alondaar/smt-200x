@@ -2,12 +2,15 @@
   <li class='item flexrow items-header'>
     <div class='item-prop roll-d10'>d10</div>
     <div class='item-name'>Actions / Skills</div>
-    <div class='item-prop'>Type</div>
     <div class='item-prop'>Cost</div>
     <div class='item-prop'>Target</div>
     <div class='item-prop'>TN</div>
     <div class='item-prop'>Power</div>
+    {{#if system.aux.showTCheaders}}
+    <div class='item-prop'>Element</div>
+    {{else}}
     <div class='item-prop'>Affinity</div>
+    {{/if}}
     <div class='item-controls'>
       <a class='item-control item-create' title='Create item' data-type='feature'>
         <i class='fas fa-plus'></i>
@@ -15,60 +18,67 @@
     </div>
   </li>
   {{#each features as |item id|}}
-  <li class='item flexrow' class='align-items: center;' data-item-id='{{item._id}}'>
-    <input type="text" name="item.system.actionPattern" class='item-prop actionPattern'
-      value="{{item.system.actionPattern}}">
-    <div class='item-name flex3'>
-      <div class='item-image'>
-        <a class='rollable' data-roll-type='item'>
-          <img src='{{item.img}}' title='{{item.name}}' width='24' height='24' />
-        </a>
-      </div>
-      <h4 class="flexrow">
-        <span class="pip-row">
-          {{range 1 item.system.uses.max item.system.uses.value}}
-        </span>
-        <span>{{item.name}}</span>
-      </h4>
+  <!-- Main Feature Row -->
+  <li class='item flexrow' data-item-id='{{item._id}}'>
+    {{#unless system.aux.showTCheaders}}
+    <div class="item-prop flex0">
+      <input type="text" name="item.system.actionPattern" class='actionPattern' style="width: 50px;"
+        value="{{item.system.actionPattern}}">
     </div>
-    <div class='item-prop'>{{item.system.type}}</div>
-    <div class='item-control item-prop clickable pay-cost'>{{item.system.cost}}</div>
+    {{/unless}}
+    <div class='flex2'
+      style="display: inline-flex; flex-wrap: wrap; align-items: center; margin-top: 4px; margin-bottom: 4px;">
+      <img class="rollable" style="margin-top: auto; margin-bottom: auto; margin-right: 6px;" data-roll-type='item'
+        src='{{item.img}}' title='{{item.name}}' width='24' height='24' />
+      <div class="pip-row" style="">
+        {{range 1 item.system.uses.max item.system.uses.value}}
+      </div>
+      <div class="clickable toggle-details" style="font-weight:bold; margin-top: auto; margin-bottom: auto;">
+        {{item.name}}
+      </div>
+    </div>
+    <div class='item-prop clickable pay-cost'>{{item.system.cost}}</div>
     <div class='item-prop'>{{item.system.target}}</div>
-    {{#ifNumber item.system.calcTN}}
-    <div class="item-prop">
-      <span class="clickable roll-tn" style="padding: 0 4px;">
-        {{item.system.displayTN}}
-      </span>
-      {{#if item.system.disableMultiaction}}
-      {{else}}
+    <div class='item-prop'>
+      {{#ifNumber item.system.calcTN}}
+      <span class="clickable roll-tn" style="padding: 0 4px;">{{item.system.displayTN}}</span>
+      {{#unless item.system.disableMultiaction}}
       <span class="clickable roll-tn-2" style="padding: 0 4px;">
         <i
-          class=" fa-solid fa-circle-2 {{#ifOver item.system.calcTN 99}}{{else}}smtx-multi-action-disabled{{/ifOver}}"></i>
+          class="fa-solid fa-circle-2 {{#ifOver item.system.calcTN 99}}{{else}}smtx-multi-action-disabled{{/ifOver}}"></i>
       </span>
       <span class="clickable roll-tn-3 {{#ifOver item.system.calcTN 199}}{{else}}smtx-multi-action-disabled{{/ifOver}}"
         style="padding: 0 4px;">
         <i class="fa-solid fa-circle-3"></i>
       </span>
-      {{/if}}
+      {{/unless}}
+      {{else}}
+      <span class="clickable roll-tn">{{item.system.displayTN}}</span>
+      {{/ifNumber}}
     </div>
-    {{else}}
-    <div class="item-prop clickable roll-tn">
-      {{item.system.displayTN}}
-    </div>
-    {{/ifNumber}}
     <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
     <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>
-    <div class='item-controls'>
-      <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=' feature'}}'>
+    <div class='item-controls flexrow flex0'>
+      <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=" feature"}}'>
         <i class='fas fa-edit'></i>
       </a>
-      <a class='item-control item-delete' title='{{localize "DOCUMENT.Delete" type=' feature'}}'>
+      <a class='item-control item-delete' title='{{localize "DOCUMENT.Delete" type=" feature"}}'>
         <i class='fas fa-trash'></i>
       </a>
     </div>
   </li>
-  <div class='item-prop'
-    style="text-align:left; padding:4px; border-bottom: 1px solid #c9c7b8 ;margin-bottom: 4px; justify-content: left;">
-    {{item.system.shortEffect}}</div>
+  <!-- Hidden Details Row -->
+  <li class="item item-details" data-item-id='{{item._id}}' style="display:none; margin-left: 2em;">
+    <div class="grid grid-4col">
+      <div>
+        <span style="font-weight: bold;">Type:</span>&nbsp;<span>{{item.system.type}}</span>
+      </div>
+      <div class='clickable weapon-rotate'><span style="font-weight: bold;">
+          Using Weapon:</span>&nbsp; {{localize (lookup @root.config.weaponChoices
+        item.system.wep)}}
+      </div>
+    </div>
+    <div class='flex3' style="text-align: left; margin-bottom: 1em;">{{item.system.shortEffect}}</div>
+  </li>
   {{/each}}
 </ol>

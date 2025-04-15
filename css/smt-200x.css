@@ -428,27 +428,23 @@
 
 
 .pip-row {
-  display: flex;
-  gap: 4px;
-  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
   margin-top: auto;
   margin-bottom: auto;
-  margin-right: 6px;
+  margin-right: 4px;
 }
 
 .pip {
   width: 13px;
-  /* Set square size */
   height: 13px;
+  /*margin-top: auto;
+  margin-bottom: auto;*/
+  margin-right: 2px;
   border: 2px solid #333;
-  /* Black border for unfilled pips */
   background-color: transparent;
   border-radius: 25%;
-  /* Unfilled pips are transparent */
-  display: inline-block;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  /* Smooth fill transition */
 }
 
 .pip.filled {
@@ -456,6 +452,7 @@
   /* Filled pips have black background */
 }
 
+/* this doesn't do anything */
 .pip:hover {
   color: orange;
 }
@@ -586,7 +583,15 @@
   font-weight: bold;
 }
 
-
 .smtx-multi-action-disabled {
   opacity: 0.5 !important;
+}
+
+/* For the Buff Widget fields*/
+.green-tint {
+  background-color: rgba(0, 255, 0, 0.2) !important;
+}
+
+.red-tint {
+  background-color: rgba(255, 0, 0, 0.2) !important;
 }

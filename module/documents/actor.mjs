@@ -432,9 +432,13 @@ export class SMTXActor extends Actor {
     const mpFormula = this.parseFormula(game.settings.get("smt-200x", "mpFormula"), systemData);
     const fateFormula = this.parseFormula(game.settings.get("smt-200x", "fateFormula"), systemData);
 
-    systemData.hp.max = (hpFormula) * systemData.hp.mult;
-    systemData.mp.max = (mpFormula) * systemData.mp.mult;
-    systemData.fate.max = fateFormula + (systemData.fate?.maxMod ? systemData.fate.maxMod : 0);
+    const hpMod = this.parseFormula(systemData.hp.maxMod != undefined ? systemData.hp.maxMod : "0", systemData);
+    const mpMod = this.parseFormula(systemData.mp.maxMod != undefined ? systemData.mp.maxMod : "0", systemData);
+    const fateMod = this.parseFormula(systemData.fate.maxMod != undefined ? systemData.fate.maxMod : "0", systemData);
+
+    systemData.hp.max = ((hpFormula) * systemData.hp.mult) + (hpMod);
+    systemData.mp.max = ((mpFormula) * systemData.mp.mult) + (mpMod);
+    systemData.fate.max = (fateFormula) + (fateMod);
 
     if (systemData.isBoss) {
       systemData.hp.max *= 5;
@@ -484,6 +488,9 @@ export class SMTXActor extends Actor {
 
 
   parseFormula(formula, systemData) {
+    if (!isNaN(formula))
+      formula = formula.toString();
+
     try {
       const result = new Roll(formula, systemData).evaluateSync({ minimize: true }).total;
       return result;
@@ -806,13 +813,10 @@ export class SMTXActor extends Actor {
       "NONE": 999
     };
 
-
     if (removeStatus != "NONE") {
-      console.log(removeStatus)
       this.toggleStatusEffect(removeStatus, { active: false })
       return;
     }
-
 
     const currentPriorityBS = priority[this.system.badStatus];
     const incomingPriorityBS = priority[status];
@@ -849,6 +853,75 @@ export class SMTXActor extends Actor {
     this.update({
       "system.macca": this.system.macca + amount
     });
+  }
+
+
+
+  payCost(itemID) {
+    const actorData = this.system;
+    const rollData = this.getRollData();
+    const item = this.items.get(itemID);
+
+    // Retrieve current resource values
+    const currentHP = actorData.hp.value;
+    const currentMP = actorData.mp.value;
+    const currentFate = actorData.fate.value;
+
+    // Calculate cost values using Roll formulas
+    const hpCost = Math.floor(Math.abs(new Roll(item.system.hpCost, rollData).evaluateSync({ minimize: true }).total));
+    const mpCost = Math.floor(Math.abs(new Roll(item.system.mpCost, rollData).evaluateSync({ minimize: true }).total));
+    const fateCost = Math.floor(Math.abs(new Roll(item.system.fateCost, rollData).evaluateSync({ minimize: true }).total));
+    const ammoCost = Math.floor(Math.abs(new Roll(item.system.ammoCost, rollData).evaluateSync({ minimize: true }).total));
+
+    // Handle ammo consumption
+    if (ammoCost > 0) {
+      if (item.system.wep === "x")
+        return ui.notifications.info(`You do not have a weapon equipped.`)
+
+      if (item.system.wep === "a") {
+        if (actorData.wepA.ammo - ammoCost >= 0) {
+          this.update({ "system.wepA.ammo": actorData.wepA.ammo - ammoCost });
+        } else {
+          return ui.notifications.info(`You do not have enough ammo.`);
+        }
+      } else {
+        if (actorData.wepB.ammo - ammoCost >= 0) {
+          this.update({ "system.wepB.ammo": actorData.wepB.ammo - ammoCost });
+        } else {
+          return ui.notifications.info(`You do not have enough ammo.`);
+        }
+      }
+    }
+
+    // Check that the actor can pay the cost
+    if (currentMP - mpCost >= 0 && currentFate - fateCost >= 0) {
+      this.update({
+        "system.hp.value": currentHP - hpCost,
+        "system.mp.value": currentMP - mpCost,
+        "system.fate.value": currentFate - fateCost
+      });
+
+      // Build a list of cost items that are greater than 0.
+      const costs = [];
+      if (hpCost > 0) costs.push(`HP: ${hpCost}`);
+      if (mpCost > 0) costs.push(`MP: ${mpCost}`);
+      if (fateCost > 0) costs.push(`Fate: ${fateCost}`);
+      if (ammoCost > 0) costs.push(`Ammo: ${ammoCost}`);
+      const costText = costs.join(', ');
+
+      const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+      const rollMode = game.settings.get("core", "rollMode");
+      const flavor = `<strong>Paid for ${item.name}</strong>`;
+
+      ChatMessage.create({
+        speaker: speaker,
+        rollMode: rollMode,
+        flavor: flavor,
+        content: `<div class="pay-cost-message">${costText}</div>`
+      });
+    } else {
+      ui.notifications.info(`You are unable to pay the cost for that skill.`);
+    }
   }
 
 
