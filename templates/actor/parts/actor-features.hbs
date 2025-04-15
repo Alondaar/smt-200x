@@ -32,9 +32,6 @@
     </div>
     <div class='item-prop clickable pay-cost'>{{item.system.cost}}</div>
     <div class='item-prop'>{{item.system.target}}</div>
-    {{#if showTC}}
-    <!-- Additional TC-related columns go here -->
-    {{else}}
     <div class='item-prop'>
       {{#ifNumber item.system.calcTN}}
       <span class="clickable roll-tn" style="padding: 0 4px;">{{item.system.displayTN}}</span>
@@ -54,7 +51,6 @@
     </div>
     <div class='item-prop clickable roll-power'>{{item.system.calcPower}}</div>
     <div class='item-prop'>{{localize (lookup @root.config.affinities item.system.affinity)}}</div>
-    {{/if}}
     <div class='item-controls flexrow flex0'>
       <a class='item-control item-edit' title='{{localize "DOCUMENT.Edit" type=" feature"}}'>
         <i class='fas fa-edit'></i>
@@ -75,7 +71,7 @@
         item.system.wep)}}
       </div>
     </div>
-    <div class='flex3' style="text-align: left;">{{item.system.shortEffect}}</div>
+    <div class='flex3' style="text-align: left; margin-bottom: 1em;">{{item.system.shortEffect}}</div>
   </li>
   {{/each}}
 </ol>
