@@ -432,9 +432,9 @@ export class SMTXActor extends Actor {
     const mpFormula = this.parseFormula(game.settings.get("smt-200x", "mpFormula"), systemData);
     const fateFormula = this.parseFormula(game.settings.get("smt-200x", "fateFormula"), systemData);
 
-    const hpMod = this.parseFormula(systemData.hp?.maxMod ? systemData.hp.maxMod : 0, systemData);
-    const mpMod = this.parseFormula(systemData.mp?.maxMod ? systemData.mp.maxMod : 0, systemData);
-    const fateMod = this.parseFormula(systemData.fate?.maxMod ? systemData.fate.maxMod : 0, systemData);
+    const hpMod = this.parseFormula(systemData.hp.maxMod != undefined ? systemData.hp.maxMod : "0", systemData);
+    const mpMod = this.parseFormula(systemData.mp.maxMod != undefined ? systemData.mp.maxMod : "0", systemData);
+    const fateMod = this.parseFormula(systemData.fate.maxMod != undefined ? systemData.fate.maxMod : "0", systemData);
 
     systemData.hp.max = ((hpFormula) * systemData.hp.mult) + (hpMod);
     systemData.mp.max = ((mpFormula) * systemData.mp.mult) + (mpMod);
@@ -488,6 +488,9 @@ export class SMTXActor extends Actor {
 
 
   parseFormula(formula, systemData) {
+    if (!isNaN(formula))
+      formula = formula.toString();
+
     try {
       const result = new Roll(formula, systemData).evaluateSync({ minimize: true }).total;
       return result;
