@@ -595,3 +595,77 @@
 .red-tint {
   background-color: rgba(255, 0, 0, 0.2) !important;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+:root {
+  /* tweak these to taste */
+  --bar-height: 1.5em;
+  /* total height of the main bar */
+  --pill-height: 2.0em;
+  /* height of the stepped‑down value pill */
+  --bar-radius: 0.75em;
+  /* rounding of the bar’s corners */
+  --bar-color: rgb(0, 8, 32);
+  /* background of the main bar */
+  --pill-color: #03356b;
+  /* background of the pill */
+  --text-color: rgb(96, 160, 248);
+}
+
+.attack-bar {
+  height: var(--pill-height);
+  /* overall rounding—but we’ll override on children */
+  border-radius: var(--bar-radius);
+  overflow: visible;
+  /* allow pill to sit outside if you want overlap */
+  font-family: sans-serif;
+  user-select: none;
+}
+
+/* Left side: the “label” stretch‑full‑height */
+.attack-bar .attack-label {
+  background-color: var(--bar-color);
+  color: var(--text-color);
+  padding: 0 0.5em;
+  display: flex;
+  align-items: center;
+  /* left corners rounded; right corners square so pill can attach */
+  border-radius: var(--bar-radius) 0 0 var(--bar-radius);
+  height: 75%;
+  font-weight: bold;
+}
+
+/* Right side: the stepped‑down “pill” */
+.attack-bar .attack-value {
+  background-color: var(--bar-color);
+  color: white;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.2em;
+  border-radius: 0 var(--bar-radius) var(--bar-radius) var(--bar-radius);
+  margin-left: -2px;
+  font-size: 1.2rem;
+  /* optional: slight overlap so you don’t see the square cut */
+}
+
+.bar-between {
+  margin-left: 6px;
+}
