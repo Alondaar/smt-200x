@@ -58,13 +58,25 @@ export class SMTXItem extends Item {
         const critRangeParts = (systemData.critRange ?? "1/10").split("/").map(Number);
         let critRate = critRangeParts.length === 2 ? critRangeParts[0] / critRangeParts[1] : 0.1;
 
-        const subCritRangeParts = (actorData[weaponSlot]?.critRate ?? "1/10").split("/").map(Number);
-        let subCritRate = subCritRangeParts.length === 2 ? subCritRangeParts[0] / subCritRangeParts[1] : 0.1;
-        if (subCritRate > critRate)
-          critRate = subCritRate;
+        const realWeapon = this.actor.items.find(i =>
+          i.type === "weapon"
+          && i.name === actorData[weaponSlot].name
+          && i.system.type === actorData[weaponSlot].type
+        );
 
-        if ((Number(actorData[weaponSlot]?.critMult) ?? 2) > systemData.critMult)
-          systemData.critMult = (Number(actorData[weaponSlot]?.critMult) ?? 2)
+        console.log(realWeapon);
+        console.log(actorData[weaponSlot]);
+        console.log(systemData);
+
+        if (realWeapon) {
+          const subCritRangeParts = (realWeapon.system?.critRate ?? "1/10").split("/").map(Number);
+          let subCritRate = subCritRangeParts.length === 2 ? subCritRangeParts[0] / subCritRangeParts[1] : 0.1;
+          if (subCritRate > critRate)
+            systemData.critRange = (realWeapon.system?.critRate ?? "1/10");
+
+          if ((Number(realWeapon.system?.critMult) ?? 2) > systemData.critMult)
+            systemData.critMult = (Number(realWeapon.system?.critMult) ?? 2)
+        }
       }
     }
 
@@ -136,7 +148,7 @@ export class SMTXItem extends Item {
     if (isPoisoned)
       situationalBoost *= 0.5;
 
-    const staticPower = Math.floor(basePowerTotal * boost);
+    const staticPower = Math.floor(basePowerTotal * boost * situationalBoost);
 
     systemData.calcPower = displayDice +
       (displayDice && staticPower ? "+" : "") +
@@ -146,7 +158,7 @@ export class SMTXItem extends Item {
       ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}`
       : systemData.powerDice;
 
-    systemData.formula = `${formatDice || 0} + ${staticPower || 0}`;
+    systemData.formula = `${formatDice || 0} + ${Math.floor(basePowerTotal * boost) || 0}`;
     if (Number(situationalBoost) != 1)
       systemData.formula = `(${systemData.formula}) * ${situationalBoost}`;
     if (Number(situationalBoost) < 1)

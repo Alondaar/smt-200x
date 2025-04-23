@@ -345,7 +345,7 @@
       "slotA": false,
       "slotB": false,
       "critRate": "1/10",
-      "critMult": "2"
+      "critMult": 2
     },
     "armor": {
       "templates": [
