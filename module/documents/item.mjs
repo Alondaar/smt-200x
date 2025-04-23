@@ -64,10 +64,6 @@ export class SMTXItem extends Item {
           && i.system.type === actorData[weaponSlot].type
         );
 
-        console.log(realWeapon);
-        console.log(actorData[weaponSlot]);
-        console.log(systemData);
-
         if (realWeapon) {
           const subCritRangeParts = (realWeapon.system?.critRate ?? "1/10").split("/").map(Number);
           let subCritRate = subCritRangeParts.length === 2 ? subCritRangeParts[0] / subCritRangeParts[1] : 0.1;
