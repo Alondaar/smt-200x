@@ -53,6 +53,18 @@ export class SMTXItem extends Item {
       if (weaponSlot) {
         weaponTN = !systemData.wepIgnoreTN ? actorData[weaponSlot]?.hit ?? 0 : 0;
         weaponPower = !systemData.wepIgnorePower ? actorData[weaponSlot]?.power ?? 0 : 0;
+
+
+        const critRangeParts = (systemData.critRange ?? "1/10").split("/").map(Number);
+        let critRate = critRangeParts.length === 2 ? critRangeParts[0] / critRangeParts[1] : 0.1;
+
+        const subCritRangeParts = (actorData[weaponSlot]?.critRate ?? "1/10").split("/").map(Number);
+        let subCritRate = subCritRangeParts.length === 2 ? subCritRangeParts[0] / subCritRangeParts[1] : 0.1;
+        if (subCritRate > critRate)
+          critRate = subCritRate;
+
+        if ((Number(actorData[weaponSlot]?.critMult) ?? 2) > systemData.critMult)
+          systemData.critMult = (Number(actorData[weaponSlot]?.critMult) ?? 2)
       }
     }
 

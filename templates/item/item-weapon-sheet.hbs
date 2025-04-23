@@ -92,6 +92,21 @@
             <input type="text" name="system.maxAmmo" value="{{system.maxAmmo}}" data-dtype="Number" />
           </div>
         </div>
+
+        <h2>WEAPON OVERRIDE</h2>
+        <div class="grid grid-3col">
+          <div class="flexcol">
+            <label for="system.critRate" class="resource-label"
+              title="The critical rate override for attacks made using this weapon">critRate</label>
+            <input type="text" name="system.critRate" value="{{system.critRate}}" />
+          </div>
+
+          <div class="flexcol">
+            <label for="system.critMult" class="resource-label"
+              title="The critical multiplier override for attacks made using this weapon">critMult</label>
+            <input type="text" name="system.critMult" value="{{system.critMult}}" data-dtype="Number" />
+          </div>
+        </div>
       </div>
 
       {{!-- Effects Tab --}}
