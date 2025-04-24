@@ -343,7 +343,9 @@
       "ammo": 0,
       "maxAmmo": 0,
       "slotA": false,
-      "slotB": false
+      "slotB": false,
+      "critRate": "1/10",
+      "critMult": 2
     },
     "armor": {
       "templates": [

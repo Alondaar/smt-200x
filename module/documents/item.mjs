@@ -53,6 +53,26 @@ export class SMTXItem extends Item {
       if (weaponSlot) {
         weaponTN = !systemData.wepIgnoreTN ? actorData[weaponSlot]?.hit ?? 0 : 0;
         weaponPower = !systemData.wepIgnorePower ? actorData[weaponSlot]?.power ?? 0 : 0;
+
+
+        const critRangeParts = (systemData.critRange ?? "1/10").split("/").map(Number);
+        let critRate = critRangeParts.length === 2 ? critRangeParts[0] / critRangeParts[1] : 0.1;
+
+        const realWeapon = this.actor.items.find(i =>
+          i.type === "weapon"
+          && i.name === actorData[weaponSlot].name
+          && i.system.type === actorData[weaponSlot].type
+        );
+
+        if (realWeapon) {
+          const subCritRangeParts = (realWeapon.system?.critRate ?? "1/10").split("/").map(Number);
+          let subCritRate = subCritRangeParts.length === 2 ? subCritRangeParts[0] / subCritRangeParts[1] : 0.1;
+          if (subCritRate > critRate)
+            systemData.critRange = (realWeapon.system?.critRate ?? "1/10");
+
+          if ((Number(realWeapon.system?.critMult) ?? 2) > systemData.critMult)
+            systemData.critMult = (Number(realWeapon.system?.critMult) ?? 2)
+        }
       }
     }
 
@@ -113,16 +133,32 @@ export class SMTXItem extends Item {
     let boost = systemData.powerBoost;
     if (rollData.boost && rollData.boost[systemData.affinity])
       boost = rollData.boost[systemData.affinity];
-    const staticPower = Math.floor(basePowerTotal * boost);
+
+    // Apply situaltional multiplier
+    const attackType = systemData.attackType + "Attack";
+    let situationalBoost = 1;
+    if (systemData.attackType != "none" && actorData[attackType] && actorData[attackType].mult) {
+      situationalBoost *= actorData[attackType].mult;
+    }
+
+    if (isPoisoned)
+      situationalBoost *= 0.5;
+
+    const staticPower = Math.floor(basePowerTotal * boost * situationalBoost);
 
     systemData.calcPower = displayDice +
       (displayDice && staticPower ? "+" : "") +
-      (staticPower ? Math.floor(staticPower * (isPoisoned && systemData.attackType != "none" ? 0.5 : 1)) : "");
+      (staticPower ? staticPower : "");
     systemData.calcPower = (systemData.calcPower === "0" || systemData.calcPower === 0) ? "-" : systemData.calcPower;
     const formatDice = (baseDice != systemData.powerDice)
       ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}`
       : systemData.powerDice;
-    systemData.formula = `${formatDice || 0} + ${staticPower || 0}`;
+
+    systemData.formula = `${formatDice || 0} + ${Math.floor(basePowerTotal * boost) || 0}`;
+    if (Number(situationalBoost) != 1)
+      systemData.formula = `(${systemData.formula}) * ${situationalBoost}`;
+    if (Number(situationalBoost) < 1)
+      systemData.formula = `floor(${systemData.formula})`;
 
     // Compute TN (this block already had try-catch)
     let baseTN = systemData.tn;
@@ -418,7 +454,23 @@ export class SMTXItem extends Item {
 
     // Step 3: Perform the rolls and evaluate results
     const critRangeParts = (systemData.critRange ?? "1/10").split("/").map(Number);
-    const critRate = critRangeParts.length === 2 ? critRangeParts[0] / critRangeParts[1] : 0.1;
+    let critRate = critRangeParts.length === 2 ? critRangeParts[0] / critRangeParts[1] : 0.1;
+
+    const attackType = item.system.attackType + "Attack";
+    if (item.system.attackType != "none" && item.actor.system[attackType] && item.actor.system[attackType].critRate) {
+      const subCritRangeParts = (item.actor.system[attackType].critRate ?? "1/10").split("/").map(Number);
+      let subCritRate = subCritRangeParts.length === 2 ? subCritRangeParts[0] / subCritRangeParts[1] : 0.1;
+      if (subCritRate > critRate)
+        critRate = subCritRate;
+    }
+
+    if (item.actor.system.global && item.actor.system.global.critRate) {
+      const subCritRangeParts = (item.actor.system.global.critRate ?? "1/10").split("/").map(Number);
+      let subCritRate = subCritRangeParts.length === 2 ? subCritRangeParts[0] / subCritRangeParts[1] : 0.1;
+      if (subCritRate > critRate)
+        critRate = subCritRate;
+    }
+
 
     const rolls = await Promise.all(
       tnParts.map(async (tn) => {
@@ -599,6 +651,15 @@ export class SMTXItem extends Item {
         `;
     const descriptionContent = `${item.system.shortEffect}<hr>${item.system.description}`;
 
+    const attackType = item.system.attackType + "Attack";
+    if (item.system.attackType != "none" && item.actor.system[attackType] && item.actor.system[attackType].critMult) {
+      systemData.critMult = item.actor.system[attackType].critMult;
+    }
+
+    if (item.system.attackType != "none" && item.actor.system.global && item.actor.system.global.ignoreDefense) {
+      systemData.ignoreDefense = item.actor.system.global.ignoreDefense;
+    }
+
     let overrides = {
       bonusFormula: "",
       affinity: systemData.affinity,
@@ -707,10 +768,6 @@ export class SMTXItem extends Item {
 
     if (overrides.extraModifier.trim() !== "0") {
       rollFormula += ` + (${overrides.extraModifier.trim()})`;
-    }
-
-    if (item.actor.system?.chargeMod) {
-      rollFormula = `(${rollFormula})*${item.actor.system.chargeMod}`;
     }
 
     // Roll for regular damage
@@ -855,6 +912,10 @@ export class SMTXItem extends Item {
     event.preventDefault();
     const splitIndex = $(event.currentTarget).data("split-index");
 
+    if (item.system.attackType != "none" && item.actor.system.global && item.actor.system.global.ignoreDefense) {
+      systemData.ignoreDefense = item.actor.system.global.ignoreDefense;
+    }
+
     // Instead of scanning the entire DOM, narrow your search to the chat message container.
     const messageContainer = $(event.currentTarget).closest(".message-content");
 
@@ -911,12 +972,7 @@ export class SMTXItem extends Item {
 
     let rollFormula = systemData.formula;
 
-    if (item.actor.system?.chargeMod) {
-      rollFormula = `(${rollFormula})*${item.actor.system.chargeMod}`;
-    }
-
-    const isPoisoned = (this.actor.system.badStatus === "POISON" && systemData.attackType !== "none");
-    const damageRoll = new Roll(isPoisoned ? "floor(  (" + rollFormula + ") / 2  )" : rollFormula, rollData);
+    const damageRoll = new Roll(rollFormula, rollData);
     await damageRoll.evaluate();
     if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
     const baseDamage = Math.floor(damageRoll.total);

@@ -276,114 +276,136 @@ export class SMTXActor extends Actor {
 
 
   _displayAffinity(systemData) {
+    const showTC = game.settings.get("smt-200x", "showTCheaders");
+    const typeBase = showTC ? "SMT_X.Affinity_TC" : "SMT_X.Affinity";
+    const effectBase = showTC ? "SMT_X.CharAffinity_TC" : "SMT_X.CharAffinity";
+
     const affinityPriority = {
-      normal: 0,
-      weak: 1,
-      resist: 2,
-      null: 3,
-      drain: 4,
-      repel: 5
+      normal: 0, weak: 1, resist: 2, null: 3, drain: 4, repel: 5
     };
+    const filtered = this._filterAffinitiesBySpecial(
+      systemData.affinityFinal, "magic", affinityPriority
+    );
 
-    // Filter affinities if a special "magic" key exists.
-    const filteredAffinity = this._filterAffinitiesBySpecial(systemData.affinityFinal, "magic", affinityPriority);
+    const values = Object.entries(filtered)
+      .filter(([type, val]) => type !== "almighty" && type !== "magic")
+      .map(([_, val]) => val);
+    if (values.length > 0 && new Set(values).size === 1) {
 
-    // Define the group order (from highest to lowest priority)
-    const groupOrder = ["repel", "drain", "null", "resist", "weak"];
-    const groups = {};
-
-    // Build groups based on the filtered affinities
-    for (let type in filteredAffinity) {
-      const value = filteredAffinity[type];
-      if (value === "normal") continue; // Skip normal entries
-
-      if (!groups[value]) groups[value] = [];
-      groups[value].push(type);
+      const effectLabel = game.i18n.localize(`${effectBase}.${values[0]}`);
+      const allLabel = "All";
+      if (effectLabel != "Normal")
+        systemData.displayAffinity = `${effectLabel} ${allLabel}`;
+      else
+        systemData.displayAffinity = `Normal`;
+      return;
     }
 
-    // Construct the display string by grouping entries in the order specified
-    const outputGroups = groupOrder.reduce((acc, effectValue) => {
-      if (groups[effectValue] && groups[effectValue].length) {
-        // Capitalize the effect label (e.g., "resist" → "Resist")
-        const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
-        // Capitalize each affinity type and join them with commas
-        const typesStr = groups[effectValue]
-          .map(type => type.charAt(0).toUpperCase() + type.slice(1))
-          .join(", ");
-        acc.push(`${effectLabel} ${typesStr}`);
-      }
-      return acc;
+    const groupOrder = ["repel", "drain", "null", "resist", "weak"];
+    const groups = {};
+    for (let type in filtered) {
+      const eff = filtered[type];
+      if (eff === "normal") continue;
+      (groups[eff] ||= []).push(type);
+    }
+
+    const out = groupOrder.reduce((arr, eff) => {
+      const list = groups[eff];
+      if (!list?.length) return arr;
+      const lbl = game.i18n.localize(`${effectBase}.${eff}`);
+      const names = list
+        .map(t => game.i18n.localize(`${typeBase}.${t}`))
+        .join(", ");
+      arr.push(`${lbl} ${names}`);
+      return arr;
     }, []);
 
-    systemData.displayAffinity = outputGroups.join("; ");
+    systemData.displayAffinity = out.join("; ");
   }
 
 
 
   _displayAffinityBS(systemData) {
     const affinityPriority = {
-      normal: 0,
-      weak: 1,
-      resist: 2,
-      null: 3,
-      drain: 4,
-      repel: 5
+      normal: 0, weak: 1, resist: 2, null: 3, drain: 4, repel: 5
     };
+    const filtered = this._filterAffinitiesBySpecial(
+      systemData.affinityBSFinal, "bs", affinityPriority
+    );
 
-    // Filter affinities if a special "bs" key exists.
-    const filteredAffinityBS = this._filterAffinitiesBySpecial(systemData.affinityBSFinal, "bs", affinityPriority);
-
-    // Define the group order (adjust order if needed)
     const groupOrder = ["null", "resist", "weak"];
     const groups = {};
-
-    // Build groups based on the filtered BS affinities
-    for (let type in filteredAffinityBS) {
-      const value = filteredAffinityBS[type];
-      if (value === "normal") continue;
-
-      if (!groups[value]) groups[value] = [];
-      groups[value].push(type);
+    for (let type in filtered) {
+      const eff = filtered[type];
+      if (eff === "normal") continue;
+      (groups[eff] ||= []).push(type);
     }
 
-    // Build the output string
-    const outputGroups = groupOrder.reduce((acc, effectValue) => {
-      if (groups[effectValue] && groups[effectValue].length) {
-        // Capitalize the effect label (e.g., "resist" → "Resist")
-        const effectLabel = effectValue.charAt(0).toUpperCase() + effectValue.slice(1);
-        // Capitalize each BS type (first letter uppercase, rest lowercase)
-        const typesStr = groups[effectValue]
-          .map(type => type.charAt(0).toUpperCase() + type.slice(1).toLowerCase())
-          .join(", ");
-        acc.push(`${effectLabel} ${typesStr}`);
-      }
-      return acc;
+    const showTC = game.settings.get("smt-200x", "showTCheaders");
+    const bsKeyBase = showTC ? "SMT_X.AffinityBS_TC" : "SMT_X.AffinityBS";
+    const affKeyBase = showTC ? "SMT_X.CharAffinity_TC" : "SMT_X.CharAffinity";
+
+    const out = groupOrder.reduce((arr, eff) => {
+      const list = groups[eff];
+      if (!list?.length) return arr;
+
+      const effectLabel = game.i18n.localize(`${affKeyBase}.${eff}`);
+
+      const names = list
+        .map(type => game.i18n.localize(`${bsKeyBase}.${type}`))
+        .join(", ");
+
+      arr.push(`${effectLabel} ${names}`);
+      return arr;
     }, []);
 
-    systemData.displayAffinityBS = outputGroups.join("; ");
+    systemData.displayAffinityBS = out.join("; ");
   }
 
 
 
   _filterAffinitiesBySpecial(affinities, specialKey, priorityMap) {
-    // If there is no special key or if it is "normal", return the original map.
     if (!affinities.hasOwnProperty(specialKey) || affinities[specialKey] === "normal") {
       return affinities;
     }
-    const threshold = priorityMap[affinities[specialKey]];
-    const filtered = {};
 
+    const threshold = priorityMap[affinities[specialKey]];
+    const showTC = game.settings.get("smt-200x", "showTCheaders");
+
+    const tcMagicTypes = ["fire", "ice", "force", "elec"];
+    const nonTcExempt = ["strike", "gun", "almighty"];
+
+    const filtered = {};
     for (const type in affinities) {
-      // Always include the special key in the output.
       if (type === specialKey) {
         filtered[type] = affinities[type];
-      } else {
-        // Only include types that have a strictly higher priority than the special one.
+        continue;
+      }
+
+      if (specialKey === "magic") {
+        if (showTC) {
+          if (
+            !tcMagicTypes.includes(type)
+            || priorityMap[affinities[type]] > threshold
+          ) {
+            filtered[type] = affinities[type];
+          }
+        } else {
+          if (
+            nonTcExempt.includes(type)
+            || priorityMap[affinities[type]] > threshold
+          ) {
+            filtered[type] = affinities[type];
+          }
+        }
+      }
+      else {
         if (priorityMap[affinities[type]] > threshold) {
           filtered[type] = affinities[type];
         }
       }
     }
+
     return filtered;
   }
 
