@@ -288,7 +288,7 @@ export class SMTXActor extends Actor {
     );
 
     const values = Object.entries(filtered)
-      .filter(([type, val]) => type !== "almighty")
+      .filter(([type, val]) => type !== "almighty" && type !== "magic")
       .map(([_, val]) => val);
     if (values.length > 0 && new Set(values).size === 1) {
 
