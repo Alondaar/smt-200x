@@ -1,7 +1,7 @@
 {
   "id": "smt-200x",
-  "title": "Shin Megami Tensei TRPG Devil City Tokyo 200X",
-  "description": "The SMT X system for FoundryVTT!",
+  "title": "Shin Megami Tensei TRPG",
+  "description": "A system that supports SMT Tokyo Conception & Devil City Tokyo 200X!",
   "authors": [
     {
       "name": "Alondaar",

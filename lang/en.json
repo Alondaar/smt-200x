@@ -158,7 +158,11 @@
       "npc": "NPC"
     },
     "Item": {
-      "feature": "Feature"
+      "feature": "Feature",
+      "passive": "Passive",
+      "armor": "Equipment",
+      "consumable": "Consumable",
+      "weapon": "Weapon"
     }
   }
 }
