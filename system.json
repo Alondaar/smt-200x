@@ -1,7 +1,7 @@
 {
   "id": "smt-200x",
-  "title": "Shin Megami Tensei TRPG Devil City Tokyo 200X",
-  "description": "The SMT X system for FoundryVTT!",
+  "title": "Shin Megami Tensei TRPG",
+  "description": "A system that supports SMT Tokyo Conception & Devil City Tokyo 200X!",
   "authors": [
     {
       "name": "Alondaar",
@@ -20,7 +20,7 @@
       "thumbnail": "systems/smt-200x/assets/anvil-impact.png"
     }
   ],
-  "version": "0.886",
+  "version": "0.887",
   "compatibility": {
     "minimum": 12,
     "verified": "12.331"
@@ -57,7 +57,7 @@
   "packFolders": [],
   "socket": true,
   "manifest": "https://github.com/Alondaar/smt-200x/raw/main/system.json",
-  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-032.zip",
+  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-033.zip",
   "background": "systems/smt-200x/assets/anvil-impact.png",
   "gridDistance": 2,
   "gridUnits": "m",

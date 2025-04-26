@@ -912,10 +912,6 @@ export class SMTXItem extends Item {
     event.preventDefault();
     const splitIndex = $(event.currentTarget).data("split-index");
 
-    if (item.system.attackType != "none" && item.actor.system.global && item.actor.system.global.ignoreDefense) {
-      systemData.ignoreDefense = item.actor.system.global.ignoreDefense;
-    }
-
     // Instead of scanning the entire DOM, narrow your search to the chat message container.
     const messageContainer = $(event.currentTarget).closest(".message-content");
 
@@ -957,6 +953,10 @@ export class SMTXItem extends Item {
     const item = this;
     const systemData = item.system;
     const rollData = item.getRollData();
+
+    if (item.system.attackType != "none" && item.actor.system.global && item.actor.system.global.ignoreDefense) {
+      systemData.ignoreDefense = item.actor.system.global.ignoreDefense;
+    }
 
     // Determine if any buff categories are active
     const hasBuffs = Object.values(systemData.buffs).some(value => value === true);
