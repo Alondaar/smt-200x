@@ -403,6 +403,8 @@
       "hasType": false,
       "lifeDrain": 0,
       "manaDrain": 0,
+      "affectsHPmultiplier": 1.0,
+      "affectsMPmultiplier": 1.0,
       "hpCut": 0,
       "hpSet": "",
       "buffs": {

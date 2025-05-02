@@ -862,6 +862,7 @@ export class SMTXItem extends Item {
           data-ignore-defense="${overrides.ignoreDefense}" 
           data-half-defense="${overrides.halfDefense}" 
           data-pierce="${overrides.pierce}" 
+          data-affects-hp='${systemData.affectsHP}' 
           data-affects-mp='${systemData.affectsMP}' 
           data-regular-damage="${finalBaseDmg}" 
           data-critical-damage="${critDamage}" 
@@ -1142,11 +1143,13 @@ export class SMTXItem extends Item {
   <div class="flexrow"><span class="flex3"><strong>Inc. Dmg:</strong> ${result.finalDamage}</span>
     <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
       data-token-id="${result.tokenId}"
+      data-item-id="${this.id}"
       data-effective-damage="${result.effectiveDamage}"
       data-affinity="${systemData.affinity}"
       data-ignore-defense="${systemData.ingoreDefense}"
       data-half-defense="${systemData.halfDefense}"
       data-critical="${baseEffect === 2}"
+      data-affects-hp='${systemData.affectsHP}' 
       data-affects-mp="${systemData.affectsMP}"
       data-lifedrain="${systemData.lifeDrain}"
       data-manadrain="${systemData.manaDrain}"
@@ -1550,6 +1553,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const ignoreDefense = button.data("ignore-defense");
     const halfDefense = button.data("half-defense");
     const critical = button.data("critical") === "true" || button.data("critical") === true;
+    const affectsHP = button.data("affects-hp");
     const affectsMP = button.data("affects-mp");
     const lifedrain = button.data("lifedrain");
     const manadrain = button.data("manadrain");
@@ -1563,6 +1567,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       ignoreDefense,
       halfDefense,
       critical,
+      affectsHP,
       affectsMP,
       lifedrain,
       manadrain
@@ -1716,6 +1721,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   const ignoreDefense = powerRollCard.data('ignore-defense');
   const halfDefense = powerRollCard.data('half-defense');
   const pierce = powerRollCard.data('pierce');
+  const affectsHP = powerRollCard.data('affects-hp');
   const affectsMP = powerRollCard.data('affects-mp');
 
   // Define the function to apply damage
@@ -1730,9 +1736,9 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       const actor = token.actor;
       if (!actor) return;
       if (heals)
-        actor.applyHeal(amount, affectsMP);
+        actor.applyHeal(amount, affectsHP, affectsMP);
       else
-        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsMP);
+        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsHP, affectsMP);
     });
   };
 

@@ -562,10 +562,7 @@ export class SMTXActor extends Actor {
 
 
 
-  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false, lifedrain = 0, manadrain = 0, attackerTokenID = null, attackerActorID = null) {
-    // Save the actor's original HP
-    const oldHP = this.system.hp.value;
-
+  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsHP = true, affectsMP = false, lifedrain = 0, manadrain = 0, affectsMPmultiplier = 1.0, attackerTokenID = null, attackerActorID = null) {
     // 1. Determine base defense based on the incoming affinity.
     let defense = this.system.magdef;
     if (affinity === "strike" || affinity === "gun") {
@@ -731,7 +728,7 @@ export class SMTXActor extends Actor {
 
     if (affinityMod < 0 || mult < 0) {
       // For drain, call applyHeal instead and exit.
-      this.applyHeal(amount, affectsMP);
+      this.applyHeal(amount, affectsHP, affectsMP);
       return;
     }
     // --- End Affinity Calculation ---
@@ -739,27 +736,25 @@ export class SMTXActor extends Actor {
     // 8. Update the actor's HP or MP.
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value;
-    const newHP = affectsMP ? currentMP - finalAmount : Math.max(currentHP - finalAmount, 0);
-    if (affectsMP) {
-      this.update({ "system.mp.value": Math.max(currentMP - finalAmount, 0) });
-    } else {
+
+    const newHP = Math.max(currentHP - finalAmount, 0);
+    const newMP = Math.max(currentMP - (finalAmount * affectsMPmultiplier), 0)
+
+    if (affectsMP)
+      this.update({ "system.mp.value": newMP });
+    if (affectsHP)
       this.update({ "system.hp.value": newHP });
-    }
 
     // 9. Calculate damage applied and note if damage exceeded available HP.
     const damageApplied = currentHP - newHP;
     let extraNote = "";
-    if (damageApplied < finalAmount) {
+    if (damageApplied < finalAmount)
       extraNote = ` (${finalAmount - damageApplied} Overkill)`;
-    }
 
-    if (lifedrain > 0) {
+    if (lifedrain > 0)
       extraNote += `<br>${Math.floor(damageApplied * lifedrain)} Life Drained`;
-    }
-
-    if (manadrain > 0) {
+    if (manadrain > 0)
       extraNote += `<br>${Math.floor(damageApplied * manadrain)} Mana Drained`;
-    }
 
     // 10. Build chat feedback content and include an "Undo" button.
     let chatContent = `
@@ -775,6 +770,7 @@ export class SMTXActor extends Actor {
               data-token-id="${this.token ? this.token.id : ''}" 
               data-damage="${damageApplied}" 
               data-old-hp="${currentHP}"
+              data-old-mp="${currentMP}"
               style="margin-left: auto;">
           <i class="fas fa-undo"></i>
         </button>`
@@ -797,13 +793,13 @@ export class SMTXActor extends Actor {
 
 
 
-  applyHeal(amount, affectsMP = false) {
+  applyHeal(amount, affectsHP = true, affectsMP = false) {
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value
 
     if (affectsMP)
       this.update({ "system.mp.value": currentMP + Math.abs(amount) });
-    else
+    if (affectsHP)
       this.update({ "system.hp.value": currentHP + Math.abs(amount) });
 
     let chatContent = `
@@ -814,6 +810,7 @@ export class SMTXActor extends Actor {
               data-token-id="${this.token ? this.token.id : ''}" 
               data-damage="${amount}" 
               data-old-hp="${currentHP}"
+              data-old-mp="${currentMP}"
               style="margin-left: auto;">
         <i class="fas fa-undo"></i>
       </button>
@@ -1268,8 +1265,9 @@ export class SMTXActor extends Actor {
       <div class="power-roll-card" 
           data-affinity="${overrides.affinity}" 
           data-ignore-defense="${overrides.ignoreDefense}" 
-          data-half-defense="${overrides.halfDefense}" 
-          data-pierce="${overrides.pierce}" 
+          data-half-defense="${overrides.halfDefense}"
+          data-affects-hp='true' 
+          data-affects-mp='false'   
           data-regular-damage="${finalBaseDmg}" 
           data-critical-damage="${critDamage}">
         
@@ -1322,12 +1320,15 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     const token = canvas.tokens.get(tokenId);
     const damageApplied = parseInt(button.data("damage"));
     const oldHP = parseInt(button.data("old-hp"));
+    const oldMP = parseInt(button.data("old-mp"));
 
     // Restore HP on the actor (or token's actor)
     if (token) {
       await token.actor.update({ "system.hp.value": oldHP });
+      await token.actor.update({ "system.mp.value": oldMP });
     } else if (actor) {
       await actor.update({ "system.hp.value": oldHP });
+      await actor.update({ "system.mp.value": oldMP });
     }
 
     // Find the parent container for the damage line.
