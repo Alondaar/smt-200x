@@ -898,8 +898,10 @@ export class SMTXActor extends Actor {
 
   payCost(itemID) {
     const actorData = this.system;
-    const rollData = this.getRollData();
+    //const rollData = this.getRollData();
     const item = this.items.get(itemID);
+    const rollData = item.getRollData();
+    rollData.targets = game.user.targets.size;
 
     // Retrieve current resource values
     const currentHP = actorData.hp.value;
