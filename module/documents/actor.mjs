@@ -26,7 +26,7 @@ export class SMTXActor extends Actor {
       for (let change of effect.changes) {
         if (typeof change.value === "string" && /[+\-d@]/.test(change.value)) {
           try {
-            const total = this.parseFormula(change.value, systemData);
+            const total = this.parseFormula(change.value, effect.parent.getRollData());
             // 5) Overwrite the change so downstream sees a number
             change.value = total;
           }
