@@ -228,33 +228,32 @@
             <input type="text" name="system.quickModTN" value="{{system.quickModTN}}%" data-dtype="Number" disabled />
             <i class="fa-solid clickable fa-plus increase-quickModTN" style="margin: auto;"></i>
           </div>
-          <div class="align-center clickable custom-power-roll">Custom Power Roll <i class="fa-solid fa-person-burst"
+
+          <div class="align-center clickable custom-power-roll">Power Roll <i class="fa-solid fa-person-burst"
               style="margin: auto;"></i>
           </div>
-        </div>
-      </section>
 
-      <section class="main">
-        <ol class="items-list effects-list">
-          <ol class="item-list">
-            <div class="grid grid-5col" style="margin: 0;">
+          <div class="grid-span-2">
+            <ol class="item-list quick-status-list">
               {{#each effects.temporary.effects as |effect|}}
-              <li class="item effect flexrow item-prop" data-effect-id="{{effect.id}}"
-                data-parent-id="{{effect.parent.id}}">
-                <div class="item-name effect-name flexrow">
-                  <img class="item-image" src="{{effect.img}}" />
-                  <h4>{{effect.name}}</h4>
-                </div>
-                <div class="item-controls effect-controls flexrow">
-                  <a class="effect-control" data-action="toggle" title="{{localize 'SMT_X.Effect.Toggle'}}">
-                    <i class="fas {{#if effect.disabled}}fa-check{{else}}fa-times{{/if}}"></i>
-                  </a>
-                </div>
+              <li class="item effect flexrow" data-effect-id="{{effect.id}}" data-parent-id="{{effect.parent.id}}">
+                <img title="{{effect.name}}" class="item-image quick-status effect-control" {{#ifEq
+                  effect.sourceName "None" }} data-action="delete" {{else}} data-action="toggle" {{/ifEq}}
+                  style="margin-right: 2px;" src="{{effect.icon}}" />
               </li>
               {{/each}}
-            </div>
-          </ol>
-        </ol>
+              <span style="margin-left: 2px; margin-right: 4px; font-weight: bold; font-size: 1.25em;">|</span>
+              {{#each effects.inactive.effects as |effect|}}
+              {{#if effect.isTemporary}}
+              <li class="item effect flexrow" data-effect-id="{{effect.id}}" data-parent-id="{{effect.parent.id}}">
+                <img title="{{effect.name}}" class="item-image quick-status effect-control" data-action="toggle"
+                  style="filter: grayscale(1); margin-right: 2px;" src="{{effect.icon}}" />
+              </li>
+              {{/if}}
+              {{/each}}
+            </ol>
+          </div>
+        </div>
       </section>
 
       <section class="main">
