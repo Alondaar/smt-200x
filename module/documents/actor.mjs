@@ -20,13 +20,11 @@ export class SMTXActor extends Actor {
       this._calculateCharacterLevel(systemData);
     }
 
-    console.log(this);
 
+    // Pre parse active effects
     for (let effect of this.appliedEffects) {
       for (let change of effect.changes) {
-        // Only if it's a string formula
         if (typeof change.value === "string" && /[+\-d@]/.test(change.value)) {
-          // 4) Roll it synchronously
           try {
             const total = this.parseFormula(change.value, systemData);
             // 5) Overwrite the change so downstream sees a number
@@ -441,8 +439,6 @@ export class SMTXActor extends Actor {
 
   _calculateCombatStats(systemData) {
     // Compute final stats with buffs
-    console.log(systemData.phydef);
-    console.log(this);
     const phyDefFormula = this.parseFormula(systemData.human ? game.settings.get("smt-200x", "phyDefHuman") : game.settings.get("smt-200x", "phyDefDemon"), systemData);
     const magDefFormula = this.parseFormula(systemData.human ? game.settings.get("smt-200x", "magDefHuman") : game.settings.get("smt-200x", "magDefDemon"), systemData);
     const initFormula = this.parseFormula(game.settings.get("smt-200x", "initFormula"), systemData);
