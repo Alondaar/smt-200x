@@ -239,7 +239,7 @@
               <li class="item effect flexrow" data-effect-id="{{effect.id}}" data-parent-id="{{effect.parent.id}}">
                 <img title="{{effect.name}}" class="item-image quick-status effect-control" {{#ifEq
                   effect.sourceName "None" }} data-action="delete" {{else}} data-action="toggle" {{/ifEq}}
-                  style="margin-right: 2px;" src="{{effect.icon}}" />
+                  style="margin-right: 2px; cursor: pointer;" src="{{effect.icon}}" />
               </li>
               {{/each}}
               <span style="margin-left: 2px; margin-right: 4px; font-weight: bold; font-size: 1.25em;">|</span>
@@ -247,7 +247,7 @@
               {{#if effect.isTemporary}}
               <li class="item effect flexrow" data-effect-id="{{effect.id}}" data-parent-id="{{effect.parent.id}}">
                 <img title="{{effect.name}}" class="item-image quick-status effect-control" data-action="toggle"
-                  style="filter: grayscale(1); margin-right: 2px;" src="{{effect.icon}}" />
+                  style="filter: grayscale(1); margin-right: 2px; cursor: pointer;" src="{{effect.icon}}" />
               </li>
               {{/if}}
               {{/each}}
