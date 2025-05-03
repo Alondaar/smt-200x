@@ -751,6 +751,9 @@ export class SMTXActor extends Actor {
     if (damageApplied < finalAmount)
       extraNote = ` (${finalAmount - damageApplied} Overkill)`;
 
+    if (affectsMP)
+      extraNote += `<br> and ${(finalAmount * affectsMPmultiplier)} MP damage`
+
     if (lifedrain > 0)
       extraNote += `<br>${Math.floor(damageApplied * lifedrain)} Life Drained`;
     if (manadrain > 0)
@@ -760,7 +763,7 @@ export class SMTXActor extends Actor {
     let chatContent = `
     <div class="flexrow damage-line">
       <span class="damage-text">
-        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} damage${extraNote}
+        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} HP damage${extraNote}
         ${fateUsed > 0 ? `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>` : ''}
         ${defenseBonus !== 0 ? `<br><em>Defense Bonus: ${defenseBonus}</em>` : ''}
       </span>
@@ -793,18 +796,27 @@ export class SMTXActor extends Actor {
 
 
 
-  applyHeal(amount, affectsHP = true, affectsMP = false) {
+  applyHeal(amount, affectsHP = true, affectsMP = false, affectsMPmultiplier = 1.0) {
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value
 
-    if (affectsMP)
-      this.update({ "system.mp.value": currentMP + Math.abs(amount) });
-    if (affectsHP)
-      this.update({ "system.hp.value": currentHP + Math.abs(amount) });
-
     let chatContent = `
-    <div class="flexrow damage-line">
-      <span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>
+    <div class="flexrow damage-line"><div>`
+
+    if (affectsHP) {
+      let hpAmount = Math.abs(amount);
+      this.update({ "system.hp.value": currentHP + Math.abs(amount) });
+      chatContent += `<div style="font-size: var(--font-size-16);">Received <strong>${hpAmount}</strong> HP.</div>`
+    }
+
+    if (affectsMP) {
+      let mpAmount = Math.abs(amount * affectsMPmultiplier);
+      this.update({ "system.mp.value": currentMP + mpAmount });
+      chatContent += `<div style="font-size: var(--font-size-16);">Received <strong>${mpAmount}</strong> MP.</div>`
+    }
+
+    chatContent += `
+      </div>
       <button class="flex0 undo-damage height: 32px; width: 32px;" 
               data-actor-id="${this.id}" 
               data-token-id="${this.token ? this.token.id : ''}" 

@@ -365,6 +365,7 @@
         "hideCritDamage": false,
         "affectsHP": true,
         "affectsMP": false,
+        "affectsMPmultiplier": 1.0,
         "actionPattern": "-",
         "appliesBadStatus": "NONE",
         "badStatusChance": "0",
@@ -429,7 +430,8 @@
         "base",
         "item",
         "skill"
-      ]
+      ],
+      "reloads": false
     },
     "feature": {
       "templates": [
