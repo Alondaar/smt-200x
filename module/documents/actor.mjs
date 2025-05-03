@@ -811,9 +811,6 @@ export class SMTXActor extends Actor {
 
     if (affectsMP) {
       let mpAmount = Math.floor(Math.abs(amount * (affectsMPHalf ? 0.5 : 1)));
-      console.log(affectsMPHalf);
-      console.log(amount);
-      console.log(mpAmount);
       this.update({ "system.mp.value": currentMP + mpAmount });
       chatContent += `<div style="font-size: var(--font-size-16);">Received <strong>${mpAmount}</strong> MP.</div>`
     }
