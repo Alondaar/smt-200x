@@ -862,7 +862,9 @@ export class SMTXItem extends Item {
           data-ignore-defense="${overrides.ignoreDefense}" 
           data-half-defense="${overrides.halfDefense}" 
           data-pierce="${overrides.pierce}" 
+          data-affects-hp='${systemData.affectsHP}' 
           data-affects-mp='${systemData.affectsMP}' 
+          data-affects-mp-half="${systemData.affectsMPHalf}"
           data-regular-damage="${finalBaseDmg}" 
           data-critical-damage="${critDamage}" 
           data-buffs='${JSON.stringify(buffArray)}' 
@@ -1142,14 +1144,17 @@ export class SMTXItem extends Item {
   <div class="flexrow"><span class="flex3"><strong>Inc. Dmg:</strong> ${result.finalDamage}</span>
     <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
       data-token-id="${result.tokenId}"
+      data-item-id="${this.id}"
       data-effective-damage="${result.effectiveDamage}"
       data-affinity="${systemData.affinity}"
       data-ignore-defense="${systemData.ingoreDefense}"
       data-half-defense="${systemData.halfDefense}"
       data-critical="${baseEffect === 2}"
+      data-affects-hp='${systemData.affectsHP}' 
       data-affects-mp="${systemData.affectsMP}"
       data-lifedrain="${systemData.lifeDrain}"
       data-manadrain="${systemData.manaDrain}"
+      data-affects-mp-half="${systemData.affectsMPHalf}"
     >DMG</button>
     </div>` : ``}
     ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
@@ -1550,9 +1555,11 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const ignoreDefense = button.data("ignore-defense");
     const halfDefense = button.data("half-defense");
     const critical = button.data("critical") === "true" || button.data("critical") === true;
+    const affectsHP = button.data("affects-hp");
     const affectsMP = button.data("affects-mp");
     const lifedrain = button.data("lifedrain");
     const manadrain = button.data("manadrain");
+    const affectsMPHalf = button.data("affects-mp-half");
 
     const token = canvas.tokens.get(tokenId);
     if (!token || !token.actor) return;
@@ -1563,9 +1570,11 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       ignoreDefense,
       halfDefense,
       critical,
+      affectsHP,
       affectsMP,
       lifedrain,
-      manadrain
+      manadrain,
+      affectsMPHalf
     );
     // Disable the button after applying damage
     //button.prop("disabled", true).text("Damage Applied");
@@ -1716,7 +1725,9 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   const ignoreDefense = powerRollCard.data('ignore-defense');
   const halfDefense = powerRollCard.data('half-defense');
   const pierce = powerRollCard.data('pierce');
+  const affectsHP = powerRollCard.data('affects-hp');
   const affectsMP = powerRollCard.data('affects-mp');
+  const affectsMPHalf = powerRollCard.data('affects-mp-half');
 
   // Define the function to apply damage
   const applyDamage = function (amount, mult = 1, crit = false, heals = false) {
@@ -1730,9 +1741,9 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       const actor = token.actor;
       if (!actor) return;
       if (heals)
-        actor.applyHeal(amount, affectsMP);
+        actor.applyHeal(amount, affectsHP, affectsMP, affectsMPHalf);
       else
-        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsMP);
+        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsHP, affectsMP, affectsMPHalf);
     });
   };
 

@@ -19,6 +19,23 @@ export class SMTXActor extends Actor {
     if (this.type === 'character') {
       this._calculateCharacterLevel(systemData);
     }
+
+
+    // Pre parse active effects
+    for (let effect of this.appliedEffects) {
+      for (let change of effect.changes) {
+        if (typeof change.value === "string" && /[+\-d@]/.test(change.value)) {
+          try {
+            const total = this.parseFormula(change.value, effect.parent.getRollData());
+            // 5) Overwrite the change so downstream sees a number
+            change.value = total;
+          }
+          catch (err) {
+            console.error("Error parsing effect formula", change.value, err);
+          }
+        }
+      }
+    }
   }
 
 
@@ -83,6 +100,10 @@ export class SMTXActor extends Actor {
       systemData.stats[key].tn = 0;
     }
 
+    systemData.hp.max = 0;
+    systemData.mp.max = 0;
+    systemData.fate.max = 0;
+    systemData.magdef = 0;
     systemData.phydef = 0;
     systemData.magdef = 0;
     systemData.meleePower = 0;
@@ -458,9 +479,9 @@ export class SMTXActor extends Actor {
     const mpMod = this.parseFormula(systemData.mp.maxMod != undefined ? systemData.mp.maxMod : "0", systemData);
     const fateMod = this.parseFormula(systemData.fate.maxMod != undefined ? systemData.fate.maxMod : "0", systemData);
 
-    systemData.hp.max = ((hpFormula) * systemData.hp.mult) + (hpMod);
-    systemData.mp.max = ((mpFormula) * systemData.mp.mult) + (mpMod);
-    systemData.fate.max = (fateFormula) + (fateMod);
+    systemData.hp.max += ((hpFormula) * systemData.hp.mult) + (hpMod);
+    systemData.mp.max += ((mpFormula) * systemData.mp.mult) + (mpMod);
+    systemData.fate.max += (fateFormula) + (fateMod);
 
     if (systemData.isBoss) {
       systemData.hp.max *= 5;
@@ -545,10 +566,7 @@ export class SMTXActor extends Actor {
 
 
 
-  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsMP = false, lifedrain = 0, manadrain = 0, attackerTokenID = null, attackerActorID = null) {
-    // Save the actor's original HP
-    const oldHP = this.system.hp.value;
-
+  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsHP = true, affectsMP = false, lifedrain = 0, manadrain = 0, affectsMPHalf = false, attackerTokenID = null, attackerActorID = null) {
     // 1. Determine base defense based on the incoming affinity.
     let defense = this.system.magdef;
     if (affinity === "strike" || affinity === "gun") {
@@ -714,7 +732,7 @@ export class SMTXActor extends Actor {
 
     if (affinityMod < 0 || mult < 0) {
       // For drain, call applyHeal instead and exit.
-      this.applyHeal(amount, affectsMP);
+      this.applyHeal(amount, affectsHP, affectsMP);
       return;
     }
     // --- End Affinity Calculation ---
@@ -722,33 +740,34 @@ export class SMTXActor extends Actor {
     // 8. Update the actor's HP or MP.
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value;
-    const newHP = affectsMP ? currentMP - finalAmount : Math.max(currentHP - finalAmount, 0);
-    if (affectsMP) {
-      this.update({ "system.mp.value": Math.max(currentMP - finalAmount, 0) });
-    } else {
+
+    const newHP = Math.max(currentHP - finalAmount, 0);
+    const newMP = Math.max(currentMP - (finalAmount * (affectsMPHalf ? 0.5 : 1)), 0)
+
+    if (affectsMP)
+      this.update({ "system.mp.value": newMP });
+    if (affectsHP)
       this.update({ "system.hp.value": newHP });
-    }
 
     // 9. Calculate damage applied and note if damage exceeded available HP.
     const damageApplied = currentHP - newHP;
     let extraNote = "";
-    if (damageApplied < finalAmount) {
+    if (damageApplied < finalAmount)
       extraNote = ` (${finalAmount - damageApplied} Overkill)`;
-    }
 
-    if (lifedrain > 0) {
+    if (affectsMP)
+      extraNote += `<br> and ${(finalAmount * affectsMPmultiplier)} MP damage`
+
+    if (lifedrain > 0)
       extraNote += `<br>${Math.floor(damageApplied * lifedrain)} Life Drained`;
-    }
-
-    if (manadrain > 0) {
+    if (manadrain > 0)
       extraNote += `<br>${Math.floor(damageApplied * manadrain)} Mana Drained`;
-    }
 
     // 10. Build chat feedback content and include an "Undo" button.
     let chatContent = `
     <div class="flexrow damage-line">
       <span class="damage-text">
-        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} damage${extraNote}
+        Received <strong>${damageApplied}</strong> ${game.i18n.localize("SMT_X.Affinity." + affinity)} HP damage${extraNote}
         ${fateUsed > 0 ? `<br><em>(Spent ${fateUsed} Fate Point${fateUsed > 1 ? 's' : ''}.)</em>` : ''}
         ${defenseBonus !== 0 ? `<br><em>Defense Bonus: ${defenseBonus}</em>` : ''}
       </span>
@@ -758,6 +777,7 @@ export class SMTXActor extends Actor {
               data-token-id="${this.token ? this.token.id : ''}" 
               data-damage="${damageApplied}" 
               data-old-hp="${currentHP}"
+              data-old-mp="${currentMP}"
               style="margin-left: auto;">
           <i class="fas fa-undo"></i>
         </button>`
@@ -780,23 +800,33 @@ export class SMTXActor extends Actor {
 
 
 
-  applyHeal(amount, affectsMP = false) {
+  applyHeal(amount, affectsHP = true, affectsMP = false, affectsMPHalf = false) {
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value
 
-    if (affectsMP)
-      this.update({ "system.mp.value": currentMP + Math.abs(amount) });
-    else
-      this.update({ "system.hp.value": currentHP + Math.abs(amount) });
-
     let chatContent = `
-    <div class="flexrow damage-line">
-      <span style="font-size: var(--font-size-16);">Received <strong>${amount}</strong> healing.</span>
+    <div class="flexrow damage-line"><div>`
+
+    if (affectsHP) {
+      let hpAmount = Math.floor(Math.abs(amount));
+      this.update({ "system.hp.value": currentHP + hpAmount });
+      chatContent += `<div style="font-size: var(--font-size-16);">Received <strong>${hpAmount}</strong> HP.</div>`
+    }
+
+    if (affectsMP) {
+      let mpAmount = Math.floor(Math.abs(amount * (affectsMPHalf ? 0.5 : 1)));
+      this.update({ "system.mp.value": currentMP + mpAmount });
+      chatContent += `<div style="font-size: var(--font-size-16);">Received <strong>${mpAmount}</strong> MP.</div>`
+    }
+
+    chatContent += `
+      </div>
       <button class="flex0 undo-damage height: 32px; width: 32px;" 
               data-actor-id="${this.id}" 
               data-token-id="${this.token ? this.token.id : ''}" 
               data-damage="${amount}" 
               data-old-hp="${currentHP}"
+              data-old-mp="${currentMP}"
               style="margin-left: auto;">
         <i class="fas fa-undo"></i>
       </button>
@@ -881,8 +911,10 @@ export class SMTXActor extends Actor {
 
   payCost(itemID) {
     const actorData = this.system;
-    const rollData = this.getRollData();
+    //const rollData = this.getRollData();
     const item = this.items.get(itemID);
+    const rollData = item.getRollData();
+    rollData.targets = game.user.targets.size;
 
     // Retrieve current resource values
     const currentHP = actorData.hp.value;
@@ -1249,8 +1281,9 @@ export class SMTXActor extends Actor {
       <div class="power-roll-card" 
           data-affinity="${overrides.affinity}" 
           data-ignore-defense="${overrides.ignoreDefense}" 
-          data-half-defense="${overrides.halfDefense}" 
-          data-pierce="${overrides.pierce}" 
+          data-half-defense="${overrides.halfDefense}"
+          data-affects-hp='true' 
+          data-affects-mp='false'   
           data-regular-damage="${finalBaseDmg}" 
           data-critical-damage="${critDamage}">
         
@@ -1303,12 +1336,15 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     const token = canvas.tokens.get(tokenId);
     const damageApplied = parseInt(button.data("damage"));
     const oldHP = parseInt(button.data("old-hp"));
+    const oldMP = parseInt(button.data("old-mp"));
 
     // Restore HP on the actor (or token's actor)
     if (token) {
       await token.actor.update({ "system.hp.value": oldHP });
+      await token.actor.update({ "system.mp.value": oldMP });
     } else if (actor) {
       await actor.update({ "system.hp.value": oldHP });
+      await actor.update({ "system.mp.value": oldMP });
     }
 
     // Find the parent container for the damage line.

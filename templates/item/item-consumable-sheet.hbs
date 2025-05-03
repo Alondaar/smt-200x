@@ -32,6 +32,11 @@
         </div>
 
         <div class="flexcol">
+          <label for="system.quantity" class="resource-label">Quantity</label>
+          <input type="text" name="system.quantity" value="{{system.quantity}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
           <label for="system.target" class="resource-label">Target</label>
           <input type="text" name="system.target" value="{{system.target}}" />
         </div>
@@ -41,11 +46,6 @@
           <select name="system.affinity">
             {{selectOptions @root.config.affinities selected=system.affinity localize=true}}
           </select>
-        </div>
-
-        <div class="flexcol">
-          <label for="system.quantity" class="resource-label">Quantity</label>
-          <input type="text" name="system.quantity" value="{{system.quantity}}" data-dtype="Number" />
         </div>
 
         <div class="flexcol">
@@ -61,16 +61,73 @@
 
       <br><br>
 
-      <h2>ROLL and CHECK DATA</h2>
+      <h2>Target Number Config</h2>
       <div class="flexrow">
         <div class="flexcol">
-          <label for="system.powerDice" class="resource-label">Power Dice</label>
-          <input type="text" name="system.powerDice" value="{{system.powerDice}}" />
+          <label class="resource-label">TN Base</label>
+          <select name="system.baseTN" {{#ifEq system.tn "" }}{{else}}disabled{{/ifEq}}>
+            {{selectOptions @root.config.tns localize=true selected=system.baseTN}}
+          </select>
         </div>
 
         <div class="flexcol flex2">
-          <label for="system.power" class="resource-label">Power</label>
+          <label for="system.modTN" class="resource-label">TN Mod</label>
+          <input type="text" name="system.modTN" value="{{system.modTN}}" />
+        </div>
+
+        <div class="flexcol flex2">
+          <label for="system.tn" class="resource-label">TN Base Override</label>
+          <input type="text" name="system.tn" value="{{system.tn}}" />
+        </div>
+      </div>
+
+      <br>
+      <h2>Power Config</h2>
+      <div class="flexrow">
+        <div class="flexcol">
+          <label class="resource-label">Power Base</label>
+          <select name="system.basePower" {{#ifEq system.power "" }}{{else}}disabled{{/ifEq}}>
+            {{selectOptions @root.config.powers localize=true selected=system.basePower}}
+          </select>
+        </div>
+
+        <div class="flexcol flex2">
+          <label for="system.modPower" class="resource-label">Power Mod</label>
+          <input type="text" name="system.modPower" value="{{system.modPower}}" />
+        </div>
+
+        <div class="flexcol flex2">
+          <label for="system.power" class="resource-label">Power Base Override</label>
           <input type="text" name="system.power" value="{{system.power}}" />
+        </div>
+      </div>
+
+      <br>
+      <h2>Power Dice Config</h2>
+      <div class="flexrow">
+        <div class="flexcol">
+          <label class="resource-label">Dice Base</label>
+          <select name="system.basePowerDice" {{#ifEq system.powerDice "" }}{{else}}disabled{{/ifEq}}>
+            {{selectOptions @root.config.powerDice localize=true selected=system.basePowerDice}}
+          </select>
+        </div>
+
+        <div class="flexcol">
+          <label for="system.modPowerDice" class="resource-label">Extra Dice</label>
+          <input type="number" name="system.modPowerDice" value="{{system.modPowerDice}}" {{#ifEq system.powerDice ""
+            }}{{else}}disabled{{/ifEq}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.explodeDice" class="resource-label">Exploding</label>
+          <input type="checkbox" name="system.explodeDice" {{#if system.explodeDice}}checked{{/if}} {{#ifEq
+            system.powerDice "" }}{{else}}disabled{{/ifEq}} />
+        </div>
+
+        <div class="flexcol flex3">
+          <label for="system.powerDice" class="resource-label"
+            title="The dice used for an attack. 1d10x for exploding dice.">Dice Override</label>
+          <input type="text" name="system.powerDice" value="{{system.powerDice}}" />
         </div>
       </div>
 
@@ -84,6 +141,11 @@
         </div>
 
         <div class="flexcol">
+          <label for="system.halfDefense" class="resource-label">Ignores 1/2 Defense</label>
+          <input type="checkbox" name="system.halfDefense" {{#if system.halfDefense}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
           <label for="system.pierce" class="resource-label">Pierce (unused)</label>
           <input type="checkbox" name="system.pierce" {{#if system.pierce}}checked{{/if}} />
         </div>
@@ -94,10 +156,104 @@
         </div>
 
         <div class="flexcol">
+          <label for="system.affectsHP" class="resource-label">Affects HP</label>
+          <input type="checkbox" name="system.affectsHP" {{#if system.affectsHP}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
           <label for="system.affectsMP" class="resource-label">Affects MP</label>
           <input type="checkbox" name="system.affectsMP" {{#if system.affectsMP}}checked{{/if}} />
         </div>
+
+        <div class="flexcol">
+          <label for="system.affectsMPHalf" class="resource-label">Affects MP Half</label>
+          <input type="checkbox" name="system.affectsMPHalf" {{#if system.affectsMPHalf}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label class="resource-label" title="This affects some niche rules cases and Bad Status interactions.">Attack
+            Type</label>
+          <select class="flex0" name="system.attackType">
+            {{selectOptions @root.config.attackTypes localize=true selected=system.attackType}}
+          </select>
+        </div>
+
+        <div class="flexcol">
+          <label for="system.disableMultiaction" class="resource-label">Disable Multi-action</label>
+          <input type="checkbox" name="system.disableMultiaction" {{#if system.disableMultiaction}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.lifeDrain" class="resource-label"
+            title="The % of HP restored from the effective damage dealt to a target">Life drain</label>
+          <input type="text" name="system.lifeDrain" value="{{system.lifeDrain}}" data-dtype="Number" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.manaDrain" class="resource-label"
+            title="The % of MP restored from the effective damage dealt to a target">Mana drain</label>
+          <input type="text" name="system.manaDrain" value="{{system.manaDrain}}" data-dtype="Number" />
+        </div>
       </div>
+
+      <br><br>
+
+      <h2>BAD STATUS CONFIGURATION</h2>
+      <div class="grid grid-4col">
+        <div class="flexcol">
+          <label for="system.badStatusChance" class="resource-label">BS%</label>
+          <input type="number" name="system.badStatusChance" value="{{system.badStatusChance}}" />
+        </div>
+
+        <div class="flexcol">
+          <label for="system.appliesBadStatus" class="resource-label">Inflicted Status</label>
+          {{#if (showTC)}}
+          <select name="system.appliesBadStatus">
+            {{selectOptions @root.config.badStatusChoices_TC selected=system.appliesBadStatus localize=true}}
+          </select>
+          {{else}}
+          <select name="system.appliesBadStatus">
+            {{selectOptions @root.config.badStatusChoices selected=system.appliesBadStatus localize=true}}
+          </select>
+          {{/if}}
+        </div>
+
+        <div class="flexcol">
+          <label>Inflicted Effect</label>
+          <div class="effect-drop-zone" style="border: 2px dashed #888; padding: 10px; text-align: center;">
+            {{#if system.inflictedEffect}}
+            <p>Linked Effect: {{system.inflictedEffect}}</p>
+            {{else}}
+            <p>Drag an effect here</p>
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="flexcol">
+          <label class="resource-label">Remove Link</label>
+          <button class="remove-effect-link">Click to remove.</button>
+        </div>
+      </div>
+
+      {{#ifEq system.appliesBadStatus "hpCut"}}
+      <div class="flexcol">
+        <label for="system.hpCut" class="resource-label" title="Reduce a target's current HP to this percentage">HP
+          Cut (Reduce a target's current HP to this percentage of itself.)</label>
+        <div class="flexrow">
+          <input type="range" name="system.hpCut" min="0.01" max="1" step="0.01" value="{{system.hpCut}}">
+          <input type="number" disabled value="{{system.hpCut}}">
+        </div>
+      </div>
+      {{/ifEq}}
+
+      {{#ifEq system.appliesBadStatus "hpSet"}}
+      <div class="flexcol">
+        <label for="system.hpSet" class="resource-label"
+          title="Set a target's HP to this value. Blank for no effect; Use -1 to set to Full HP">HP
+          Set</label>
+        <input type="text" name="system.hpSet" value="{{system.hpSet}}" data-dtype="Number" />
+      </div>
+      {{/ifEq}}
 
       <br><br>
 

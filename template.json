@@ -207,6 +207,8 @@
         "race": "",
         "alignment": "",
         "macca": 0,
+        "magnetite": 0,
+        "forma": 0,
         "gems": {
           "diamond": 0,
           "pearl": 0,
@@ -289,7 +291,8 @@
       "item": {
         "gp": 1,
         "buy": "0",
-        "sell": "0"
+        "sell": "0",
+        "quantity": 1
       },
       "equipment": {
         "vtReq": 0,
@@ -330,6 +333,63 @@
           "HAPPY": "none",
           "BS": "none"
         }
+      },
+      "skill": {
+        "cost": "-",
+        "target": "1",
+        "wep": "x",
+        "wepIgnoreTN": false,
+        "wepIgnorePower": false,
+        "baseTN": "auto",
+        "modTN": "0",
+        "basePower": "none",
+        "modPower": "0",
+        "basePowerDice": "match",
+        "modPowerDice": "0",
+        "explodeDice": true,
+        "tn": "",
+        "power": "",
+        "powerDice": "",
+        "affinity": "strike",
+        "ingoreDefense": false,
+        "halfDefense": false,
+        "pierce": false,
+        "critMult": 2,
+        "primaryMult": 1,
+        "critRange": "1/10",
+        "flatCritChance": 0,
+        "flatCritDamage": 0,
+        "powerBoost": 1,
+        "hpCost": "0",
+        "mpCost": "0",
+        "fateCost": "0",
+        "ammoCost": "0",
+        "hideCritDamage": false,
+        "affectsHP": true,
+        "affectsMP": false,
+        "affectsMPHalf": false,
+        "actionPattern": "-",
+        "appliesBadStatus": "NONE",
+        "badStatusChance": "0",
+        "attackType": "none",
+        "disableMultiaction": false,
+        "rank": 0,
+        "buffs": {
+          "sukukaja": false,
+          "sukunda": false,
+          "tarukaja": false,
+          "tarunda": false,
+          "rakukaja": false,
+          "rakunda": false,
+          "makakaja": false,
+          "makunda": false
+        },
+        "subBuffRoll": "",
+        "uses": {
+          "value": 0,
+          "max": 0
+        },
+        "inflictedEffect": ""
       }
     },
     "weapon": {
@@ -370,115 +430,16 @@
     "consumable": {
       "templates": [
         "base",
-        "item"
+        "item",
+        "skill"
       ],
-      "cost": "-",
-      "target": "1",
-      "wep": "x",
-      "wepIgnoreTN": false,
-      "wepIgnorePower": false,
-      "tn": "0",
-      "power": "0",
-      "powerDice": "1d10x",
-      "affinity": "strike",
-      "ingoreDefense": false,
-      "pierce": false,
-      "critMult": 2,
-      "primaryMult": 1,
-      "critRange": "1/10",
-      "flatCritChance": 0,
-      "flatCritDamage": 0,
-      "powerBoost": 1,
-      "hpCost": "0",
-      "mpCost": "0",
-      "fateCost": "0",
-      "hideCritDamage": true,
-      "affectsHP": true,
-      "affectsMP": false,
-      "actionPattern": "-",
-      "reloads": false,
-      "hasPower": false,
-      "hasAffinity": false,
-      "hasTarget": false,
-      "hasType": false,
-      "lifeDrain": 0,
-      "manaDrain": 0,
-      "hpCut": 0,
-      "hpSet": "",
-      "buffs": {
-        "sukukaja": false,
-        "sukunda": false,
-        "tarukaja": false,
-        "tarunda": false,
-        "rakukaja": false,
-        "rakunda": false,
-        "makakaja": false,
-        "makunda": false
-      },
-      "subBuffRoll": "",
-      "uses": {
-        "value": 0,
-        "max": 0
-      },
-      "quantity": 0
+      "reloads": false
     },
     "feature": {
       "templates": [
-        "base"
-      ],
-      "cost": "-",
-      "target": "1",
-      "wep": "x",
-      "wepIgnoreTN": false,
-      "wepIgnorePower": false,
-      "baseTN": "auto",
-      "modTN": "0",
-      "basePower": "none",
-      "modPower": "0",
-      "basePowerDice": "match",
-      "modPowerDice": "0",
-      "explodeDice": true,
-      "tn": "",
-      "power": "",
-      "powerDice": "",
-      "affinity": "strike",
-      "ingoreDefense": false,
-      "halfDefense": false,
-      "pierce": false,
-      "critMult": 2,
-      "primaryMult": 1,
-      "critRange": "1/10",
-      "flatCritChance": 0,
-      "flatCritDamage": 0,
-      "powerBoost": 1,
-      "hpCost": "0",
-      "mpCost": "0",
-      "fateCost": "0",
-      "ammoCost": "0",
-      "hideCritDamage": false,
-      "affectsHP": true,
-      "affectsMP": false,
-      "actionPattern": "-",
-      "appliesBadStatus": "NONE",
-      "badStatusChance": "0",
-      "attackType": "none",
-      "disableMultiaction": false,
-      "buffs": {
-        "sukukaja": false,
-        "sukunda": false,
-        "tarukaja": false,
-        "tarunda": false,
-        "rakukaja": false,
-        "rakunda": false,
-        "makakaja": false,
-        "makunda": false
-      },
-      "subBuffRoll": "",
-      "uses": {
-        "value": 0,
-        "max": 0
-      },
-      "inflictedEffect": ""
+        "base",
+        "skill"
+      ]
     },
     "passive": {
       "templates": [

@@ -196,6 +196,11 @@
         </div>
 
         <div class="flexcol">
+          <label for="system.affectsMPHalf" class="resource-label">Affects MP Half</label>
+          <input type="checkbox" name="system.affectsMPHalf" {{#if system.affectsMPHalf}}checked{{/if}} />
+        </div>
+
+        <div class="flexcol">
           <label class="resource-label" title="This affects some niche rules cases and Bad Status interactions.">Attack
             Type</label>
           <select class="flex0" name="system.attackType">
