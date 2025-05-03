@@ -365,7 +365,7 @@
         "hideCritDamage": false,
         "affectsHP": true,
         "affectsMP": false,
-        "affectsMPmultiplier": 1.0,
+        "affectsMPHalf": false,
         "actionPattern": "-",
         "appliesBadStatus": "NONE",
         "badStatusChance": "0",

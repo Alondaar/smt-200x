@@ -864,6 +864,7 @@ export class SMTXItem extends Item {
           data-pierce="${overrides.pierce}" 
           data-affects-hp='${systemData.affectsHP}' 
           data-affects-mp='${systemData.affectsMP}' 
+          data-affects-mp-half="${systemData.affectsMPHalf}"
           data-regular-damage="${finalBaseDmg}" 
           data-critical-damage="${critDamage}" 
           data-buffs='${JSON.stringify(buffArray)}' 
@@ -1153,6 +1154,7 @@ export class SMTXItem extends Item {
       data-affects-mp="${systemData.affectsMP}"
       data-lifedrain="${systemData.lifeDrain}"
       data-manadrain="${systemData.manaDrain}"
+      data-affects-mp-half="${systemData.affectsMPHalf}"
     >DMG</button>
     </div>` : ``}
     ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
@@ -1557,6 +1559,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
     const affectsMP = button.data("affects-mp");
     const lifedrain = button.data("lifedrain");
     const manadrain = button.data("manadrain");
+    const affectsMPHalf = button.data("affects-mp-half");
 
     const token = canvas.tokens.get(tokenId);
     if (!token || !token.actor) return;
@@ -1570,7 +1573,8 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       affectsHP,
       affectsMP,
       lifedrain,
-      manadrain
+      manadrain,
+      affectsMPHalf
     );
     // Disable the button after applying damage
     //button.prop("disabled", true).text("Damage Applied");
@@ -1723,6 +1727,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
   const pierce = powerRollCard.data('pierce');
   const affectsHP = powerRollCard.data('affects-hp');
   const affectsMP = powerRollCard.data('affects-mp');
+  const affectsMPHalf = powerRollCard.data('affects-mp-half');
 
   // Define the function to apply damage
   const applyDamage = function (amount, mult = 1, crit = false, heals = false) {
@@ -1736,9 +1741,9 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       const actor = token.actor;
       if (!actor) return;
       if (heals)
-        actor.applyHeal(amount, affectsHP, affectsMP);
+        actor.applyHeal(amount, affectsHP, affectsMP, affectsMPHalf);
       else
-        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsHP, affectsMP);
+        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsHP, affectsMP, affectsMPHalf);
     });
   };
 

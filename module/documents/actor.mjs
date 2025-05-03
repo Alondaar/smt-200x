@@ -562,7 +562,7 @@ export class SMTXActor extends Actor {
 
 
 
-  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsHP = true, affectsMP = false, lifedrain = 0, manadrain = 0, affectsMPmultiplier = 1.0, attackerTokenID = null, attackerActorID = null) {
+  async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsHP = true, affectsMP = false, lifedrain = 0, manadrain = 0, affectsMPHalf = false, attackerTokenID = null, attackerActorID = null) {
     // 1. Determine base defense based on the incoming affinity.
     let defense = this.system.magdef;
     if (affinity === "strike" || affinity === "gun") {
@@ -738,7 +738,7 @@ export class SMTXActor extends Actor {
     const currentMP = this.system.mp.value;
 
     const newHP = Math.max(currentHP - finalAmount, 0);
-    const newMP = Math.max(currentMP - (finalAmount * affectsMPmultiplier), 0)
+    const newMP = Math.max(currentMP - (finalAmount * (affectsMPHalf ? 0.5 : 1)), 0)
 
     if (affectsMP)
       this.update({ "system.mp.value": newMP });
@@ -796,7 +796,7 @@ export class SMTXActor extends Actor {
 
 
 
-  applyHeal(amount, affectsHP = true, affectsMP = false, affectsMPmultiplier = 1.0) {
+  applyHeal(amount, affectsHP = true, affectsMP = false, affectsMPHalf = false) {
     const currentHP = this.system.hp.value;
     const currentMP = this.system.mp.value
 
@@ -804,13 +804,16 @@ export class SMTXActor extends Actor {
     <div class="flexrow damage-line"><div>`
 
     if (affectsHP) {
-      let hpAmount = Math.abs(amount);
-      this.update({ "system.hp.value": currentHP + Math.abs(amount) });
+      let hpAmount = Math.floor(Math.abs(amount));
+      this.update({ "system.hp.value": currentHP + hpAmount });
       chatContent += `<div style="font-size: var(--font-size-16);">Received <strong>${hpAmount}</strong> HP.</div>`
     }
 
     if (affectsMP) {
-      let mpAmount = Math.abs(amount * affectsMPmultiplier);
+      let mpAmount = Math.floor(Math.abs(amount * (affectsMPHalf ? 0.5 : 1)));
+      console.log(affectsMPHalf);
+      console.log(amount);
+      console.log(mpAmount);
       this.update({ "system.mp.value": currentMP + mpAmount });
       chatContent += `<div style="font-size: var(--font-size-16);">Received <strong>${mpAmount}</strong> MP.</div>`
     }
