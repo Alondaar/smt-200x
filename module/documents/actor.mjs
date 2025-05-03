@@ -100,6 +100,10 @@ export class SMTXActor extends Actor {
       systemData.stats[key].tn = 0;
     }
 
+    systemData.hp.max = 0;
+    systemData.mp.max = 0;
+    systemData.fate.max = 0;
+    systemData.magdef = 0;
     systemData.phydef = 0;
     systemData.magdef = 0;
     systemData.meleePower = 0;
@@ -475,9 +479,9 @@ export class SMTXActor extends Actor {
     const mpMod = this.parseFormula(systemData.mp.maxMod != undefined ? systemData.mp.maxMod : "0", systemData);
     const fateMod = this.parseFormula(systemData.fate.maxMod != undefined ? systemData.fate.maxMod : "0", systemData);
 
-    systemData.hp.max = ((hpFormula) * systemData.hp.mult) + (hpMod);
-    systemData.mp.max = ((mpFormula) * systemData.mp.mult) + (mpMod);
-    systemData.fate.max = (fateFormula) + (fateMod);
+    systemData.hp.max += ((hpFormula) * systemData.hp.mult) + (hpMod);
+    systemData.mp.max += ((mpFormula) * systemData.mp.mult) + (mpMod);
+    systemData.fate.max += (fateFormula) + (fateMod);
 
     if (systemData.isBoss) {
       systemData.hp.max *= 5;

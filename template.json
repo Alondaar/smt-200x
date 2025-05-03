@@ -207,6 +207,8 @@
         "race": "",
         "alignment": "",
         "macca": 0,
+        "magnetite": 0,
+        "forma": 0,
         "gems": {
           "diamond": 0,
           "pearl": 0,
