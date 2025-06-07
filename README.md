@@ -14,6 +14,10 @@ If you're familiar with Foundry VTT, you should know that there is a lot to expl
 
 You can use a large portion of the sheet's power with just inputting your base stats, and clicking the POWER / TN fields in the header. However, looking at the Action / Skill table is where the majority of the magic can happen, if you take the time to set it up. Please refer to the video below for an in-depth tour of the system.
 
+## System Settings
+Please check the system settings and configure your World how you like. Enable TC headers if you want to primarily use those rules, and see that edition's text / game terms!
+There are also a number of neat homebrew options, and quite a lot of customizability if you want to tweak much of the inner formulas to your liking.
+
 ## Attribute Key References
 Here is a list of common @keys you can use in the various TN / POWER fields around the sheet (namely for Actions / Skills).
 NOTE: Exploding rolls (such as for Power rolls) should be made with "d10x"
@@ -29,7 +33,11 @@ NOTE: Exploding rolls (such as for Power rolls) should be made with "d10x"
  ## System Tour Video
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/1BWq_6YXBZk/0.jpg)](https://www.youtube.com/watch?v=1BWq_6YXBZk)
  
+ ## Special Sheet Layout by Kyane!!
+ Check out his sheet module here for a really cool nocturne-like style.
+ https://github.com/Tenyryas/smt-200x-kyane-sheet
 
+## Contact & Info
 Please report any rules inconsistencies, bugs, issues, or feedback to Alondaar on Discord (my own, or in my dedicated thread on LionWing's SMT-Homebrew channel). You may also file issues on this repository. You can also contact me via e-mail at alondaar@gmail.com
 
 Feel free to fork or get in touch with me if you want to make contributions to the system. This is my first time making a system at all, so "best practices" were not employed.
