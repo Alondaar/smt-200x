@@ -1,7 +1,7 @@
 {
   "id": "smt-200x",
-  "title": "Shin Megami Tensei TRPG",
-  "description": "A system that supports SMT Tokyo Conception & Devil City Tokyo 200X!",
+  "title": "SMT TRPG",
+  "description": "A system that supports the SMT TRPG!",
   "authors": [
     {
       "name": "Alondaar",
@@ -57,7 +57,7 @@
   "packFolders": [],
   "socket": true,
   "manifest": "https://github.com/Alondaar/smt-200x/raw/main/system.json",
-  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-034.zip",
+  "download": "https://github.com/Alondaar/smt-200x/archive/refs/tags/release-035.zip",
   "background": "systems/smt-200x/assets/anvil-impact.png",
   "gridDistance": 2,
   "gridUnits": "m",
