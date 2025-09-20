@@ -914,6 +914,10 @@ export class SMTXItem extends Item {
     event.preventDefault();
     const splitIndex = $(event.currentTarget).data("split-index");
 
+    const item = this;
+    const systemData = item.system;
+    const rollData = item.getRollData();
+
     // Instead of scanning the entire DOM, narrow your search to the chat message container.
     const messageContainer = $(event.currentTarget).closest(".message-content");
 
@@ -924,7 +928,7 @@ export class SMTXItem extends Item {
       const text = rollDescElem[0].innerText.toLowerCase();
       if (text.includes("critical")) outcome = "Critical";
     }
-    const baseEffect = (outcome === "Critical") ? 2 : 1;
+    const baseEffect = (outcome === "Critical") ? rollData.item.critMult : 1; // TODO FIX CRIT
 
     // --- 2. Gather Dodge Data for This Split ---
     let targetData = [];
@@ -942,7 +946,7 @@ export class SMTXItem extends Item {
       if (txt.startsWith("Crit")) {
         finalEffect = 0;
       } else if (txt.startsWith("Pass") || txt.startsWith("Miss")) {
-        finalEffect = (baseEffect === 2) ? 1 : 0;
+        finalEffect = (baseEffect > 1) ? 1 : 0;
       } else if (txt.startsWith("Fumble")) {
         finalEffect = baseEffect * 2;
       } else if (txt.startsWith("Fail") || txt.startsWith("Can't")) {
@@ -952,9 +956,6 @@ export class SMTXItem extends Item {
     });
 
     // --- 4. Roll Damage Once ---
-    const item = this;
-    const systemData = item.system;
-    const rollData = item.getRollData();
 
     if (item.system.attackType != "none" && item.actor.system.global && item.actor.system.global.ignoreDefense) {
       systemData.ignoreDefense = item.actor.system.global.ignoreDefense;
@@ -1149,7 +1150,7 @@ export class SMTXItem extends Item {
       data-affinity="${systemData.affinity}"
       data-ignore-defense="${systemData.ingoreDefense}"
       data-half-defense="${systemData.halfDefense}"
-      data-critical="${baseEffect === 2}"
+      data-critical="${baseEffect > 1}"
       data-affects-hp='${systemData.affectsHP}' 
       data-affects-mp="${systemData.affectsMP}"
       data-lifedrain="${systemData.lifeDrain}"
