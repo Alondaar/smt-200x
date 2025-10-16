@@ -587,7 +587,13 @@ export class SMTXActor extends Actor {
 
 
   async applyDamage(amount, mult, affinity = "almighty", ignoreDefense = false, halfDefense = false, crit = false, affectsHP = true, affectsMP = false, lifedrain = 0, manadrain = 0, affectsMPHalf = false, attackerTokenID = null, attackerActorID = null) {
-    // 1. Determine base defense based on the incoming affinity.
+    if (affinity == "recovery") {
+      // For recovery, call applyHeal instead and exit.
+      this.applyHeal(amount, affectsHP, affectsMP, affectsMPHalf);
+      return;
+    }
+
+    // Determine base defense based on the incoming affinity.
     let defense = this.system.magdef;
     if (affinity === "strike" || affinity === "gun") {
       defense = this.system.phydef;
@@ -776,7 +782,7 @@ export class SMTXActor extends Actor {
       extraNote = ` (${finalAmount - damageApplied} Overkill)`;
 
     if (affectsMP)
-      extraNote += `<br> and ${(finalAmount * affectsMPmultiplier)} MP damage`
+      extraNote += `<br> and ${(finalAmount * (affectsMPHalf ? 0.5 : 1))} MP damage`
 
     if (lifedrain > 0)
       extraNote += `<br>${Math.floor(damageApplied * lifedrain)} Life Drained`;
@@ -826,6 +832,8 @@ export class SMTXActor extends Actor {
 
     let chatContent = `
     <div class="flexrow damage-line"><div>`
+
+    console.log(amount)
 
     if (affectsHP) {
       let hpAmount = Math.floor(Math.abs(amount));
@@ -1157,6 +1165,7 @@ export class SMTXActor extends Actor {
     let overrides = {
       affinity: defAffinity || "almighty",
       ignoreDefense: false,
+      halfDefense: false,
       affectsMP: false,
       critMult: 2,
       extraModifier: "0",
@@ -1302,8 +1311,8 @@ export class SMTXActor extends Actor {
           data-affinity="${overrides.affinity}" 
           data-ignore-defense="${overrides.ignoreDefense}" 
           data-half-defense="${overrides.halfDefense}"
-          data-affects-hp='true' 
-          data-affects-mp='false'   
+          data-affects-hp="true"
+          data-affects-mp="false"
           data-regular-damage="${finalBaseDmg}" 
           data-critical-damage="${critDamage}">
         

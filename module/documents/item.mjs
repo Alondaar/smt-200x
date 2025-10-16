@@ -1254,7 +1254,7 @@ export class SMTXItem extends Item {
          </div>
          ${baseDamage > 0 ? `
   <div class="flexrow"><span class="flex3"><strong>Inc. Dmg:</strong> ${result.finalDamage}</span>
-    <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
+    <button class="apply-damage-btn smtx-roll-button" title="Apply" 
       data-token-id="${result.tokenId}"
       data-item-id="${this.id}"
       data-effective-damage="${result.effectiveDamage}"
@@ -1267,14 +1267,14 @@ export class SMTXItem extends Item {
       data-lifedrain="${systemData.lifeDrain}"
       data-manadrain="${systemData.manaDrain}"
       data-affects-mp-half="${systemData.affectsMPHalf}"
-    >DMG</button>
+    >APP</button>
     </div>` : ``}
     ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
           ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (Roll: ${result.ailmentRoll})</div>`
           : ""}  
     ${(systemData.hpCut > 0 && systemData.appliesBadStatus == "hpCut")
           ? `<div class="flexrow"><span class="flex3">HP cut to ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.max(Math.floor(currentToken.actor.system.hp.value * systemData.hpCut), 1)})</span>
-            <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
+            <button class="apply-damage-btn smtx-roll-button" title="Apply" 
               data-token-id="${result.tokenId}"
               data-effective-damage="${currentToken.actor.system.hp.value - Math.max(Math.floor(currentToken.actor.system.hp.value * systemData.hpCut), 1)}"
               data-affinity="almighty"
@@ -1283,11 +1283,11 @@ export class SMTXItem extends Item {
           </div>`
           : ""}
     ${(systemData.hpSet && systemData.appliesBadStatus == "hpSet")
-          ? `<div class="flexrow"><span class="flex3">HP set to ${systemData.hpSet == -1 ? `Full` : systemData.hpSet} !!</span>
-            <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
+          ? `<div class="flexrow"><span class="flex3">HP set to ${systemData.hpSet == -1 ? `Full` : systemData.hpSet == -2 ? `Half` : systemData.hpSet} !!</span>
+            <button class="apply-damage-btn smtx-roll-button" title="Apply" 
               data-token-id="${result.tokenId}"
               data-mult="${systemData.hpSet == -1 ? -1 : 1}"
-              data-effective-damage="${systemData.hpSet == -1 ? currentToken.actor.system.hp.max : currentToken.actor.system.hp.value - systemData.hpSet}"
+              data-effective-damage="${systemData.hpSet == -1 ? currentToken.actor.system.hp.max : systemData.hpSet == -2 ? Math.floor(currentToken.actor.system.hp.max / 2) : currentToken.actor.system.hp.value - systemData.hpSet}"
               data-affinity="almighty"
               data-ignore-defense="true"
             >SET</button>
@@ -1862,7 +1862,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
       if (heals)
         actor.applyHeal(amount, affectsHP, affectsMP, affectsMPHalf);
       else
-        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, pierce, affectsHP, affectsMP, affectsMPHalf);
+        actor.applyDamage(amount, mult, affinity, ignoreDefense, halfDefense, crit, affectsHP, affectsMP, 0, 0, affectsMPHalf);
     });
   };
 
