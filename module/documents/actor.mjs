@@ -121,28 +121,48 @@ export class SMTXActor extends Actor {
 
 
   _calculateCharacterLevel(systemData) {
-    const tierMultipliers = { tierOne: 0.8, tierTwo: 1.0, tierThree: 1.3 };
-    const totalExp = systemData.attributes.exp.tierOne + systemData.attributes.exp.tierTwo + systemData.attributes.exp.tierThree;
+    const tierMultipliers = [0.8, 1.0, 1.3];
+    const tierExpInputs = [
+      systemData.attributes.exp.tierOne || 0,
+      systemData.attributes.exp.tierTwo || 0,
+      systemData.attributes.exp.tierThree || 0,
+    ];
+    const totalRawExp = tierExpInputs.reduce((a, b) => a + b, 0);
 
     let currentLevel = 1;
-    let nextThreshold = 0;
-    let currentMultiplier = tierMultipliers.tierOne;
+    let expPool = 0;
+    let lastActiveMultiplier = tierMultipliers[0];
 
-    if (systemData.attributes.exp.tierTwo > 0) currentMultiplier = tierMultipliers.tierTwo;
-    if (systemData.attributes.exp.tierThree > 0) currentMultiplier = tierMultipliers.tierThree;
+    for (let i = 0; i < tierExpInputs.length; i++) {
+      expPool += tierExpInputs[i];
+      const currentMultiplier = tierMultipliers[i];
 
-    while (true) {
-      const threshold = Math.floor(Math.pow(currentLevel + 1, 3) * currentMultiplier);
-      if (totalExp < threshold) {
-        nextThreshold = threshold;
-        break;
+      if (tierExpInputs[i] > 0) {
+        lastActiveMultiplier = currentMultiplier;
       }
-      currentLevel++;
+
+      while (true) {
+        const thresholdForNextLevel = Math.floor(Math.pow(currentLevel + 1, 3) * currentMultiplier);
+        const thresholdForCurrentLevel = (currentLevel === 1) ? 0 : Math.floor(Math.pow(currentLevel, 3) * currentMultiplier);
+
+        if (expPool >= (thresholdForNextLevel - thresholdForCurrentLevel)) {
+          expPool -= (thresholdForNextLevel - thresholdForCurrentLevel);
+          currentLevel++;
+        } else {
+          break;
+        }
+      }
     }
 
+    const finalThresholdNext = Math.floor(Math.pow(currentLevel + 1, 3) * lastActiveMultiplier);
+    const finalThresholdCurrent = (currentLevel === 1) ? 0 : Math.floor(Math.pow(currentLevel, 3) * lastActiveMultiplier);
+    const costOfNextLevel = finalThresholdNext - finalThresholdCurrent;
+
+    const expToNext = costOfNextLevel - expPool;
+
     systemData.attributes.level = currentLevel;
-    systemData.attributes.totalexp = totalExp;
-    systemData.attributes.expnext = nextThreshold - totalExp;
+    systemData.attributes.totalexp = totalRawExp;
+    systemData.attributes.expnext = expToNext;
   }
 
 
