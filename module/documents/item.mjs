@@ -199,20 +199,125 @@ export class SMTXItem extends Item {
    * Prepare consumables (potions, etc.).
    */
   _prepareConsumable(rollData) {
+    if (!this.actor) return;
     const systemData = this.system;
-    let evaluatedPower;
-    try {
-      const rollResult = new Roll(systemData.power, rollData).evaluateSync({ minimize: true });
-      evaluatedPower = rollResult.total;
-      if (isNaN(evaluatedPower)) {
-        throw new Error("Roll total is NaN");
+    const actorData = rollData;
+
+    const isPoisoned = (actorData.badStatus == "POISON" && systemData.attackType != "none");
+
+    // Fetch weapon stats from actor
+    let weaponTN = 0, weaponPower = 0;
+    if (systemData.wep) {
+      const weaponSlot = systemData.wep === "a" ? "wepA" : systemData.wep === "b" ? "wepB" : null;
+      if (weaponSlot) {
+        weaponTN = !systemData.wepIgnoreTN ? actorData[weaponSlot]?.hit ?? 0 : 0;
+        weaponPower = !systemData.wepIgnorePower ? actorData[weaponSlot]?.power ?? 0 : 0;
+
+
+        const critRangeParts = (systemData.critRange ?? "1/10").split("/").map(Number);
+        let critRate = critRangeParts.length === 2 ? critRangeParts[0] / critRangeParts[1] : 0.1;
+
+        const realWeapon = this.actor.items.find(i =>
+          i.type === "weapon"
+          && i.name === actorData[weaponSlot].name
+          && i.system.type === actorData[weaponSlot].type
+        );
+
+        if (realWeapon) {
+          const subCritRangeParts = (realWeapon.system?.critRate ?? "1/10").split("/").map(Number);
+          let subCritRate = subCritRangeParts.length === 2 ? subCritRangeParts[0] / subCritRangeParts[1] : 0.1;
+          if (subCritRate > critRate)
+            systemData.critRange = (realWeapon.system?.critRate ?? "1/10");
+
+          if ((Number(realWeapon.system?.critMult) ?? 2) > systemData.critMult)
+            systemData.critMult = (Number(realWeapon.system?.critMult) ?? 2)
+        }
       }
-    } catch (err) {
-      evaluatedPower = systemData.power;
     }
 
-    // Build the formula string using the powerDice and either the evaluated power or its raw string.
-    systemData.formula = `(${systemData.powerDice || 0}) + (${evaluatedPower})`;
+    // Set up base power
+    let basePower = systemData.power;
+    if (basePower == "") {
+      basePower = 0;
+      if (systemData.basePower == "melee")
+        basePower = actorData.meleePower ?? "@meleePower";
+      if (systemData.basePower == "ranged")
+        basePower = actorData.rangedPower ?? "@rangedPower";
+      if (systemData.basePower == "spell")
+        basePower = actorData.spellPower ?? "@spellPower";
+    }
+
+    // Determine base dice and build displayDice string
+    let baseDice = systemData.powerDice;
+    let displayDice = "";
+    if (baseDice == "") {
+      const usedDice = systemData.basePowerDice == "match" ? systemData.basePower : systemData.basePowerDice;
+      baseDice = actorData.powerDice[usedDice] ?? 0;
+      baseDice += systemData.modPowerDice ? systemData.modPowerDice : 0;
+      displayDice = baseDice > 0 ? `${baseDice}D` : "";
+    } else {
+      try {
+        const basePowerDiceRoll = new Roll(`${systemData.powerDice}` || "0", rollData).evaluateSync({ minimize: true });
+        displayDice = basePowerDiceRoll.dice.reduce((sum, die) => sum + die.number, 0);
+        displayDice = displayDice ? `${displayDice}D` : "";
+      } catch (err) {
+        // Fallback: use raw value if the roll cannot be parsed.
+        displayDice = systemData.powerDice;
+      }
+    }
+
+    // Condense Power modifier with error handling
+    let modPower;
+    try {
+      // Default modPower to "0" if not provided
+      const modPowerRoll = new Roll(`(${systemData.modPower || "0"}) + ${weaponPower}`, rollData).evaluateSync({ minimize: true });
+      let booster = 1;
+      if (rollData.booster && rollData.booster[systemData.affinity])
+        booster = rollData.booster[systemData.affinity];
+      modPower = Math.floor((modPowerRoll.total - modPowerRoll.dice.reduce((sum, die) => sum + die.number, 0)) * booster);
+    } catch (err) {
+      modPower = Number(systemData.modPower) || 0;
+    }
+
+    // Condense Power base with error handling
+    let basePowerTotal;
+    try {
+      const basePowerRoll = new Roll(`(${basePower}) + ${modPower}`, rollData).evaluateSync({ minimize: true });
+      basePowerTotal = basePowerRoll.total - basePowerRoll.dice.reduce((sum, die) => sum + die.number, 0);
+    } catch (err) {
+      basePowerTotal = Number(basePower) || 0;
+    }
+
+    // Apply boost multiplier
+    let boost = systemData.powerBoost;
+    if (rollData.boost && rollData.boost[systemData.affinity])
+      boost = rollData.boost[systemData.affinity];
+
+    // Apply situaltional multiplier
+    const attackType = systemData.attackType + "Attack";
+    let situationalBoost = 1;
+    if (systemData.attackType != "none" && actorData[attackType] && actorData[attackType].mult) {
+      situationalBoost *= actorData[attackType].mult;
+    }
+
+    if (isPoisoned)
+      situationalBoost *= 0.5;
+
+    const staticPower = Math.floor(basePowerTotal * boost * situationalBoost);
+
+    systemData.calcPower = displayDice +
+      (displayDice && staticPower ? "+" : "") +
+      (staticPower ? staticPower : "");
+    systemData.calcPower = (systemData.calcPower === "0" || systemData.calcPower === 0) ? "-" : systemData.calcPower;
+    const formatDice = (baseDice != systemData.powerDice)
+      ? `${baseDice}d10${systemData.explodeDice ? `x` : ``}`
+      : systemData.powerDice;
+
+    systemData.formula = `${formatDice || 0} + ${Math.floor(basePowerTotal * boost) || 0}`;
+    if (Number(situationalBoost) != 1)
+      systemData.formula = `(${systemData.formula}) * ${situationalBoost}`;
+    if (Number(situationalBoost) < 1)
+      systemData.formula = `floor(${systemData.formula})`;
   }
 
 
@@ -823,7 +928,7 @@ export class SMTXItem extends Item {
 
     // Determine button visibility based on affinity
     const hideDamage = (hasBuffs && !hasBuffSubRoll);
-    const showCrit = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !systemData.hideCritDamage && !hideDamage;
+    const showCrit = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !systemData.hideCritDamage && !hideDamage /*&& item.type !== "consumable"*/;
     const showDamageButtons = overrides.affinity !== "recovery" && overrides.affinity !== "none" && !hideDamage;
     const showHealing = overrides.affinity == "recovery";
     const showBuffButtons = hasBuffs || hasBuffSubRoll;
