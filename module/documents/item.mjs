@@ -1003,12 +1003,18 @@ export class SMTXItem extends Item {
       </div>
     `;
 
+    const flagData = {
+      itemUuid: item.uuid,
+    };
 
     const message = await ChatMessage.create({
       speaker: speaker,
       rollMode: rollMode,
       flavor: label,
-      content
+      content,
+      flags: {
+        autoanimations: flagData,
+      }
     });
   }
 
@@ -1267,10 +1273,10 @@ export class SMTXItem extends Item {
           ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (Roll: ${result.ailmentRoll})</div>`
           : ""}  
     ${(systemData.hpCut > 0 && systemData.appliesBadStatus == "hpCut")
-          ? `<div class="flexrow"><span class="flex3">HP cut to ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)})</span>
+          ? `<div class="flexrow"><span class="flex3">HP cut to ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.max(Math.floor(currentToken.actor.system.hp.value * systemData.hpCut), 1)})</span>
             <button class="apply-damage-btn smtx-roll-button" title="Apply Damage" 
               data-token-id="${result.tokenId}"
-              data-effective-damage="${currentToken.actor.system.hp.value - Math.floor(currentToken.actor.system.hp.value * systemData.hpCut)}"
+              data-effective-damage="${currentToken.actor.system.hp.value - Math.max(Math.floor(currentToken.actor.system.hp.value * systemData.hpCut), 1)}"
               data-affinity="almighty"
               data-ignore-defense="true"
             >CUT</button>
@@ -1291,11 +1297,18 @@ export class SMTXItem extends Item {
     });
 
 
+    const flagData = {
+      itemUuid: item.uuid,
+    };
+
     const speaker = ChatMessage.getSpeaker({ actor: item.actor });
     await ChatMessage.create({
       speaker: speaker,
       flavor: `${item.name} Effect (${splitIndex + 1})`,
-      content: logMessage
+      content: logMessage,
+      flags: {
+        autoanimations: flagData,
+      }
     });
   }
 }

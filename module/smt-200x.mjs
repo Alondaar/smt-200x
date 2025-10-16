@@ -55,6 +55,13 @@ Hooks.once('init', function () {
   });
 
 
+  // Setup Automated Animations
+  if (game.modules.get("autoanimations")?.active) {
+    console.log("SMT-200X | Hooking into Automated Animations");
+    setupAutomatedAnimationsHook();
+  }
+
+
 
   console.log('SMT 200X | Initializing socket listener');
   game.socket.on("system.smt-200x", async (data) => {
@@ -1523,5 +1530,39 @@ async function _onItemPilesReady() {
         }
       }
     ],
+  });
+}
+
+
+
+
+
+
+function setupAutomatedAnimationsHook() {
+  Hooks.on("createChatMessage", async (message) => {
+    // Only run for the user who sent the message
+    if (message.user.id !== game.user.id) { return; }
+
+    // Access the global namespace
+    const AA = window.AutomatedAnimations;
+    if (!AA?.playAnimation) { return; }
+
+    // Get the item's UUID from the message flag
+    const itemUuid = message.flags?.autoanimations?.itemUuid;
+    if (!itemUuid) { return; }
+
+    const item = await fromUuid(itemUuid);
+    if (!item) { return; }
+
+    const token = canvas.tokens.get(message.speaker?.token);
+    if (!token) { return; }
+
+    // --- DIRECTLY CALL THE PLAYANIMATION FUNCTION ---
+    try {
+      // The function signature is (token, item, options)
+      AA.playAnimation(token, item, { targets: Array.from(game.user.targets) });
+    } catch (error) {
+      console.error("SMT-200X | Failed to run Automated Animation", error);
+    }
   });
 }
