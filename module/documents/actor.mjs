@@ -833,8 +833,6 @@ export class SMTXActor extends Actor {
     let chatContent = `
     <div class="flexrow damage-line"><div>`
 
-    console.log(amount)
-
     if (affectsHP) {
       let hpAmount = Math.floor(Math.abs(amount));
       this.update({ "system.hp.value": currentHP + hpAmount });
