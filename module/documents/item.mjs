@@ -535,6 +535,33 @@ export class SMTXItem extends Item {
     `;
 
     if (isNaN(systemData.calcTN)) {
+      const targets = Array.from(game.user.targets);
+      let targetHtml = "";
+      if (targets.length) {
+        targetHtml += `<hr>`;
+        targets.forEach(target => {
+          const tokenName = target.document.name;
+          targetHtml += `
+      <div class="target-row" style="margin-bottom: 10px;">
+        <div class="flexrow" style="justify-content: space-between; align-items: center;">
+          <span class="target-name" data-token-id="${target.id}" style="font-weight: bold; cursor: pointer;">${tokenName}</span>
+        </div>
+      </div>`;
+        });
+        targetHtml += `<hr>`;
+        let effectButtonsHtml = `<div class="flexrow effect-buttons">
+          <button class="apply-effect smtx-roll-button" 
+              data-split-index="1" 
+              data-item-id="${this.id}" 
+              data-actor-id="${this.actor.id}"
+              data-token-id="${this.actor.token ? this.actor.token.id : null}">
+              Effect
+          </button>
+        </div>`;
+        targetHtml += effectButtonsHtml;
+
+      }
+
       ChatMessage.create({
         speaker: speaker,
         rolMode: rollMode,
@@ -544,7 +571,7 @@ export class SMTXItem extends Item {
           ${descriptionContent}
           ${statusDisplay}
           ${effectDisplay}
-          <hr>
+          ${targetHtml}
           `,
       });
 
@@ -1032,14 +1059,40 @@ export class SMTXItem extends Item {
     // Instead of scanning the entire DOM, narrow your search to the chat message container.
     const messageContainer = $(event.currentTarget).closest(".message-content");
 
+    /*if (isNaN(item.system.calcTN)) {
+
+      let targetData = [];
+      messageContainer.find(".target-row").each(function () {
+        const tokenId = $(this).find(".target-name").data("token-id");
+        const dodgeElem = $(this).find(`.chat-dodge-split[data-split-index="${splitIndex}"]`);
+        const dodgeText = dodgeElem.length ? dodgeElem.text().trim() : "";
+        targetData.push({ tokenId, dodgeText });
+      });
+
+      const finalEffects = targetData.map(target => {
+        let finalEffect = 1;
+        return { tokenId: target.tokenId, finalEffect };
+      });
+
+      let rollFormula = systemData.formula;
+
+      const damageRoll = new Roll(rollFormula, rollData);
+      await damageRoll.evaluate();
+      if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
+      const baseDamage = Math.floor(damageRoll.total);
+      const diceHtml = await damageRoll.render();
+
+      return
+    }*/
+
     // --- 1. Determine Outcome for This Split ---
     const rollDescElem = messageContainer.find(`.roll-result-desc[data-split-index="${splitIndex}"]`);
     let outcome = "Success";
-    if (rollDescElem) {
+    if (rollDescElem && !isNaN(item.system.calcTN)) {
       const text = rollDescElem[0].innerText.toLowerCase();
       if (text.includes("critical")) outcome = "Critical";
     }
-    const baseEffect = (outcome === "Critical") ? rollData.item.critMult : 1; // TODO FIX CRIT
+    const baseEffect = (outcome === "Critical") ? rollData.item.critMult : 1; // TODO Use override if possible?
 
     // --- 2. Gather Dodge Data for This Split ---
     let targetData = [];
@@ -1053,7 +1106,7 @@ export class SMTXItem extends Item {
     // --- 3. Compute Dodge-Based Multiplier for This Split ---
     const finalEffects = targetData.map(target => {
       let finalEffect = baseEffect;
-      const txt = target.dodgeText;
+      const txt = target.dodgeText ?? "Fail";
       if (txt.startsWith("Crit")) {
         finalEffect = 0;
       } else if (txt.startsWith("Pass") || txt.startsWith("Miss")) {
@@ -1187,7 +1240,7 @@ export class SMTXItem extends Item {
             : "normal";
           finalAffinity = chooseAffinity(baseAffinity, magicAffinity);
         }
-        const finalAffinityMultiplier = multiplierForAffinity(finalAffinity);
+        const finalAffinityMultiplier = (systemData.affinity == "recovery" || systemData.affinity == "none") ? 1 : multiplierForAffinity(finalAffinity);
 
         // --- BS (Bad Status) Affinity Calculation ---
         const specificBS = (token && token.actor && token.actor.system.affinityBSFinal)
@@ -1234,18 +1287,20 @@ export class SMTXItem extends Item {
       }))).filter(result => result.badStatus.toUpperCase() !== "DEAD");
 
     // --- 6. Log the Damage Roll Results ---
-    let logMessage = `${baseDamage > 0 ? diceHtml : ``} ${buffContent}`;
+    let logMessage = `${baseDamage > 0 ? diceHtml : ``} ${buffContent}`
     damageResults.forEach(result => {
       let currentToken = canvas.tokens.get(result.tokenId);
+      let affinityPart = `<span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+        ? "SMT_X.CharAffinity_TC."
+        : "SMT_X.CharAffinity.") + result.finalAffinity)}
+      ${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
+          ? "SMT_X.Affinity_TC."
+          : "SMT_X.Affinity.") + systemData.affinity)})</span>`
+
       logMessage += `<div class="flexcol target-row" data-token-id="${result.tokenId}" style="margin: 10px 0px">
         <div class="flexrow">
           <strong>${result.tokenName}:</strong>
-          <span>(${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
-        ? "SMT_X.CharAffinity_TC."
-        : "SMT_X.CharAffinity.") + result.finalAffinity)} 
-           ${game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
-          ? "SMT_X.Affinity_TC."
-          : "SMT_X.Affinity.") + systemData.affinity)})</span>
+          ${(systemData.affinity == "recovery" || systemData.affinity == "none") ? "" : affinityPart}
           <span>${result.badStatus != "NONE"
           ? game.i18n.localize((game.settings.get("smt-200x", "showTCheaders")
             ? "SMT_X.AffinityBS_TC."
@@ -1253,7 +1308,7 @@ export class SMTXItem extends Item {
           : ""}</span>
          </div>
          ${baseDamage > 0 ? `
-  <div class="flexrow"><span class="flex3"><strong>Inc. Dmg:</strong> ${result.finalDamage}</span>
+  <div class="flexrow"><span class="flex3"><strong>Inc. ${systemData.affinity == "recovery" ? "Heal" : "Dmg"}:</strong> ${result.finalDamage}</span>
     <button class="apply-damage-btn smtx-roll-button" title="Apply" 
       data-token-id="${result.tokenId}"
       data-item-id="${this.id}"
