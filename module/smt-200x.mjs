@@ -56,10 +56,10 @@ Hooks.once('init', function () {
 
 
   // Setup Automated Animations
-  if (game.modules.get("autoanimations")?.active) {
+  /*if (game.modules.get("autoanimations")?.active) {
     console.log("SMT-200X | Hooking into Automated Animations");
     setupAutomatedAnimationsHook();
-  }
+  }*/
 
 
 
@@ -1538,7 +1538,7 @@ async function _onItemPilesReady() {
 
 
 
-function setupAutomatedAnimationsHook() {
+/*function setupAutomatedAnimationsHook() {
   Hooks.on("createChatMessage", async (message) => {
     // Only run for the user who sent the message
     if (message.user.id !== game.user.id) { return; }
@@ -1565,4 +1565,4 @@ function setupAutomatedAnimationsHook() {
       console.error("SMT-200X | Failed to run Automated Animation", error);
     }
   });
-}
+}*/

@@ -1031,7 +1031,7 @@ export class SMTXItem extends Item {
     `;
 
     const flagData = {
-      itemUuid: item.uuid,
+      /*itemUuid: item.uuid*/
     };
 
     const message = await ChatMessage.create({
@@ -1043,6 +1043,8 @@ export class SMTXItem extends Item {
         autoanimations: flagData,
       }
     });
+
+    GogoAnimation(item.uuid)
   }
 
 
@@ -1058,32 +1060,6 @@ export class SMTXItem extends Item {
 
     // Instead of scanning the entire DOM, narrow your search to the chat message container.
     const messageContainer = $(event.currentTarget).closest(".message-content");
-
-    /*if (isNaN(item.system.calcTN)) {
-
-      let targetData = [];
-      messageContainer.find(".target-row").each(function () {
-        const tokenId = $(this).find(".target-name").data("token-id");
-        const dodgeElem = $(this).find(`.chat-dodge-split[data-split-index="${splitIndex}"]`);
-        const dodgeText = dodgeElem.length ? dodgeElem.text().trim() : "";
-        targetData.push({ tokenId, dodgeText });
-      });
-
-      const finalEffects = targetData.map(target => {
-        let finalEffect = 1;
-        return { tokenId: target.tokenId, finalEffect };
-      });
-
-      let rollFormula = systemData.formula;
-
-      const damageRoll = new Roll(rollFormula, rollData);
-      await damageRoll.evaluate();
-      if (game.dice3d) await game.dice3d.showForRoll(damageRoll, game.user, true);
-      const baseDamage = Math.floor(damageRoll.total);
-      const diceHtml = await damageRoll.render();
-
-      return
-    }*/
 
     // --- 1. Determine Outcome for This Split ---
     const rollDescElem = messageContainer.find(`.roll-result-desc[data-split-index="${splitIndex}"]`);
@@ -1259,7 +1235,7 @@ export class SMTXItem extends Item {
         let ailmentChance = 0;
         let ailmentRollResult = null;
         let rawChance = 0;
-        if (systemData.appliesBadStatus && systemData.badStatusChance && (effectiveDamage * finalAffinityMultiplier * finalBSAffinityMultiplier > 0)) {
+        if (systemData.appliesBadStatus != "NONE" && systemData.badStatusChance != 0 && (target.finalEffect * finalAffinityMultiplier * finalBSAffinityMultiplier > 0)) {
           rawChance = systemData.badStatusChance * finalAffinityMultiplier * finalBSAffinityMultiplier * target.finalEffect;
           ailmentChance = Math.min(95, Math.max(5, rawChance));
           let rollForAilment = new Roll("1d100");
@@ -1326,7 +1302,7 @@ export class SMTXItem extends Item {
     </div>` : ``}
     ${(systemData.appliesBadStatus != "NONE" && result.rawBSchance > 0)
           ? `<div>${result.ailmentChance}% ${systemData.appliesBadStatus} (Roll: ${result.ailmentRoll})</div>`
-          : ""}  
+          : ``}  
     ${(systemData.hpCut > 0 && systemData.appliesBadStatus == "hpCut")
           ? `<div class="flexrow"><span class="flex3">HP cut to ${Math.floor(systemData.hpCut * 100)}% ! (${currentToken.actor.system.hp.value} -> ${Math.max(Math.floor(currentToken.actor.system.hp.value * systemData.hpCut), 1)})</span>
             <button class="apply-damage-btn smtx-roll-button" title="Apply" 
@@ -1336,7 +1312,7 @@ export class SMTXItem extends Item {
               data-ignore-defense="true"
             >CUT</button>
           </div>`
-          : ""}
+          : ``}
     ${(systemData.hpSet && systemData.appliesBadStatus == "hpSet")
           ? `<div class="flexrow"><span class="flex3">HP set to ${systemData.hpSet == -1 ? `Full` : systemData.hpSet == -2 ? `Half` : systemData.hpSet} !!</span>
             <button class="apply-damage-btn smtx-roll-button" title="Apply" 
@@ -1347,13 +1323,13 @@ export class SMTXItem extends Item {
               data-ignore-defense="true"
             >SET</button>
           </div>`
-          : ""}
+          : ``}
 </div><hr>`;
     });
 
 
     const flagData = {
-      itemUuid: item.uuid,
+      /*itemUuid: item.uuid*/
     };
 
     const speaker = ChatMessage.getSpeaker({ actor: item.actor });
@@ -1365,6 +1341,8 @@ export class SMTXItem extends Item {
         autoanimations: flagData,
       }
     });
+
+    GogoAnimation(item.uuid)
   }
 }
 
@@ -1997,3 +1975,25 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     });
   });
 });
+
+
+
+async function GogoAnimation(itemuuid) {
+  const AA = window.AutomatedAnimations;
+  if (!AA?.playAnimation) { return; }
+
+  const item = await fromUuid(itemuuid);
+  if (!item) { return; }
+
+  console.log(item.actor);
+  const token = item.actor.getActiveTokens()[0];
+  if (!token) { return; }
+
+  // --- DIRECTLY CALL THE PLAYANIMATION FUNCTION ---
+  try {
+    // The function signature is (token, item, options)
+    AA.playAnimation(token, item, { targets: Array.from(game.user.targets) });
+  } catch (error) {
+    console.error("SMT-200X | Failed to run Automated Animation", error);
+  }
+}
