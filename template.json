@@ -177,7 +177,10 @@
           "power": 0,
           "hit": 0,
           "maxAmmo": 0,
-          "ammo": 0
+          "ammo": 0,
+          "ammoPower": 0,
+          "ammoHit": 0,
+          "ammoAffinity": ""
         },
         "wepB": {
           "name": "",
@@ -185,7 +188,10 @@
           "power": 0,
           "hit": 0,
           "maxAmmo": 0,
-          "ammo": 0
+          "ammo": 0,
+          "ammoPower": 0,
+          "ammoHit": 0,
+          "ammoAffinity": ""
         },
         "quickModTN": 0,
         "resetModTN": true,
@@ -433,7 +439,9 @@
         "item",
         "skill"
       ],
-      "reloads": false
+      "reloads": false,
+      "ammoA": false,
+      "ammoB": false
     },
     "feature": {
       "templates": [

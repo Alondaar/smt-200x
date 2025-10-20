@@ -54,6 +54,23 @@ export class SMTXItem extends Item {
         weaponTN = !systemData.wepIgnoreTN ? actorData[weaponSlot]?.hit ?? 0 : 0;
         weaponPower = !systemData.wepIgnorePower ? actorData[weaponSlot]?.power ?? 0 : 0;
 
+        this.actor.items.forEach(ammoitem => {
+          if (ammoitem.type === "consumable" && ammoitem.system.reloads) {
+            if (weaponSlot === "wepA" && ammoitem.system.ammoA) {
+              weaponTN += Number(ammoitem.system.tn);
+              weaponPower += Number(ammoitem.system.power);
+              if (ammoitem.system.affinity != "none" && ammoitem.system.affinity != "recovery") {
+                systemData.affinity = ammoitem.system.affinity;
+              }
+            } else if (weaponSlot === "wepB" && ammoitem.system.ammoB) {
+              weaponTN += Number(ammoitem.system.tn);
+              weaponPower += Number(ammoitem.system.power);
+              if (ammoitem.system.affinity != "none" && ammoitem.system.affinity != "recovery") {
+                systemData.affinity = ammoitem.system.affinity;
+              }
+            }
+          }
+        });
 
         const critRangeParts = (systemData.critRange ?? "1/10").split("/").map(Number);
         let critRate = critRangeParts.length === 2 ? critRangeParts[0] / critRangeParts[1] : 0.1;

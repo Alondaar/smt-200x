@@ -491,6 +491,33 @@ export class SMTXActorSheet extends ActorSheet {
     });
 
 
+    html.on('click', '.set-ammo-a', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      item.update({ "system.ammoA": !item.system.ammoA })
+
+      this.actor.items.forEach(ammoitem => {
+        if (ammoitem.type === "consumable" && ammoitem.system.reloads) {
+          ammoitem.update({ "system.ammoA": false })
+        }
+      });
+    });
+
+    html.on('click', '.set-ammo-b', (ev) => {
+      const li = $(ev.currentTarget).parents('.item');
+      const item = this.actor.items.get(li.data('itemId'));
+
+      item.update({ "system.ammoB": !item.system.ammoB })
+
+      this.actor.items.forEach(ammoitem => {
+        if (ammoitem.type === "consumable" && ammoitem.system.reloads) {
+          ammoitem.update({ "system.ammoB": false })
+        }
+      });
+    });
+
+
 
     html.on('click', '.melee-power-roll', async (event) => {
       event.preventDefault();
