@@ -569,7 +569,7 @@ export class SMTXItem extends Item {
         let effectButtonsHtml = `<div class="flexrow effect-buttons">
           <button class="apply-effect smtx-roll-button" 
               data-split-index="1" 
-              data-item-id="${this.id}" 
+              data-source-id="${this.id}" 
               data-actor-id="${this.actor.id}"
               data-token-id="${this.actor.token ? this.actor.token.id : null}">
               Effect
@@ -728,7 +728,7 @@ export class SMTXItem extends Item {
             const isDisabled = (rolls[i] && ["Fail", "Auto Fail", "Fumble"].includes(rolls[i].result));
             return `<button class="apply-effect smtx-roll-button ${isDisabled ? "smtx-roll-button-disabled" : ""}" 
                       data-split-index="${i}" 
-                      data-item-id="${this.id}" 
+                      data-source-id="${this.id}" 
                       data-actor-id="${this.actor.id}"
                       data-token-id="${this.actor.token ? this.actor.token.id : null}">
                 Effect ${i + 1}
@@ -1304,7 +1304,7 @@ export class SMTXItem extends Item {
   <div class="flexrow"><span class="flex3"><strong>Inc. ${systemData.affinity == "recovery" ? "Heal" : "Dmg"}:</strong> ${result.finalDamage}</span>
     <button class="apply-damage-btn smtx-roll-button" title="Apply" 
       data-token-id="${result.tokenId}"
-      data-item-id="${this.id}"
+      data-source-id="${this.id}"
       data-effective-damage="${result.effectiveDamage}"
       data-affinity="${systemData.affinity}"
       data-ignore-defense="${systemData.ingoreDefense}"
@@ -1389,7 +1389,7 @@ Hooks.on('renderChatMessage', (message, html, data) => {
 
   html.find('.apply-effect').on('click', async (event) => {
     event.preventDefault();
-    const itemId = $(event.currentTarget).data('item-id');
+    const itemId = $(event.currentTarget).data('source-id');
     const actorId = $(event.currentTarget).data('actor-id');
     const tokenId = $(event.currentTarget).data('token-id');
     const actor = game.actors.get(actorId);
