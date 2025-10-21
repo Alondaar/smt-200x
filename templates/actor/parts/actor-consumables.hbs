@@ -24,7 +24,10 @@
         <div class='item-prop'>
           Reload&emsp;
           <span class="weapon-reload-a clickable"><i class="fa-solid fa-a"> </i></span>
-          <span class="weapon-reload-b clickable">&emsp;<i class="fa-solid fa-b"></i></span>
+          <input type="checkbox" class="set-ammo-a" name="item.ammoA" {{#if item.system.ammoA}}checked{{/if}} />
+          <span>&nbsp;|&nbsp;</span>
+          <span class="weapon-reload-b clickable"><i class="fa-solid fa-b"></i></span>
+          <input type="checkbox" class="set-ammo-b" name="item.ammoB" {{#if item.system.ammoB}}checked{{/if}} />
         </div>
         {{/if}}
         <!--<div class='item-prop'>{{item.system.type}}</div>
