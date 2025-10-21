@@ -498,6 +498,9 @@ export class SMTXActorSheet extends ActorSheet {
       item.update({ "system.ammoA": !item.system.ammoA })
 
       this.actor.items.forEach(ammoitem => {
+        if (ammoitem.id == item.id) {
+          return
+        }
         if (ammoitem.type === "consumable" && ammoitem.system.reloads) {
           ammoitem.update({ "system.ammoA": false })
         }
@@ -511,6 +514,9 @@ export class SMTXActorSheet extends ActorSheet {
       item.update({ "system.ammoB": !item.system.ammoB })
 
       this.actor.items.forEach(ammoitem => {
+        if (ammoitem.id == item.id) {
+          return
+        }
         if (ammoitem.type === "consumable" && ammoitem.system.reloads) {
           ammoitem.update({ "system.ammoB": false })
         }
